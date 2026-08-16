@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  PARENT
+  ADMIN
+}
+
+enum TeacherStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionPeriod {
+  MONTHLY
+  SIX_MONTHS
+  YEARLY
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  ERROR
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @default(STUDENT)
+  isActive      Boolean   @default(true)
+  teacherStatus TeacherStatus? 
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  courses       Course[]       @relation("TeacherCourses")
+  subscriptions Subscription[]
+  quizAttempts  QuizAttempt[]
+  lessonProgress LessonProgress[]
+
+  children      ParentStudent[] @relation("ParentLink")
+  parents       ParentStudent[] @relation("StudentLink")
+
+  @@map("users")
+}
+
+model ParentStudent {
+  id        String   @id @default(uuid())
+  parentId  String
+  studentId String
+  parent    User     @relation("ParentLink", fields: [parentId], references: [id], onDelete: Cascade)
+  student   User     @relation("StudentLink", fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([parentId, studentId])
+  @@map("parent_students")
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  nameEn      String   // e.g. "Physics 1st Secondary"
+  nameAr      String   // e.g. "فيزياء الصف الأول الثانوي"
+  description String?
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses       Course[]
+  pricing       SubjectPricing[]
+  subscriptions Subscription[]
+
+  @@map("subjects")
+}
+
+model SubjectPricing {
+  id        String             @id @default(uuid())
+  subjectId String
+  period    SubscriptionPeriod
+  priceEgp  Decimal           @db.Decimal(10, 2)
+  priceUsd  Decimal           @db.Decimal(10, 2)
+  isActive  Boolean           @default(true)
+  
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, period])
+  @@map("subject_pricing")
+}
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+model Subscription {
+  id            String   @id @default(uuid())
+  userId        String
+  subjectId     String
+  period        SubscriptionPeriod
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  
+  // Manual Payment Fields
+  status        SubscriptionStatus @default(PENDING)
+  paymentMethod String?            // e.g. "VODAFONE_CASH", "INSTAPAY"
+  transactionId String?            // Mobile number or transaction reference
+  
+  // Legacy fields (optional if moving away from Stripe/PayPal, but keeping for compatibility)
+  stripeSubId   String?  @unique
+  paypalSubId   String?  @unique
+  
+  // Removed isActive boolean in favor of status enum
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId]) // Student can only have one active subscription per subject
+  @@map("subscriptions")
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  titleEn     String
+  titleAr     String
+  description String
+  teacherId   String
+  subjectId   String
+  thumbnail   String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teacher     User      @relation("TeacherCourses", fields: [teacherId], references: [id])
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sections    Section[]
+
+  @@map("courses")
+}
+
+model Section {
+  id            String   @id @default(uuid())
+  courseId      String
+  titleEn       String
+  titleAr       String
+  orderIndex    Int
+  isFreePreview Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons       Lesson[]
+
+  @@map("sections")
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  sectionId   String
+  titleEn     String
+  titleAr     String
+  content     String?  @db.Text // Rich text description
+  orderIndex  Int
+  videoId     String?  @unique
+  quizId      String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  video       Video?   @relation(fields: [videoId], references: [id])
+  quiz        Quiz?    @relation(fields: [quizId], references: [id])
+  materials   Material[]
+  progress    LessonProgress[]
+
+  @@map("lessons")
+}
+
+model Video {
+  id               String      @id @default(uuid())
+  teacherId        String
+  status           VideoStatus @default(UPLOADING)
+  durationSec      Int?
+  videoUrl         String      // Supabase storage path or local path
+  originalFileName String?
+  sizeBytes        Int?
+  createdAt        DateTime    @default(now())
+
+  lesson           Lesson?
+
+  @@map("videos")
+}
+
+model Material {
+  id        String   @id @default(uuid())
+  lessonId  String
+  title     String
+  fileUrl   String
+  fileType  String
+  sizeBytes Int
+  createdAt DateTime @default(now())
+
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("materials")
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  titleEn     String
+  titleAr     String
+  timeLimit   Int?     // In minutes
+  passingScore Int     @default(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lesson      Lesson?
+  questions   Question[]
+  attempts    QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  quizId        String
+  questionText  String   @db.Text
+  options       Json     // Array of { id, text, isCorrect }
+  explanation   String?  @db.Text
+  orderIndex    Int
+  points        Int      @default(1)
+
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  quizId      String
+  userId      String
+  score       Int      @default(0)
+  answers     Json     // Array of { questionId, selectedOptionId }
+  isPassed    Boolean  @default(false)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
+
+model LessonProgress {
+  id           String   @id @default(uuid())
+  userId       String
+  lessonId     String
+  watchTimeSec Int      @default(0)
+  isCompleted  Boolean  @default(false)
+  lastWatched  DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}

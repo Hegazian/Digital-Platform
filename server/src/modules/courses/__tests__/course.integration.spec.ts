@@ -1,0 +1,156 @@
+import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { PrismaClient, Role, TeacherStatus } from '@prisma/client';
+import app from '../../../app';
+import { generateAccessToken } from '../../../utils/jwt';
+
+const prisma = new PrismaClient();
+
+describe('Course & Subject Integration Tests', () => {
+  let adminToken: string;
+  let teacherToken: string;
+  let studentToken: string;
+  let teacherId: string;
+  let subjectId: string;
+
+  beforeAll(async () => {
+    await prisma.$connect();
+    await prisma.user.deleteMany();
+    await prisma.subject.deleteMany();
+
+    // Create Admin user
+    const admin = await prisma.user.create({
+      data: {
+        email: 'admin@edu.com',
+        password: 'pass',
+        name: 'Admin User',
+        role: Role.ADMIN,
+      },
+    });
+    adminToken = generateAccessToken({ userId: admin.id, role: Role.ADMIN });
+
+    // Create Approved Teacher user
+    const teacher = await prisma.user.create({
+      data: {
+        email: 'teacher@edu.com',
+        password: 'pass',
+        name: 'Teacher User',
+        role: Role.TEACHER,
+        teacherStatus: TeacherStatus.APPROVED,
+      },
+    });
+    teacherId = teacher.id;
+    teacherToken = generateAccessToken({
+      userId: teacher.id,
+      role: Role.TEACHER,
+      teacherStatus: TeacherStatus.APPROVED,
+    });
+
+    // Create Student user
+    const student = await prisma.user.create({
+      data: {
+        email: 'student@edu.com',
+        password: 'pass',
+        name: 'Student User',
+        role: Role.STUDENT,
+      },
+    });
+    studentToken = generateAccessToken({ userId: student.id, role: Role.STUDENT });
+  });
+
+  afterAll(async () => {
+    await prisma.course.deleteMany();
+    await prisma.subject.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.$disconnect();
+  });
+
+  describe('Subject Endpoints', () => {
+    it('POST /api/v1/subjects - should allow ADMIN to create subject', async () => {
+      const res = await request(app)
+        .post('/api/v1/subjects')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          nameEn: 'Programming',
+          nameAr: 'برمجة',
+          description: 'Computer Science & Software Development',
+          pricing: [
+            { period: 'MONTHLY', priceEgp: 300, priceUsd: 15 },
+            { period: 'YEARLY', priceEgp: 2500, priceUsd: 120 },
+          ],
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.nameEn).toBe('Programming');
+      subjectId = res.body.data.id;
+    });
+
+    it('GET /api/v1/subjects - public route should list subjects', async () => {
+      const res = await request(app).get('/api/v1/subjects');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+    });
+
+    it('POST /api/v1/subjects - non-admin should be forbidden (403)', async () => {
+      const res = await request(app)
+        .post('/api/v1/subjects')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .send({
+          nameEn: 'Math',
+          nameAr: 'رياضيات',
+        });
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('Course Endpoints', () => {
+    let courseId: string;
+
+    it('POST /api/v1/courses - approved teacher can create course', async () => {
+      const res = await request(app)
+        .post('/api/v1/courses')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({
+          titleEn: 'Mastering JavaScript',
+          titleAr: 'إتقان جافاسكريبت',
+          description: 'Full stack JS programming',
+          subjectId: subjectId,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.titleEn).toBe('Mastering JavaScript');
+      courseId = res.body.data.id;
+    });
+
+    it('POST /api/v1/courses/:courseId/sections - teacher can add section', async () => {
+      const res = await request(app)
+        .post(`/api/v1/courses/${courseId}/sections`)
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({
+          titleEn: 'Chapter 1: Intro',
+          titleAr: 'الفصل الأول: المقدمة',
+          orderIndex: 1,
+          isFreePreview: true,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.isFreePreview).toBe(true);
+    });
+
+    it('PATCH /api/v1/courses/:courseId/publish - owner teacher can publish course', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/courses/${courseId}/publish`)
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.isPublished).toBe(true);
+    });
+  });
+});
