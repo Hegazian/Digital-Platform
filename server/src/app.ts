@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
 import videoRoutes from './modules/videos/video.routes';
@@ -16,9 +17,19 @@ const app: Express = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Rate Limiting (Production Audit)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests from this IP, please try again later.' }
+});
+app.use('/api', limiter);
 
 // Welcome Root Route for Browser Visits
 app.get('/', (req: Request, res: Response) => {
