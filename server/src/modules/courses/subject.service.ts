@@ -71,12 +71,22 @@ export class SubjectService {
   }
 
   static async getAllSubjects() {
-    await this.ensureDefaultSubjectsExist();
-    return await prisma.subject.findMany({
+    let subjects = await prisma.subject.findMany({
       include: {
         pricing: true,
       },
     });
+
+    if (subjects.length === 0) {
+      await this.ensureDefaultSubjectsExist();
+      subjects = await prisma.subject.findMany({
+        include: {
+          pricing: true,
+        },
+      });
+    }
+
+    return subjects;
   }
 
   static async getSubjectById(id: string) {

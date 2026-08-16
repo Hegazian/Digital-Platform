@@ -101,5 +101,33 @@ describe('VideoService', () => {
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'student-1');
       expect(hasAccess).toBe(true);
     });
+
+    it('should grant access if user is course teacher owner', async () => {
+      const mockVideo = {
+        id: 'video-123',
+        teacherId: 'teacher-1',
+        lesson: { section: { isFreePreview: false, course: { subjectId: 'subject-1' } } },
+      };
+
+      (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'teacher-1', role: 'TEACHER' });
+
+      const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'teacher-1');
+      expect(hasAccess).toBe(true);
+    });
+
+    it('should grant access if user is ADMIN', async () => {
+      const mockVideo = {
+        id: 'video-123',
+        teacherId: 'teacher-1',
+        lesson: { section: { isFreePreview: false, course: { subjectId: 'subject-1' } } },
+      };
+
+      (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'admin-1', role: 'ADMIN' });
+
+      const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'admin-1');
+      expect(hasAccess).toBe(true);
+    });
   });
 });

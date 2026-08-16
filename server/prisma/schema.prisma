@@ -119,16 +119,11 @@ model Subscription {
   paymentMethod String?            // e.g. "VODAFONE_CASH", "INSTAPAY"
   transactionId String?            // Mobile number or transaction reference
   
-  // Legacy fields (optional if moving away from Stripe/PayPal, but keeping for compatibility)
-  stripeSubId   String?  @unique
-  paypalSubId   String?  @unique
-  
   // Removed isActive boolean in favor of status enum
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, subjectId]) // Student can only have one active subscription per subject
   @@map("subscriptions")
 }
 

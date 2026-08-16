@@ -11,6 +11,7 @@ vi.mock('../../../prisma', () => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
     },
     subject: {
       count: vi.fn().mockResolvedValue(1),
@@ -90,6 +91,18 @@ describe('CourseService Unit Tests', () => {
       (prisma.course.findUnique as any).mockResolvedValue(mockCourse);
 
       await expect(CourseService.publishCourse('course-1', 'teacher-other')).rejects.toThrow(ForbiddenError);
+    });
+  });
+
+  describe('getAllCourses', () => {
+    it('should return paginated course list', async () => {
+      (prisma.course.findMany as any).mockResolvedValue([{ id: 'c1', titleEn: 'C1' }]);
+      (prisma.course.count as any).mockResolvedValue(1);
+
+      const res = await CourseService.getAllCourses({ page: '1', limit: '10' });
+      expect(res.courses).toBeDefined();
+      expect(res.pagination.total).toBe(1);
+      expect(res.pagination.page).toBe(1);
     });
   });
 });

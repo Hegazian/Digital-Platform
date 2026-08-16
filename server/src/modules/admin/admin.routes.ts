@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { AdminController } from './admin.controller';
 import { authenticate, requireRole } from '../auth/auth.middleware';
+import { Role } from '@prisma/client';
 
 const adminRouter = Router();
 
 // All admin routes require authentication + ADMIN role
-adminRouter.use(authenticate, requireRole('ADMIN'));
+adminRouter.use(authenticate, requireRole([Role.ADMIN]));
 
 // User management
 adminRouter.get('/users', AdminController.getUsers);

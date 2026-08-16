@@ -3,24 +3,46 @@ import { NotFoundError, ForbiddenError } from '../../utils/errors';
 
 export class CourseService {
   static async getAllCourses(query: any = {}) {
-    const { subjectId, isPublished } = query;
-    return await prisma.course.findMany({
-      where: {
-        ...(subjectId && { subjectId }),
-        ...(isPublished !== undefined && { isPublished: isPublished === 'true' }),
+    const { subjectId, isPublished, page, limit } = query;
+    const pageNum = page ? parseInt(page as string, 10) : 1;
+    const limitNum = limit ? parseInt(limit as string, 10) : 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {
+      ...(subjectId && { subjectId }),
+      ...(isPublished !== undefined && { isPublished: isPublished === 'true' }),
+    };
+
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        include: {
+          teacher: {
+            select: { id: true, name: true, avatar: true },
+          },
+          subject: {
+            select: { id: true, nameEn: true, nameAr: true },
+          },
+          sections: {
+            orderBy: { orderIndex: 'asc' },
+          },
+        },
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.course.count({ where }),
+    ]);
+
+    return {
+      courses,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
-      include: {
-        teacher: {
-          select: { id: true, name: true, avatar: true },
-        },
-        subject: {
-          select: { id: true, nameEn: true, nameAr: true },
-        },
-        sections: {
-          orderBy: { orderIndex: 'asc' },
-        },
-      },
-    });
+    };
   }
 
   static async getCourseById(id: string) {
