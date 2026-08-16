@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller';
-import { authenticate, requireRole } from './auth.middleware';
-import { Role } from '@prisma/client';
+import { authenticate, AuthRequest } from './auth.middleware';
+import { validateBody } from '../../utils/validate';
+import { registerSchema, loginSchema, refreshTokenSchema } from '../../utils/schemas';
 
 const router = Router();
 
-router.post('/register', AuthController.register);
-router.post('/login', AuthController.login);
+router.post('/register', validateBody(registerSchema), AuthController.register);
+router.post('/login', validateBody(loginSchema), AuthController.login);
+router.post('/refresh', validateBody(refreshTokenSchema), AuthController.refreshToken);
 
-// Example of a protected route
-router.get('/me', authenticate, (req, res) => {
-  res.json({ success: true, user: (req as any).user });
+// Protected user endpoint
+router.get('/me', authenticate, (req: AuthRequest, res) => {
+  res.json({ success: true, user: req.user });
 });
 
 export default router;

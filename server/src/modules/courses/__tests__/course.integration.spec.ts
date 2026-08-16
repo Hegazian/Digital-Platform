@@ -15,13 +15,12 @@ describe('Course & Subject Integration Tests', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
-    await prisma.user.deleteMany();
-    await prisma.subject.deleteMany();
+    const timestamp = Date.now();
 
     // Create Admin user
     const admin = await prisma.user.create({
       data: {
-        email: 'admin@edu.com',
+        email: `admin-crs-test-${timestamp}@edu.com`,
         password: 'pass',
         name: 'Admin User',
         role: Role.ADMIN,
@@ -32,7 +31,7 @@ describe('Course & Subject Integration Tests', () => {
     // Create Approved Teacher user
     const teacher = await prisma.user.create({
       data: {
-        email: 'teacher@edu.com',
+        email: `teacher-crs-test-${timestamp}@edu.com`,
         password: 'pass',
         name: 'Teacher User',
         role: Role.TEACHER,
@@ -49,7 +48,7 @@ describe('Course & Subject Integration Tests', () => {
     // Create Student user
     const student = await prisma.user.create({
       data: {
-        email: 'student@edu.com',
+        email: `student-crs-test-${timestamp}@edu.com`,
         password: 'pass',
         name: 'Student User',
         role: Role.STUDENT,
@@ -59,9 +58,9 @@ describe('Course & Subject Integration Tests', () => {
   });
 
   afterAll(async () => {
-    await prisma.course.deleteMany();
-    await prisma.subject.deleteMany();
-    await prisma.user.deleteMany();
+    await prisma.course.deleteMany({ where: { titleEn: { contains: 'Mastering JavaScript' } } });
+    await prisma.subject.deleteMany({ where: { nameEn: { contains: 'CourseTestSubject' } } });
+    await prisma.user.deleteMany({ where: { email: { contains: '-crs-test-' } } });
     await prisma.$disconnect();
   });
 
@@ -71,8 +70,8 @@ describe('Course & Subject Integration Tests', () => {
         .post('/api/v1/subjects')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          nameEn: 'Programming',
-          nameAr: 'برمجة',
+          nameEn: 'CourseTestSubject',
+          nameAr: 'مادة اختبارية',
           description: 'Computer Science & Software Development',
           pricing: [
             { period: 'MONTHLY', priceEgp: 300, priceUsd: 15 },
@@ -82,7 +81,7 @@ describe('Course & Subject Integration Tests', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.nameEn).toBe('Programming');
+      expect(res.body.data.nameEn).toBe('CourseTestSubject');
       subjectId = res.body.data.id;
     });
 

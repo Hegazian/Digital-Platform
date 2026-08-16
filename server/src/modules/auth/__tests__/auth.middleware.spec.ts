@@ -56,5 +56,28 @@ describe('Auth Middleware Suite', () => {
       const err = mNext.mock.calls[0][0];
       expect(err.statusCode).toBe(403);
     });
+
+    it('should allow ADMIN role when guard requires [Role.ADMIN]', () => {
+      const mReq = { user: { role: Role.ADMIN } } as AuthRequest;
+      const mRes = {} as any;
+      const mNext = vi.fn();
+
+      const guard = requireRole([Role.ADMIN]);
+      guard(mReq, mRes, mNext);
+
+      expect(mNext).toHaveBeenCalledWith();
+    });
+
+    it('should reject STUDENT role when guard requires [Role.ADMIN]', () => {
+      const mReq = { user: { role: Role.STUDENT } } as AuthRequest;
+      const mRes = {} as any;
+      const mNext = vi.fn();
+
+      const guard = requireRole([Role.ADMIN]);
+      guard(mReq, mRes, mNext);
+
+      const err = mNext.mock.calls[0][0];
+      expect(err.statusCode).toBe(403);
+    });
   });
 });

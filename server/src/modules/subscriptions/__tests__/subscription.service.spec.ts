@@ -69,6 +69,25 @@ describe('SubscriptionService Unit Tests (Manual Payments)', () => {
         })
       ).rejects.toThrow(BadRequestError);
     });
+
+    it('should allow re-subscribing if previous subscription is CANCELLED or EXPIRED', async () => {
+      const mockPricing = { id: 'p1', isActive: true };
+      const mockNewSub = { id: 'sub2', status: 'PENDING' };
+
+      (prisma.subjectPricing.findUnique as any).mockResolvedValue(mockPricing);
+      (prisma.subscription.findFirst as any).mockResolvedValue(null);
+      (prisma.subscription.create as any).mockResolvedValue(mockNewSub);
+
+      const result = await SubscriptionService.createManualSubscription({
+        userId: 'u1',
+        subjectId: 's1',
+        period: SubscriptionPeriod.YEARLY,
+        paymentMethod: 'VODAFONE_CASH',
+        transactionId: '01099998888',
+      });
+
+      expect(result.id).toBe('sub2');
+    });
   });
 
   describe('approveSubscription', () => {

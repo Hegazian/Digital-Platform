@@ -93,4 +93,31 @@ export class AuthService {
       },
     };
   }
+
+  static async refreshToken(token: string) {
+    if (!token) {
+      throw new BadRequestError('Refresh token is required');
+    }
+
+    try {
+      const { verifyRefreshToken } = await import('../../utils/jwt');
+      const decoded = verifyRefreshToken(token) as any;
+
+      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+      if (!user || !user.isActive) {
+        throw new UnauthorizedError('User account is invalid or deactivated');
+      }
+
+      const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
+      const newAccessToken = generateAccessToken(payload);
+      const newRefreshToken = generateRefreshToken(payload);
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (err: any) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
+  }
 }

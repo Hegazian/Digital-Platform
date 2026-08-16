@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../auth/auth.middleware';
 import { SubjectService } from './subject.service';
 import { CourseService } from './course.service';
 import { SectionService } from './section.service';
@@ -42,9 +43,9 @@ export class CourseController {
     }
   }
 
-  static async createCourse(req: Request, res: Response, next: NextFunction) {
+  static async createCourse(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const teacherId = (req as any).user.userId;
+      const teacherId = req.user!.userId;
       const course = await CourseService.createCourse({ ...req.body, teacherId });
       res.status(201).json({ success: true, data: course });
     } catch (error) {
@@ -52,9 +53,9 @@ export class CourseController {
     }
   }
 
-  static async publishCourse(req: Request, res: Response, next: NextFunction) {
+  static async publishCourse(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const teacherId = (req as any).user.userId;
+      const teacherId = req.user!.userId;
       const course = await CourseService.publishCourse(req.params.id, teacherId);
       res.status(200).json({ success: true, data: course });
     } catch (error) {
@@ -68,6 +69,33 @@ export class CourseController {
       const courseId = req.params.courseId;
       const section = await SectionService.createSection({ ...req.body, courseId });
       res.status(201).json({ success: true, data: section });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSectionsByCourse(req: Request, res: Response, next: NextFunction) {
+    try {
+      const sections = await SectionService.getSectionsByCourse(req.params.courseId);
+      res.status(200).json({ success: true, data: sections });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSubjectById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subject = await SubjectService.getSubjectById(req.params.id);
+      res.status(200).json({ success: true, data: subject });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateSubject(req: Request, res: Response, next: NextFunction) {
+    try {
+      const subject = await SubjectService.updateSubject(req.params.id, req.body);
+      res.status(200).json({ success: true, data: subject });
     } catch (error) {
       next(error);
     }
