@@ -1,0 +1,141 @@
+import { prisma } from '../../prisma';
+import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
+import { StorageService } from '../../utils/storage';
+import { Role, SubscriptionStatus } from '@prisma/client';
+
+export class MaterialService {
+  /**
+   * Upload a new lesson material attachment.
+   */
+  static async uploadMaterial(params: {
+    lessonId: string;
+    title: string;
+    fileBuffer: Buffer;
+    fileName: string;
+    mimeType: string;
+    sizeBytes: number;
+    userId: string;
+    userRole: Role;
+  }) {
+    const { lessonId, title, fileBuffer, fileName, mimeType, sizeBytes, userId, userRole } = params;
+
+    if (!lessonId || !title || !fileBuffer || !fileName) {
+      throw new BadRequestError('lessonId, title, and file are required');
+    }
+
+    // Verify lesson and section ownership
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        section: {
+          include: {
+            course: true,
+          },
+        },
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundError('Lesson not found');
+    }
+
+    if (userRole !== Role.ADMIN && lesson.section.course.teacherId !== userId) {
+      throw new ForbiddenError('You do not have permission to add materials to this course');
+    }
+
+    // Upload to Supabase/Storage
+    const fileUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType);
+
+    // Save to Database
+    const material = await prisma.material.create({
+      data: {
+        lessonId,
+        title,
+        fileUrl,
+        fileType: mimeType,
+        sizeBytes,
+      },
+    });
+
+    return material;
+  }
+
+  /**
+   * Retrieve materials for a specific lesson with access control verification.
+   */
+  static async getMaterialsByLesson(lessonId: string, userId: string, userRole: Role) {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        section: {
+          include: {
+            course: true,
+          },
+        },
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundError('Lesson not found');
+    }
+
+    // Allow Admin or Course Teacher
+    if (userRole === Role.ADMIN || (userRole === Role.TEACHER && lesson.section.course.teacherId === userId)) {
+      return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+    }
+
+    // Allow free preview lessons
+    if (lesson.section.isFreePreview) {
+      return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+    }
+
+    // Check student active subscription
+    const activeSub = await prisma.subscription.findFirst({
+      where: {
+        userId,
+        subjectId: lesson.section.course.subjectId,
+        status: SubscriptionStatus.ACTIVE,
+        endDate: { gte: new Date() },
+      },
+    });
+
+    if (!activeSub) {
+      throw new ForbiddenError('Active subscription required to access lesson materials');
+    }
+
+    return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+  }
+
+  /**
+   * Delete a material attachment.
+   */
+  static async deleteMaterial(materialId: string, userId: string, userRole: Role) {
+    const material = await prisma.material.findUnique({
+      where: { id: materialId },
+      include: {
+        lesson: {
+          include: {
+            section: {
+              include: {
+                course: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!material) {
+      throw new NotFoundError('Material not found');
+    }
+
+    if (userRole !== Role.ADMIN && material.lesson.section.course.teacherId !== userId) {
+      throw new ForbiddenError('You do not have permission to delete this material');
+    }
+
+    await StorageService.deleteFile(material.fileUrl);
+    await prisma.material.delete({ where: { id: materialId } });
+
+    return { message: 'Material deleted successfully' };
+  }
+}
