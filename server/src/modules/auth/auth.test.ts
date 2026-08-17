@@ -4,9 +4,10 @@ import app from '../../app';
 import { prisma } from '../../prisma';
 
 describe('Auth Module API', () => {
+  const email = `test${Date.now()}@student.com`;
   const testUser = {
     name: 'Test Student',
-    email: 'test@student.com',
+    email: email,
     password: 'password123',
     role: 'STUDENT',
   };

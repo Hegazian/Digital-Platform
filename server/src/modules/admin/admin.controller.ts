@@ -46,6 +46,7 @@ export class AdminController {
   static async updateTeacherStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
+      console.log('updateTeacherStatus req.body:', req.body);
       const { status } = req.body;
 
       if (!status || !['APPROVED', 'REJECTED'].includes(status)) {
