@@ -16,7 +16,7 @@ export class QuizController {
     try {
       const { id } = req.params;
       const isTeacher = req.user?.role === 'TEACHER' || req.user?.role === 'ADMIN';
-      const quiz = await QuizService.getQuizById(id, isTeacher);
+      const quiz = await QuizService.getQuizById(id as string, isTeacher);
       res.status(200).json({ success: true, data: quiz });
     } catch (error) {
       next(error);
@@ -27,7 +27,7 @@ export class QuizController {
     try {
       const { id } = req.params;
       const userId = req.user!.userId;
-      const result = await QuizService.submitAttempt(userId, id, req.body);
+      const result = await QuizService.submitAttempt(userId, id as string, req.body);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
@@ -38,7 +38,7 @@ export class QuizController {
     try {
       const { id } = req.params;
       const userId = req.user!.userId;
-      const attempts = await QuizService.getUserAttempts(userId, id);
+      const attempts = await QuizService.getUserAttempts(userId, id as string);
       res.status(200).json({ success: true, data: attempts });
     } catch (error) {
       next(error);

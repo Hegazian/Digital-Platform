@@ -25,7 +25,7 @@ export class StorageService {
             'Content-Type': mimeType,
             'x-upsert': 'true',
           },
-          body: fileBuffer,
+          body: fileBuffer as any,
         });
 
         if (response.ok) {

@@ -29,4 +29,13 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async mfaLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AuthService.verifyMfaLogin(req.body);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

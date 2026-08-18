@@ -9,11 +9,15 @@ describe('Progress Module API', () => {
   let testLessonId: string;
 
   beforeAll(async () => {
+    const timestamp = Date.now();
+    const teacherEmail = `teacher-prog-${timestamp}@test.com`;
+    const studentEmail = `student-prog-${timestamp}@test.com`;
+
     // 1. Create Teacher
     const teacher = await prisma.user.create({
       data: {
         name: 'Test Teacher',
-        email: 'teacher@test.com',
+        email: teacherEmail,
         password: 'hash',
         role: 'TEACHER',
       }
@@ -56,14 +60,14 @@ describe('Progress Module API', () => {
     // 3. Register Student
     const regRes = await request(app).post('/api/v1/auth/register').send({
       name: 'Student',
-      email: 'student@test.com',
+      email: studentEmail,
       password: 'password123',
     });
     studentId = regRes.body.data.id;
 
     // Login Student to get token
     const logRes = await request(app).post('/api/v1/auth/login').send({
-      email: 'student@test.com',
+      email: studentEmail,
       password: 'password123',
     });
     studentToken = logRes.body.data.tokens.accessToken;

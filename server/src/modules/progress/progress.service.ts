@@ -56,25 +56,22 @@ export class ProgressService {
    * Based on active subscriptions.
    */
   static async getStudentProgressSummary(userId: string) {
-    // 1. Get all active subscriptions
-    const subscriptions = await prisma.subscription.findMany({
+    const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+    const { subjectIds, courseIds } = await EntitlementResolver.getAccessibleResources(userId);
+
+    // Fetch all courses accessible via subjects OR direct course access
+    const courses = await prisma.course.findMany({
       where: {
-        userId,
-        status: 'ACTIVE',
-        endDate: { gte: new Date() },
+        OR: [
+          { subjectId: { in: Array.from(subjectIds) } },
+          { id: { in: Array.from(courseIds) } },
+        ],
       },
       include: {
-        subject: {
+        subject: true,
+        sections: {
           include: {
-            courses: {
-              include: {
-                sections: {
-                  include: {
-                    lessons: true,
-                  },
-                },
-              },
-            },
+            lessons: true,
           },
         },
       },
@@ -99,46 +96,44 @@ export class ProgressService {
     });
     
     let totalScore = 0;
-    quizAttempts.forEach(q => totalScore += q.score);
+    quizAttempts.forEach((q) => (totalScore += q.score));
     const avgQuizScore = quizAttempts.length > 0 ? Math.round(totalScore / quizAttempts.length) : 0;
 
     const courseProgressList: any[] = [];
 
     // Calculate progress per course
-    subscriptions.forEach((sub) => {
-      sub.subject.courses.forEach((course) => {
-        let totalLessons = 0;
-        let completedLessons = 0;
-        let lastLessonTitle = 'Get Started';
-        let lastWatchedDate = new Date(0);
+    courses.forEach((course) => {
+      let totalLessons = 0;
+      let completedLessons = 0;
+      let lastLessonTitle = 'Get Started';
+      let lastWatchedDate = new Date(0);
 
-        course.sections.forEach((sec) => {
-          sec.lessons.forEach((les) => {
-            totalLessons++;
-            const p = progressMap.get(les.id);
-            if (p) {
-              if (p.isCompleted) completedLessons++;
-              if (p.lastWatched > lastWatchedDate) {
-                lastWatchedDate = p.lastWatched;
-                lastLessonTitle = les.titleEn;
-              }
+      course.sections.forEach((sec) => {
+        sec.lessons.forEach((les) => {
+          totalLessons++;
+          const p = progressMap.get(les.id);
+          if (p) {
+            if (p.isCompleted) completedLessons++;
+            if (p.lastWatched > lastWatchedDate) {
+              lastWatchedDate = p.lastWatched;
+              lastLessonTitle = les.titleEn;
             }
-          });
+          }
         });
-
-        if (totalLessons > 0) {
-          courseProgressList.push({
-            id: course.id,
-            titleEn: course.titleEn,
-            titleAr: course.titleAr,
-            subject: sub.subject.nameEn,
-            totalLessons,
-            completedLessons,
-            progress: Math.round((completedLessons / totalLessons) * 100),
-            lastLesson: lastLessonTitle,
-          });
-        }
       });
+
+      if (totalLessons > 0) {
+        courseProgressList.push({
+          id: course.id,
+          titleEn: course.titleEn,
+          titleAr: course.titleAr,
+          subject: course.subject?.nameEn || 'General',
+          totalLessons,
+          completedLessons,
+          progress: Math.round((completedLessons / totalLessons) * 100),
+          lastLesson: lastLessonTitle,
+        });
+      }
     });
 
     return {

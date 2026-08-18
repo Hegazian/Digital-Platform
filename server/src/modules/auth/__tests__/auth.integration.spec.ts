@@ -1,36 +1,39 @@
 import request from 'supertest';
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { prisma } from '../../../prisma';
 import app from '../../../app';
 
-const prisma = new PrismaClient();
-
-const cleanDb = async () => {
-  await prisma.section.deleteMany();
-  await prisma.course.deleteMany();
-  await prisma.subject.deleteMany();
-  await prisma.user.deleteMany();
-};
-
 describe('Auth Integration Tests', () => {
-  beforeAll(async () => {
-    await prisma.$connect();
-    await cleanDb();
-  });
+  const testPrefix = `auth-test-${Date.now()}`;
+  const studentEmail = `${testPrefix}-student@test.com`;
+  const dupEmail = `${testPrefix}-dup@test.com`;
+  const loginEmail = `${testPrefix}-login@test.com`;
+  const wrongPassEmail = `${testPrefix}-wrongpass@test.com`;
 
-  afterEach(async () => {
+  const cleanDb = async () => {
+    try {
+      await prisma.user.deleteMany({
+        where: {
+          email: {
+            in: [studentEmail, dupEmail, loginEmail, wrongPassEmail],
+          },
+        },
+      });
+    } catch (e) {}
+  };
+
+  beforeAll(async () => {
     await cleanDb();
-  });
+  }, 15000);
 
   afterAll(async () => {
     await cleanDb();
-    await prisma.$disconnect();
-  });
+  }, 15000);
 
   describe('POST /api/v1/auth/register', () => {
     it('should successfully register a new student', async () => {
       const res = await request(app).post('/api/v1/auth/register').send({
-        email: 'test@student.com',
+        email: studentEmail,
         password: 'Password123!',
         name: 'Test Student',
         role: 'STUDENT',
@@ -38,19 +41,19 @@ describe('Auth Integration Tests', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.email).toBe('test@student.com');
+      expect(res.body.data.email).toBe(studentEmail);
       expect(res.body.data.role).toBe('STUDENT');
     });
 
     it('should fail when registering an existing email', async () => {
       await request(app).post('/api/v1/auth/register').send({
-        email: 'duplicate@test.com',
+        email: dupEmail,
         password: 'password',
         name: 'First User',
       });
 
       const res = await request(app).post('/api/v1/auth/register').send({
-        email: 'duplicate@test.com',
+        email: dupEmail,
         password: 'password',
         name: 'Second User',
       });
@@ -64,13 +67,13 @@ describe('Auth Integration Tests', () => {
   describe('POST /api/v1/auth/login', () => {
     it('should login and return tokens for valid credentials', async () => {
       await request(app).post('/api/v1/auth/register').send({
-        email: 'login@test.com',
+        email: loginEmail,
         password: 'ValidPassword123',
         name: 'Login User',
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({
-        email: 'login@test.com',
+        email: loginEmail,
         password: 'ValidPassword123',
       });
 
@@ -81,13 +84,13 @@ describe('Auth Integration Tests', () => {
 
     it('should fail login for wrong password', async () => {
       await request(app).post('/api/v1/auth/register').send({
-        email: 'wrongpass@test.com',
+        email: wrongPassEmail,
         password: 'CorrectPassword',
         name: 'User',
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({
-        email: 'wrongpass@test.com',
+        email: wrongPassEmail,
         password: 'WrongPassword',
       });
 

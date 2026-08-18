@@ -62,19 +62,16 @@ export class VideoService {
       return true;
     }
 
-    // Check active subscription for subject
-    if (video.lesson?.section?.course?.subjectId) {
-      const subjectId = video.lesson.section.course.subjectId;
-      const activeSubscription = await prisma.subscription.findFirst({
-        where: {
-          userId,
-          subjectId,
-          status: 'ACTIVE',
-          endDate: { gte: new Date() },
-        },
-      });
+    // Check active entitlement or subscription via EntitlementResolver
+    const courseId = video.lesson?.section?.courseId;
+    const subjectId = video.lesson?.section?.course?.subjectId;
 
-      if (activeSubscription) {
+    if (courseId || subjectId) {
+      const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+      if (courseId && (await EntitlementResolver.hasCourseAccess(userId, courseId))) {
+        return true;
+      }
+      if (subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
         return true;
       }
     }

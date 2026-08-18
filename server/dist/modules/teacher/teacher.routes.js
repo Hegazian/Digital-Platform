@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const teacher_controller_1 = require("./teacher.controller");
+const auth_middleware_1 = require("../auth/auth.middleware");
+const teacherRouter = (0, express_1.Router)();
+teacherRouter.get('/students', auth_middleware_1.authenticate, auth_middleware_1.requireApprovedTeacher, teacher_controller_1.TeacherController.getEnrolledStudents);
+teacherRouter.get('/students/:studentId/progress', auth_middleware_1.authenticate, auth_middleware_1.requireApprovedTeacher, teacher_controller_1.TeacherController.getStudentProgress);
+teacherRouter.post('/announcements', auth_middleware_1.authenticate, auth_middleware_1.requireApprovedTeacher, teacher_controller_1.TeacherController.broadcastAnnouncement);
+teacherRouter.get('/revenue', auth_middleware_1.authenticate, auth_middleware_1.requireApprovedTeacher, teacher_controller_1.TeacherController.getRevenueSummary);
+exports.default = teacherRouter;

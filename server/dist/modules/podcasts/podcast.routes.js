@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const podcast_controller_1 = require("./podcast.controller");
+const auth_middleware_1 = require("../auth/auth.middleware");
+const router = (0, express_1.Router)();
+router.get('/', auth_middleware_1.authenticate, podcast_controller_1.getPodcasts);
+router.post('/', auth_middleware_1.authenticate, podcast_controller_1.createPodcast);
+router.post('/:id/episodes', auth_middleware_1.authenticate, podcast_controller_1.addEpisode);
+exports.default = router;

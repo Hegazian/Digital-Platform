@@ -57,7 +57,7 @@ export class SubscriptionController {
   static async approve(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const approved = await SubscriptionService.approveSubscription(id);
+      const approved = await SubscriptionService.approveSubscription(id as string);
       res.status(200).json({
         success: true,
         message: 'Subscription approved successfully',
@@ -75,7 +75,7 @@ export class SubscriptionController {
   static async reject(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const rejected = await SubscriptionService.rejectSubscription(id);
+      const rejected = await SubscriptionService.rejectSubscription(id as string);
       res.status(200).json({
         success: true,
         message: 'Subscription rejected',
@@ -109,7 +109,7 @@ export class SubscriptionController {
     try {
       const { id } = req.params;
       const userId = req.user!.userId;
-      const cancelled = await SubscriptionService.cancelSubscription(id, userId);
+      const cancelled = await SubscriptionService.cancelSubscription(id as string, userId);
       res.status(200).json({
         success: true,
         message: 'Subscription cancelled',

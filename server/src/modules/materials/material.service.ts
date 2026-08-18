@@ -23,15 +23,12 @@ export class MaterialService {
       throw new BadRequestError('lessonId, title, and file are required');
     }
 
-    // Verify lesson and section ownership
+    // Verify lesson and section/module ownership
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
-        section: {
-          include: {
-            course: true,
-          },
-        },
+        section: { include: { course: true } },
+        module: { include: { course: true } },
       },
     });
 
@@ -39,7 +36,9 @@ export class MaterialService {
       throw new NotFoundError('Lesson not found');
     }
 
-    if (userRole !== Role.ADMIN && lesson.section.course.teacherId !== userId) {
+    const teacherId = lesson.section?.course.teacherId || lesson.module?.course.teacherId;
+
+    if (userRole !== Role.ADMIN && teacherId !== userId) {
       throw new ForbiddenError('You do not have permission to add materials to this course');
     }
 
@@ -67,11 +66,8 @@ export class MaterialService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
-        section: {
-          include: {
-            course: true,
-          },
-        },
+        section: { include: { course: true } },
+        module: { include: { course: true } },
       },
     });
 
@@ -79,13 +75,17 @@ export class MaterialService {
       throw new NotFoundError('Lesson not found');
     }
 
+    const teacherId = lesson.section?.course.teacherId || lesson.module?.course.teacherId;
+    const isFreePreview = lesson.section?.isFreePreview || false;
+    const subjectId = lesson.section?.course.subjectId || lesson.module?.course.subjectId;
+
     // Allow Admin or Course Teacher
-    if (userRole === Role.ADMIN || (userRole === Role.TEACHER && lesson.section.course.teacherId === userId)) {
+    if (userRole === Role.ADMIN || (userRole === Role.TEACHER && teacherId === userId)) {
       return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
     }
 
     // Allow free preview lessons
-    if (lesson.section.isFreePreview) {
+    if (isFreePreview) {
       return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
     }
 
@@ -93,7 +93,7 @@ export class MaterialService {
     const activeSub = await prisma.subscription.findFirst({
       where: {
         userId,
-        subjectId: lesson.section.course.subjectId,
+        subjectId,
         status: SubscriptionStatus.ACTIVE,
         endDate: { gte: new Date() },
       },
@@ -115,11 +115,8 @@ export class MaterialService {
       include: {
         lesson: {
           include: {
-            section: {
-              include: {
-                course: true,
-              },
-            },
+            section: { include: { course: true } },
+            module: { include: { course: true } },
           },
         },
       },
@@ -129,7 +126,9 @@ export class MaterialService {
       throw new NotFoundError('Material not found');
     }
 
-    if (userRole !== Role.ADMIN && material.lesson.section.course.teacherId !== userId) {
+    const teacherId = material.lesson.section?.course.teacherId || material.lesson.module?.course.teacherId;
+
+    if (userRole !== Role.ADMIN && teacherId !== userId) {
       throw new ForbiddenError('You do not have permission to delete this material');
     }
 
@@ -139,3 +138,4 @@ export class MaterialService {
     return { message: 'Material deleted successfully' };
   }
 }
+

@@ -114,7 +114,7 @@ describe('AdminService Unit Tests', () => {
         .mockResolvedValueOnce(100)  // total
         .mockResolvedValueOnce(70)   // students
         .mockResolvedValueOnce(20)   // teachers
-        .mockResolvedValueOnce(10)   // parents
+
         .mockResolvedValueOnce(5)    // pending teachers
         .mockResolvedValueOnce(15);  // approved teachers
       (prisma.course.count as any)
