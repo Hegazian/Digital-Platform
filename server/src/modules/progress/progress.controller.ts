@@ -14,7 +14,7 @@ export class ProgressController {
         throw new BadRequestError('watchTimeDeltaSec must be a number');
       }
 
-      const progress = await ProgressService.updateWatchTime(userId, lessonId, watchTimeDeltaSec);
+      const progress = await ProgressService.updateWatchTime(userId, lessonId as string, watchTimeDeltaSec);
 
       res.status(200).json({
         success: true,
@@ -30,7 +30,7 @@ export class ProgressController {
       const { lessonId } = req.params;
       const userId = req.user!.userId;
 
-      const progress = await ProgressService.markCompleted(userId, lessonId);
+      const progress = await ProgressService.markCompleted(userId, lessonId as string);
 
       res.status(200).json({
         success: true,

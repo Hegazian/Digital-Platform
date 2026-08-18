@@ -42,7 +42,7 @@ export class VideoController {
       const { videoId } = req.params;
       const userId = req.user!.userId;
 
-      const secureUrl = await VideoService.getSecurePlaybackUrl(videoId, userId);
+      const secureUrl = await VideoService.getSecurePlaybackUrl(videoId as string, userId);
 
       res.status(200).json({
         success: true,
@@ -80,7 +80,7 @@ export class VideoController {
       }
 
       const { prisma } = await import('../../prisma');
-      const video = await prisma.video.findUnique({ where: { id: videoId } });
+      const video = await prisma.video.findUnique({ where: { id: videoId as string } });
       if (!video || !video.videoUrl || !video.videoUrl.startsWith('/uploads/')) {
         throw new BadRequestError('Local video not found');
       }

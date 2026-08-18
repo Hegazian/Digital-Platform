@@ -1,19 +1,18 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../app';
-import { prisma } from '../../prisma';
 
 describe('Auth Module API', () => {
-  const email = `test${Date.now()}@student.com`;
-  const testUser = {
+  const getTestUser = () => ({
     name: 'Test Student',
-    email: email,
+    email: `test-${Date.now()}-${Math.random()}@student.com`,
     password: 'password123',
     role: 'STUDENT',
-  };
+  });
 
   describe('POST /api/v1/auth/register', () => {
     it('should successfully register a new student', async () => {
+      const testUser = getTestUser();
       const res = await request(app)
         .post('/api/v1/auth/register')
         .send(testUser);
@@ -24,6 +23,7 @@ describe('Auth Module API', () => {
     });
 
     it('should fail if email is already registered', async () => {
+      const testUser = getTestUser();
       await request(app).post('/api/v1/auth/register').send(testUser);
       const res = await request(app).post('/api/v1/auth/register').send(testUser);
 
@@ -34,12 +34,10 @@ describe('Auth Module API', () => {
   });
 
   describe('POST /api/v1/auth/login', () => {
-    beforeAll(async () => {
-      // Register before login tests (might return 409 if already registered by previous tests, which is fine)
-      await request(app).post('/api/v1/auth/register').send(testUser);
-    });
-
     it('should login successfully with correct credentials', async () => {
+      const testUser = getTestUser();
+      await request(app).post('/api/v1/auth/register').send(testUser);
+
       const res = await request(app)
         .post('/api/v1/auth/login')
         .send({
@@ -53,6 +51,9 @@ describe('Auth Module API', () => {
     });
 
     it('should fail login with wrong password', async () => {
+      const testUser = getTestUser();
+      await request(app).post('/api/v1/auth/register').send(testUser);
+
       const res = await request(app)
         .post('/api/v1/auth/login')
         .send({

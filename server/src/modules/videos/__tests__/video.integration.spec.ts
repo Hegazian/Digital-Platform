@@ -12,14 +12,12 @@ describe('Video Pipeline Integration Tests', () => {
   let studentId: string;
   let subjectId: string;
   let courseId: string;
-  let sectionId: string;
-  let videoId: string;
 
   beforeAll(async () => {
     // Teacher
     const teacher = await prisma.user.create({
       data: {
-        email: 'videoteacher@test.com',
+        email: `videoteacher-${Date.now()}@test.com`,
         password: 'hashedpassword',
         name: 'Video Teacher',
         role: Role.TEACHER,
@@ -32,7 +30,7 @@ describe('Video Pipeline Integration Tests', () => {
     // Student
     const student = await prisma.user.create({
       data: {
-        email: 'videostudent@test.com',
+        email: `videostudent-${Date.now()}@test.com`,
         password: 'hashedpassword',
         name: 'Video Student',
         role: Role.STUDENT,
@@ -41,9 +39,9 @@ describe('Video Pipeline Integration Tests', () => {
     studentId = student.id;
     studentToken = generateAccessToken({ userId: student.id, role: student.role });
 
-    // Subject, Course, Section
+    // Subject, Course
     const subject = await prisma.subject.create({
-      data: { nameEn: 'Physics 101', nameAr: 'فيزياء 101' },
+      data: { nameEn: `Physics 101 ${Date.now()}`, nameAr: 'فيزياء 101' },
     });
     subjectId = subject.id;
 
@@ -58,17 +56,17 @@ describe('Video Pipeline Integration Tests', () => {
       },
     });
     courseId = course.id;
+  });
 
-    const section = await prisma.section.create({
-      data: {
-        courseId: course.id,
-        titleEn: 'Chapter 1',
-        titleAr: 'الفصل ١',
-        orderIndex: 1,
-        isFreePreview: true,
-      },
-    });
-    sectionId = section.id;
+  afterAll(async () => {
+    if (courseId) {
+      await prisma.course.deleteMany({ where: { id: courseId } });
+    }
+    if (subjectId) {
+      await prisma.subject.deleteMany({ where: { id: subjectId } });
+    }
+    await prisma.user.deleteMany({ where: { email: { contains: 'videoteacher-' } } });
+    await prisma.user.deleteMany({ where: { email: { contains: 'videostudent-' } } });
   });
 
   describe('POST /api/v1/videos/upload', () => {
@@ -80,10 +78,6 @@ describe('Video Pipeline Integration Tests', () => {
 
       expect(res.status).toBe(403);
     });
-
-    // We cannot easily test the actual upload endpoint if it reaches out to Supabase
-    // without mocking it. So we will skip the success upload case in integration test
-    // or mock it. For now, we just test the authorization.
   });
 
   describe('GET /api/v1/videos/:videoId/playback-url', () => {

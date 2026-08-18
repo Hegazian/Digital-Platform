@@ -53,7 +53,7 @@ export class AdminController {
         throw new BadRequestError('status must be "APPROVED" or "REJECTED"');
       }
 
-      const updated = await AdminService.updateTeacherStatus(id, status);
+      const updated = await AdminService.updateTeacherStatus(id as string, status);
 
       res.status(200).json({
         success: true,
@@ -78,7 +78,7 @@ export class AdminController {
         throw new BadRequestError('isActive must be a boolean');
       }
 
-      const updated = await AdminService.setUserActiveStatus(id, isActive);
+      const updated = await AdminService.setUserActiveStatus(id as string, isActive);
 
       res.status(200).json({
         success: true,

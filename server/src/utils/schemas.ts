@@ -5,7 +5,7 @@ export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
   name: z.string().min(2, 'Name must be at least 2 characters long'),
-  role: z.enum(['STUDENT', 'TEACHER', 'PARENT']).optional(),
+  role: z.enum(['STUDENT', 'TEACHER']).optional(),
 });
 
 export const loginSchema = z.object({
@@ -15,6 +15,11 @@ export const loginSchema = z.object({
 
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+export const mfaLoginSchema = z.object({
+  mfaSessionToken: z.string().min(1, 'MFA session token is required'),
+  mfaCode: z.string().length(6, 'MFA code must be 6 digits'),
 });
 
 // Course Schemas

@@ -16,6 +16,12 @@ vi.mock('../../../prisma', () => ({
     subscription: {
       findFirst: vi.fn(),
     },
+    entitlement: {
+      findFirst: vi.fn(),
+    },
+    course: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 

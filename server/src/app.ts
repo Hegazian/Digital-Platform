@@ -3,6 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
+import { prisma } from './prisma';
+import { Logger } from './utils/logger';
+
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
 import videoRoutes from './modules/videos/video.routes';
@@ -11,27 +15,95 @@ import adminRoutes from './modules/admin/admin.routes';
 import quizRouter from './modules/quizzes/quiz.routes';
 import materialRouter from './modules/materials/material.routes';
 import progressRoutes from './modules/progress/progress.routes';
-import parentRoutes from './modules/parent/parent.routes';
+
+import academicRouter from './modules/academic/academic.routes';
+import commerceRouter from './modules/commerce/commerce.routes';
+import assessmentRouter from './modules/assessment/assessment.routes';
+import notificationRouter from './modules/notifications/notification.routes';
+import teacherRouter from './modules/teacher/teacher.routes';
+import liveRouter from './modules/live/live.routes';
+import configRoutes from './modules/config/config.routes';
+import playgroundRoutes from './modules/courses/playground.routes';
+import boardRoutes from './modules/courses/board.routes';
+import discussionRoutes from './modules/discussions/discussion.routes';
+import podcastRoutes from './modules/podcasts/podcast.routes';
+import certificateRoutes from './modules/certificates/certificate.routes';
+import collectionRoutes from './modules/collections/collection.routes';
+import aiRoutes from './modules/ai/ai.routes';
+import apiTokenRoutes from './modules/developer/api-token.routes';
+import webhookRoutes from './modules/developer/webhook.routes';
+import mfaRoutes from './modules/auth/mfa.routes';
+import auditRoutes from './modules/audit/audit.routes';
 
 const app: Express = express();
 
-// Middleware
+// 1. Request ID Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  req.headers['x-request-id'] = requestId;
+  res.setHeader('x-request-id', requestId);
+  next();
+});
+
+// 2. Standard Middleware
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json());
-app.use(morgan('dev'));
 
-// Rate Limiting (Production Audit)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per windowMs
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
+
+// 3. Rate Limiting
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 1000,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Too many requests from this IP, please try again later.' }
+  message: { success: false, message: 'Too many requests from this IP, please try again later.' },
 });
-app.use('/api', limiter);
+app.use('/api', globalLimiter);
 
-// Welcome Root Route for Browser Visits
+// Dedicated Auth & Brute Force Rate Limiter
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many authentication attempts, please try again later.' },
+});
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth/register', authLimiter);
+app.use('/api/v1/auth/mfa-login', authLimiter);
+
+// 4. Health Check Endpoint
+const handleHealthCheck = async (req: Request, res: Response) => {
+  let dbStatus = 'disconnected';
+  try {
+    await prisma.$queryRawUnsafe('SELECT 1');
+    dbStatus = 'connected';
+  } catch (e) {
+    dbStatus = 'error';
+  }
+
+  const memory = process.memoryUsage();
+
+  res.status(200).json({
+    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
+    database: dbStatus,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memory: {
+      heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
+      rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
+    },
+  });
+};
+
+app.get('/health', handleHealthCheck);
+app.get('/api/v1/health', handleHealthCheck);
+
+// 5. Welcome Root Route for Browser Visits
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'EduPlatform API Backend',
@@ -49,7 +121,7 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// Routes
+// 6. Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/subjects', subjectRouter);
 app.use('/api/v1/courses', courseRouter);
@@ -59,16 +131,31 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/quizzes', quizRouter);
 app.use('/api/v1/materials', materialRouter);
 app.use('/api/v1/progress', progressRoutes);
-app.use('/api/v1/parent', parentRoutes);
 
-// Health check
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'OK' });
-});
+app.use('/api/v1/academic', academicRouter);
+app.use('/api/v1/commerce', commerceRouter);
+app.use('/api/v1/assessment', assessmentRouter);
+app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/teacher', teacherRouter);
+app.use('/api/v1/live', liveRouter);
+app.use('/api/v1/config', configRoutes);
+app.use('/api/v1/playgrounds', playgroundRoutes);
+app.use('/api/v1/boards', boardRoutes);
+app.use('/api/v1/discussions', discussionRoutes);
+app.use('/api/v1/podcasts', podcastRoutes);
+app.use('/api/v1/certificates', certificateRoutes);
+app.use('/api/v1/collections', collectionRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/developer', apiTokenRoutes);
+app.use('/api/v1/developer', webhookRoutes);
+app.use('/api/v1/mfa', mfaRoutes);
+app.use('/api/v1/audit', auditRoutes);
 
-// Error handling middleware
+// 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('App Error Handler:', err);
+  const requestId = req.headers['x-request-id'] as string;
+  Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
+
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,

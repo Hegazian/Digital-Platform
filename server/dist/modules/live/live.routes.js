@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const live_controller_1 = require("./live.controller");
+const auth_middleware_1 = require("../auth/auth.middleware");
+const client_1 = require("@prisma/client");
+const liveRouter = (0, express_1.Router)();
+liveRouter.post('/sessions', auth_middleware_1.authenticate, auth_middleware_1.requireApprovedTeacher, live_controller_1.LiveController.createLiveSession);
+liveRouter.get('/sessions/subject/:subjectId', auth_middleware_1.authenticate, (0, auth_middleware_1.requireRole)([client_1.Role.STUDENT]), live_controller_1.LiveController.getSubjectLiveSessions);
+exports.default = liveRouter;

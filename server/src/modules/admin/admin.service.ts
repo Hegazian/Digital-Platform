@@ -164,42 +164,26 @@ export class AdminService {
    * Get platform-wide analytics and statistics.
    */
   static async getPlatformStats() {
-    const [
-      totalUsers,
-      totalStudents,
-      totalTeachers,
-      totalParents,
-      pendingTeachers,
-      approvedTeachers,
-      totalCourses,
-      publishedCourses,
-      totalSubjects,
-      activeSubscriptions,
-      totalSubscriptions,
-      totalVideos,
-      totalQuizzes,
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { role: Role.STUDENT } }),
-      prisma.user.count({ where: { role: Role.TEACHER } }),
-      prisma.user.count({ where: { role: Role.PARENT } }),
-      prisma.user.count({ where: { role: Role.TEACHER, teacherStatus: TeacherStatus.PENDING } }),
-      prisma.user.count({ where: { role: Role.TEACHER, teacherStatus: TeacherStatus.APPROVED } }),
-      prisma.course.count(),
-      prisma.course.count({ where: { isPublished: true } }),
-      prisma.subject.count(),
-      prisma.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } }),
-      prisma.subscription.count(),
-      prisma.video.count(),
-      prisma.quiz.count(),
-    ]);
+    const totalUsers = await prisma.user.count();
+    const totalStudents = await prisma.user.count({ where: { role: Role.STUDENT } });
+    const totalTeachers = await prisma.user.count({ where: { role: Role.TEACHER } });
+
+    const pendingTeachers = await prisma.user.count({ where: { role: Role.TEACHER, teacherStatus: TeacherStatus.PENDING } });
+    const approvedTeachers = await prisma.user.count({ where: { role: Role.TEACHER, teacherStatus: TeacherStatus.APPROVED } });
+    const totalCourses = await prisma.course.count();
+    const publishedCourses = await prisma.course.count({ where: { isPublished: true } });
+    const totalSubjects = await prisma.subject.count();
+    const activeSubscriptions = await prisma.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } });
+    const totalSubscriptions = await prisma.subscription.count();
+    const totalVideos = await prisma.video.count();
+    const totalQuizzes = await prisma.quiz.count();
 
     return {
       users: {
         total: totalUsers,
         students: totalStudents,
         teachers: totalTeachers,
-        parents: totalParents,
+
         pendingTeachers,
         approvedTeachers,
       },

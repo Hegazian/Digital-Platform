@@ -77,7 +77,7 @@ describe('CourseService Unit Tests', () => {
       expect(result.isPublished).toBe(true);
       expect(prisma.course.update).toHaveBeenCalledWith({
         where: { id: 'course-1' },
-        data: { isPublished: true },
+        data: { isPublished: true, status: 'PUBLISHED' },
       });
     });
 

@@ -35,7 +35,7 @@ export class MaterialController {
       const { lessonId } = req.params;
       const { userId, role } = req.user!;
 
-      const materials = await MaterialService.getMaterialsByLesson(lessonId, userId, role);
+      const materials = await MaterialService.getMaterialsByLesson(lessonId as string, userId, role);
       res.status(200).json({ success: true, data: materials });
     } catch (error) {
       next(error);
@@ -47,7 +47,7 @@ export class MaterialController {
       const { id } = req.params;
       const { userId, role } = req.user!;
 
-      const result = await MaterialService.deleteMaterial(id, userId, role);
+      const result = await MaterialService.deleteMaterial(id as string, userId, role);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
