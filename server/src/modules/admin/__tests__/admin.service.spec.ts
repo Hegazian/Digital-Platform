@@ -8,8 +8,15 @@ vi.mock('../../../prisma', () => ({
     user: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
+    },
+    grade: {
+      findUnique: vi.fn(),
+    },
+    auditLog: {
+      create: vi.fn().mockResolvedValue({ id: 'audit-1' }),
     },
     course: {
       count: vi.fn(),
@@ -108,10 +115,80 @@ describe('AdminService Unit Tests', () => {
     });
   });
 
+  describe('createUser', () => {
+    it('should create a new teacher account with default active status', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue(null);
+      (prisma.user.create as any).mockResolvedValue({
+        id: 'new-t',
+        email: 'newteacher@test.com',
+        name: 'New Teacher',
+        role: 'TEACHER',
+        teacherStatus: 'APPROVED',
+        isActive: true,
+      });
+
+      const result = await AdminService.createUser({
+        email: 'newteacher@test.com',
+        name: 'New Teacher',
+        role: 'TEACHER' as any,
+      });
+
+      expect(result.role).toBe('TEACHER');
+      expect(result.teacherStatus).toBe('APPROVED');
+      expect(prisma.user.create).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestError if user with email already exists', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'existing' });
+
+      await expect(
+        AdminService.createUser({
+          email: 'duplicate@test.com',
+          name: 'Dupe',
+        })
+      ).rejects.toThrow(BadRequestError);
+    });
+
+    it('should throw BadRequestError if gradeId is invalid', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue(null);
+      (prisma.grade.findUnique as any).mockResolvedValue(null);
+
+      await expect(
+        AdminService.createUser({
+          email: 'student@test.com',
+          name: 'Student',
+          gradeId: 'invalid-grade',
+        })
+      ).rejects.toThrow(BadRequestError);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should update user name and grade', async () => {
+      const mockUser = { id: 'u1', email: 'user@test.com', name: 'Old' };
+      (prisma.user.findUnique as any).mockResolvedValue(mockUser);
+      (prisma.grade.findUnique as any).mockResolvedValue({ id: 'g1' });
+      (prisma.user.update as any).mockResolvedValue({
+        ...mockUser,
+        name: 'New Name',
+        gradeId: 'g1',
+      });
+
+      const result = await AdminService.updateUser('u1', {
+        name: 'New Name',
+        gradeId: 'g1',
+      });
+
+      expect(result.name).toBe('New Name');
+      expect(prisma.user.update).toHaveBeenCalled();
+    });
+  });
+
   describe('getPlatformStats', () => {
     it('should return aggregate platform statistics', async () => {
       (prisma.user.count as any)
         .mockResolvedValueOnce(100)  // total
+        .mockResolvedValueOnce(80)   // active users
         .mockResolvedValueOnce(70)   // students
         .mockResolvedValueOnce(20)   // teachers
 
@@ -130,6 +207,7 @@ describe('AdminService Unit Tests', () => {
       const stats = await AdminService.getPlatformStats();
 
       expect(stats.users.total).toBe(100);
+      expect(stats.users.activeUsers).toBe(80);
       expect(stats.users.students).toBe(70);
       expect(stats.users.pendingTeachers).toBe(5);
       expect(stats.content.totalCourses).toBe(25);

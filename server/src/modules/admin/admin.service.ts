@@ -1,6 +1,8 @@
 import { prisma } from '../../prisma';
 import { Role, TeacherStatus, SubscriptionStatus } from '@prisma/client';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
+import { logAuditAction } from '../audit/audit.service';
+import { invalidateActivationCache } from '../auth/auth.middleware';
 
 export class AdminService {
   /**
@@ -130,6 +132,14 @@ export class AdminService {
       // Ignore background email errors
     }
 
+    await logAuditAction(
+      teacherId,
+      'TEACHER_STATUS_UPDATED',
+      teacherId,
+      'User',
+      { status }
+    );
+
     return updated;
   }
 
@@ -147,7 +157,7 @@ export class AdminService {
       throw new ForbiddenError('Cannot deactivate admin accounts');
     }
 
-    return await prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id: userId },
       data: { isActive },
       select: {
@@ -158,6 +168,184 @@ export class AdminService {
         isActive: true,
       },
     });
+
+    // Instant revocation: next request from this user re-checks the DB.
+    invalidateActivationCache(userId);
+
+    await logAuditAction(
+      userId,
+      isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
+      userId,
+      'User',
+      { isActive }
+    );
+
+    return updated;
+  }
+
+  /**
+   * Create a new user (Teacher or Student) directly by Admin.
+   */
+  static async createUser(data: {
+    email: string;
+    password?: string;
+    name: string;
+    role?: Role;
+    teacherStatus?: TeacherStatus;
+    gradeId?: string;
+    isActive?: boolean;
+  }) {
+    const { email, password, name, role = Role.STUDENT, teacherStatus, gradeId, isActive = true } = data;
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new BadRequestError('User with this email already exists');
+    }
+
+    if (gradeId) {
+      const grade = await prisma.grade.findUnique({ where: { id: gradeId } });
+      if (!grade) {
+        throw new BadRequestError('Invalid grade ID');
+      }
+    }
+
+    const { default: bcrypt } = await import('bcrypt');
+    const hashedPassword = await bcrypt.hash(password || 'EduPlatform123!', 10);
+    const resolvedTeacherStatus = role === Role.TEACHER ? (teacherStatus || TeacherStatus.APPROVED) : null;
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role,
+        teacherStatus: resolvedTeacherStatus,
+        gradeId: gradeId || null,
+        isActive,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        teacherStatus: true,
+        gradeId: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    await logAuditAction(
+      user.id,
+      'USER_CREATED',
+      user.id,
+      'User',
+      { email: user.email, role: user.role }
+    );
+
+    return user;
+  }
+
+  /**
+   * Update an existing user's information by Admin.
+   */
+  static async updateUser(
+    userId: string,
+    data: {
+      name?: string;
+      email?: string;
+      role?: Role;
+      teacherStatus?: TeacherStatus;
+      gradeId?: string | null;
+      isActive?: boolean;
+      password?: string;
+    }
+  ) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (data.email && data.email !== user.email) {
+      const existing = await prisma.user.findUnique({ where: { email: data.email } });
+      if (existing) {
+        throw new BadRequestError('Another user with this email already exists');
+      }
+    }
+
+    if (data.gradeId) {
+      const grade = await prisma.grade.findUnique({ where: { id: data.gradeId } });
+      if (!grade) {
+        throw new BadRequestError('Invalid grade ID');
+      }
+    }
+
+    let hashedPassword: string | undefined;
+    if (data.password) {
+      const { default: bcrypt } = await import('bcrypt');
+      hashedPassword = await bcrypt.hash(data.password, 10);
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.email && { email: data.email }),
+        ...(data.role && { role: data.role }),
+        ...(data.teacherStatus !== undefined && { teacherStatus: data.teacherStatus }),
+        ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+        ...(hashedPassword && { password: hashedPassword }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        teacherStatus: true,
+        gradeId: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    await logAuditAction(
+      userId,
+      'USER_UPDATED',
+      userId,
+      'User',
+      { updatedFields: Object.keys(data) }
+    );
+
+    return updated;
+  }
+
+  /**
+   * Update academic year.
+   */
+  static async updateAcademicYear(
+    id: string,
+    data: {
+      name?: string;
+      startDate?: string | Date;
+      endDate?: string | Date;
+      isActive?: boolean;
+    }
+  ) {
+    const year = await prisma.academicYear.findUnique({ where: { id } });
+    if (!year) {
+      throw new NotFoundError('Academic year not found');
+    }
+
+    return await prisma.academicYear.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.startDate && { startDate: new Date(data.startDate) }),
+        ...(data.endDate && { endDate: new Date(data.endDate) }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+      },
+    });
   }
 
   /**
@@ -165,6 +353,7 @@ export class AdminService {
    */
   static async getPlatformStats() {
     const totalUsers = await prisma.user.count();
+    const activeUsers = await prisma.user.count({ where: { isActive: true } });
     const totalStudents = await prisma.user.count({ where: { role: Role.STUDENT } });
     const totalTeachers = await prisma.user.count({ where: { role: Role.TEACHER } });
 
@@ -181,6 +370,7 @@ export class AdminService {
     return {
       users: {
         total: totalUsers,
+        activeUsers,
         students: totalStudents,
         teachers: totalTeachers,
 
@@ -201,3 +391,4 @@ export class AdminService {
     };
   }
 }
+

@@ -152,7 +152,10 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
   });
 
   it('4. should retrieve the full course curriculum tree with eager-loaded modules, lessons, videos, materials, and quizzes', async () => {
-    const res = await request(app).get(`/api/v1/courses/${courseId}`);
+    // Draft curricula are restricted to the owning teacher (NFR-001).
+    const res = await request(app)
+      .get(`/api/v1/courses/${courseId}`)
+      .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);

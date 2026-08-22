@@ -8,12 +8,19 @@ const commerceRouter = Router();
 // Public Product Catalog Listing
 commerceRouter.get('/products', CommerceController.getAllProducts);
 
-// Admin Product & Voucher Creation
+// Admin Product & Voucher Management
 commerceRouter.post(
   '/products',
   authenticate,
   requireRole([Role.ADMIN]),
   CommerceController.createProduct
+);
+
+commerceRouter.get(
+  '/vouchers',
+  authenticate,
+  requireRole([Role.ADMIN]),
+  CommerceController.getAllVouchers
 );
 
 commerceRouter.post(
@@ -23,26 +30,39 @@ commerceRouter.post(
   CommerceController.createVoucher
 );
 
-// Student Checkout & Voucher Redemption
+commerceRouter.delete(
+  '/vouchers/:id',
+  authenticate,
+  requireRole([Role.ADMIN]),
+  CommerceController.deleteVoucher
+);
+
+// Student Checkout & Voucher Redemption (Strictly for Students)
 commerceRouter.post(
   '/orders',
   authenticate,
-  requireRole([Role.STUDENT]),
+  requireRole([Role.STUDENT], false),
   CommerceController.createOrder
 );
 
 commerceRouter.post(
   '/vouchers/redeem',
   authenticate,
-  requireRole([Role.STUDENT]),
+  requireRole([Role.STUDENT], false),
   CommerceController.redeemVoucher
 );
 
-// Student Entitlement Access Verification
+// Student Entitlement Access Verification (Course & Subject)
 commerceRouter.get(
   '/entitlements/check',
   authenticate,
   CommerceController.checkEntitlementAccess
+);
+
+commerceRouter.get(
+  '/entitlements/check-course/:courseId',
+  authenticate,
+  CommerceController.checkCourseAccess
 );
 
 // Automated Webhook Callbacks (Paymob & Fawry)

@@ -3,9 +3,18 @@ import { authenticate, requireRole, requireApprovedTeacher, AuthRequest } from '
 import { Role, TeacherStatus } from '@prisma/client';
 import * as jwtUtils from '../../../utils/jwt';
 
+// authenticate() performs a DB-backed activation (revocation) check.
+vi.mock('../../../prisma', () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ isActive: true }),
+    },
+  },
+}));
+
 describe('Auth Middleware Suite', () => {
   describe('authenticate', () => {
-    it('should extract and verify Bearer token from header', () => {
+    it('should extract and verify Bearer token from header', async () => {
       const mReq = {
         headers: { authorization: 'Bearer valid_token' },
       } as AuthRequest;
@@ -14,18 +23,18 @@ describe('Auth Middleware Suite', () => {
 
       vi.spyOn(jwtUtils, 'verifyAccessToken').mockReturnValue({ userId: 'u1', role: Role.STUDENT } as any);
 
-      authenticate(mReq, mRes, mNext);
+      await authenticate(mReq, mRes, mNext);
 
       expect(mReq.user).toEqual({ userId: 'u1', role: Role.STUDENT, teacherStatus: undefined });
       expect(mNext).toHaveBeenCalledWith();
     });
 
-    it('should return error for missing authorization header', () => {
+    it('should return error for missing authorization header', async () => {
       const mReq = { headers: {} } as AuthRequest;
       const mRes = {} as any;
       const mNext = vi.fn();
 
-      authenticate(mReq, mRes, mNext);
+      await authenticate(mReq, mRes, mNext);
 
       expect(mNext).toHaveBeenCalled();
       const err = mNext.mock.calls[0][0];

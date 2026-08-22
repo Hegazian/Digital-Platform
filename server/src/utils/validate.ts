@@ -20,7 +20,11 @@ export const validateBody = (schema: ZodSchema) => {
 export const validateQuery = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.query = schema.parse(req.query) as any;
+      // Express 5 exposes req.query via a read-only getter on the prototype,
+      // so we merge parsed values into the existing object instead of
+      // reassigning the property (which throws -> 500).
+      const parsed = schema.parse(req.query) as Record<string, unknown>;
+      Object.assign(req.query, parsed);
       next();
     } catch (error) {
       if (error instanceof ZodError) {

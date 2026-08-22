@@ -188,6 +188,49 @@ export class CommerceService {
     return { hasAccess: Boolean(entitlement), entitlement };
   }
 
+  static async checkCourseAccess(studentId: string, courseId: string) {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, subjectId: true, gradeId: true },
+    });
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+
+    const now = new Date();
+    const entitlement = await prisma.entitlement.findFirst({
+      where: {
+        studentId,
+        status: EntitlementStatus.ACTIVE,
+        OR: [
+          {
+            resourceType: EntitlementType.COURSE,
+            resourceId: course.id,
+          },
+          {
+            resourceType: EntitlementType.SUBJECT,
+            resourceId: course.subjectId,
+          },
+          ...(course.gradeId
+            ? [
+                {
+                  resourceType: EntitlementType.GRADE_BUNDLE,
+                  resourceId: course.gradeId,
+                },
+              ]
+            : []),
+        ],
+        AND: [
+          {
+            OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+          },
+        ],
+      },
+    });
+
+    return { hasAccess: Boolean(entitlement), entitlement };
+  }
+
   // Vouchers
   static async createVoucher(data: {
     code: string;
@@ -217,6 +260,10 @@ export class CommerceService {
   }
 
   static async redeemVoucher(studentId: string, code: string) {
+    if (!code) {
+      throw new NotFoundError('Invalid or expired voucher code');
+    }
+
     const voucher = await prisma.voucher.findUnique({
       where: { code },
     });
@@ -230,41 +277,52 @@ export class CommerceService {
       throw new BadRequestError('Voucher code has expired');
     }
 
-    // Atomic conditional increment inside a transaction
-    return await prisma.$transaction(async (tx) => {
-      const updateResult = await tx.voucher.updateMany({
-        where: {
-          id: voucher.id,
-          isActive: true,
-          usedCount: { lt: voucher.maxUses },
-          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-        },
-        data: {
-          usedCount: { increment: 1 },
-        },
-      });
+    // Atomic conditional increment
+    const updateResult = await prisma.voucher.updateMany({
+      where: {
+        id: voucher.id,
+        isActive: true,
+        usedCount: { lt: voucher.maxUses },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      data: {
+        usedCount: { increment: 1 },
+      },
+    });
 
-      if (updateResult.count === 0) {
-        throw new BadRequestError('Voucher code has reached maximum usage limit');
-      }
+    if (updateResult.count === 0) {
+      throw new BadRequestError('Voucher code has reached maximum usage limit');
+    }
 
-      // Grant Entitlement inside the exact same atomic transaction
-      const startsAt = new Date();
-      const expiresAt = voucher.durationDays
-        ? new Date(startsAt.getTime() + voucher.durationDays * 24 * 60 * 60 * 1000)
-        : null;
+    // Grant Entitlement for the student
+    const startsAt = new Date();
+    const expiresAt = voucher.durationDays
+      ? new Date(startsAt.getTime() + voucher.durationDays * 24 * 60 * 60 * 1000)
+      : null;
 
-      return await tx.entitlement.create({
-        data: {
-          student: { connect: { id: studentId } },
-          resourceType: voucher.resourceType,
-          resourceId: voucher.resourceId,
-          sourceType: EntitlementSource.VOUCHER,
-          startsAt,
-          expiresAt,
-          status: EntitlementStatus.ACTIVE,
-        },
-      });
+    return await prisma.entitlement.create({
+      data: {
+        student: { connect: { id: studentId } },
+        resourceType: voucher.resourceType,
+        resourceId: voucher.resourceId,
+        sourceType: EntitlementSource.VOUCHER,
+        startsAt,
+        expiresAt,
+        status: EntitlementStatus.ACTIVE,
+      },
+    });
+  }
+
+  static async getAllVouchers() {
+    return await prisma.voucher.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  static async deleteVoucher(id: string) {
+    return await prisma.voucher.update({
+      where: { id },
+      data: { isActive: false },
     });
   }
 }

@@ -54,4 +54,16 @@ export class ProgressController {
       next(error);
     }
   }
+
+  static async getCourseProgress(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user!.userId;
+      const data = await ProgressService.getCourseLessonProgress(userId, courseId as string);
+
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

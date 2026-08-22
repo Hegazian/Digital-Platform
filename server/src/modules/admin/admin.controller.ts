@@ -91,6 +91,56 @@ export class AdminController {
   }
 
   /**
+   * POST /api/v1/admin/users
+   */
+  static async createUser(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const user = await AdminService.createUser(req.body);
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/users/:id
+   */
+  static async updateUser(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const user = await AdminService.updateUser(id as string, req.body);
+      res.status(200).json({
+        success: true,
+        message: 'User updated successfully',
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/admin/academic-years/:id
+   */
+  static async updateAcademicYear(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const year = await AdminService.updateAcademicYear(id as string, req.body);
+      res.status(200).json({
+        success: true,
+        message: 'Academic year updated successfully',
+        data: year,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * GET /api/v1/admin/stats
    */
   static async getStats(req: AuthRequest, res: Response, next: NextFunction) {

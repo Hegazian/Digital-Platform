@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { Role } from '@prisma/client';
 import { prisma } from '../../../prisma';
 import { CourseService } from '../course.service';
 import { ProgressService } from '../../progress/progress.service';
@@ -106,7 +107,11 @@ describe('Curriculum Hierarchy Unification (TDD)', () => {
   });
 
   it('should fetch course details including sections, lessons, and freePreview flags', async () => {
-    const course = await CourseService.getCourseById(courseId);
+    // Owner-scoped read: draft curricula are only visible to the owning teacher.
+    const course = await CourseService.getCourseById(courseId, {
+      userId: teacherId,
+      role: Role.TEACHER,
+    });
     expect(course).toBeDefined();
     expect(course.sections.length).toBeGreaterThan(0);
     expect(course.sections[0].lessons.length).toBeGreaterThan(0);

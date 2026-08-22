@@ -170,27 +170,29 @@ model Subscription {
 }
 
 model Course {
-  id             String           @id @default(uuid())
-  titleEn        String
-  titleAr        String
-  description    String
-  teacherId      String
-  subjectId      String
-  academicYearId String?
-  gradeId        String?
-  slug           String?
-  thumbnail      String?
-  status         CourseStatus     @default(DRAFT)
-  visibility     CourseVisibility @default(PUBLIC)
-  isPublished    Boolean          @default(false)
-  deletedAt      DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id              String           @id @default(uuid())
+  titleEn         String
+  titleAr         String
+  description     String
+  teacherId       String
+  subjectId       String
+  academicYearId  String?
+  gradeId         String?
+  slug            String?
+  thumbnail       String?
+  status          CourseStatus     @default(DRAFT)
+  visibility      CourseVisibility @default(PUBLIC)
+  isPublished     Boolean          @default(false)
+  rejectionReason String?          @db.Text
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  teacher        User             @relation("TeacherCourses", fields: [teacherId], references: [id])
-  subject        Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  sections       Section[]
-  modules        CourseModule[]
+  teacher         User             @relation("TeacherCourses", fields: [teacherId], references: [id])
+  subject         Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  grade           Grade?           @relation(fields: [gradeId], references: [id])
+  sections        Section[]
+  modules         CourseModule[]
 
   @@map("courses")
 }
@@ -325,49 +327,70 @@ model Material {
 }
 
 model Quiz {
-  id          String   @id @default(uuid())
-  titleEn     String
-  titleAr     String
-  timeLimit   Int?     // In minutes
-  passingScore Int     @default(50)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String        @id @default(uuid())
+  titleEn      String
+  titleAr      String
+  timeLimit    Int?          // In minutes
+  passingScore Int           @default(50)
+  maxAttempts  Int           @default(1)
+  dueDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  lesson      Lesson?
-  questions   Question[]
-  attempts    QuizAttempt[]
+  lesson       Lesson?
+  questions    Question[]
+  attempts     QuizAttempt[]
 
   @@map("quizzes")
 }
 
 model Question {
-  id            String   @id @default(uuid())
+  id            String            @id @default(uuid())
   quizId        String
-  questionText  String   @db.Text
-  options       Json     // Array of { id, text, isCorrect }
-  explanation   String?  @db.Text
+  questionText  String            @db.Text
+  type          QuizQuestionType  @default(MCQ)
+  options       Json              // MCQ/TRUE_FALSE/MULTIPLE_SELECT: Array of { id, text, isCorrect }
+  correctAnswer String?           // SHORT_ANSWER: expected text (normalized compare)
+  explanation   String?           @db.Text
   orderIndex    Int
-  points        Int      @default(1)
+  points        Int               @default(1)
 
-  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz          Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   @@map("questions")
 }
 
+enum QuizQuestionType {
+  MCQ
+  TRUE_FALSE
+  MULTIPLE_SELECT
+  SHORT_ANSWER
+  ESSAY
+}
+
 model QuizAttempt {
-  id          String   @id @default(uuid())
-  quizId      String
-  userId      String
-  score       Int      @default(0)
-  answers     Json     // Array of { questionId, selectedOptionId }
-  isPassed    Boolean  @default(false)
-  startedAt   DateTime @default(now())
-  completedAt DateTime?
+  id           String       @id @default(uuid())
+  quizId       String
+  userId       String
+  score        Int          @default(0)
+  answers      Json         // Array of { questionId, selectedOptionId?, selectedOptionIds?, textAnswer? }
+  isPassed     Boolean      @default(false)
+  status       AttemptStatus @default(COMPLETED)
+  timeSpentSec Int?
+  startedAt    DateTime     @default(now())
+  completedAt  DateTime?
 
   quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([quizId, userId, status])
   @@map("quiz_attempts")
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  AWAITING_REVIEW
 }
 
 model Assignment {
@@ -481,6 +504,7 @@ model Grade {
   stage         EducationalStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
   gradeSubjects GradeSubject[]
   students      User[]
+  courses       Course[]
 
   @@map("grades")
 }

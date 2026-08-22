@@ -34,7 +34,9 @@ describe('Progress Module API', () => {
         titleAr: 'جبر',
         description: 'Test',
         teacherId: teacher.id,
-        subjectId: subject.id
+        subjectId: subject.id,
+        isPublished: true,
+        status: 'PUBLISHED',
       }
     });
 

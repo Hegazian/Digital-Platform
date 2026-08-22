@@ -20,6 +20,15 @@ export class AuthController {
     }
   }
 
+  static async mfaLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AuthService.verifyMfaLogin(req.body);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const { refreshToken } = req.body;
@@ -30,10 +39,25 @@ export class AuthController {
     }
   }
 
-  static async mfaLogin(req: Request, res: Response, next: NextFunction) {
+  static async getProfile(req: any, res: Response, next: NextFunction) {
     try {
-      const result = await AuthService.verifyMfaLogin(req.body);
-      res.status(200).json({ success: true, data: result });
+      const userId = req.user.userId;
+      const user = await AuthService.getProfile(userId);
+      res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateProfile(req: any, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user.userId;
+      const updated = await AuthService.updateProfile(userId, req.body);
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: updated,
+      });
     } catch (error) {
       next(error);
     }

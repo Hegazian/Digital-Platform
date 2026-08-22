@@ -45,11 +45,16 @@ jobs:
         DATABASE_URL: "postgresql://test_user:test_password@localhost:5432/eduplatform_test?schema=public"
       run: npx prisma db push
 
+    - name: Typecheck Backend (tsc)
+      working-directory: ./server
+      run: npx tsc --noEmit
+
     - name: Run Backend Tests (Vitest)
       working-directory: ./server
       env:
         DATABASE_URL: "postgresql://test_user:test_password@localhost:5432/eduplatform_test?schema=public"
         JWT_SECRET: "ci_secret"
+        JWT_REFRESH_SECRET: "ci_refresh_secret"
       run: npm run test -- --run
 
   test-frontend:

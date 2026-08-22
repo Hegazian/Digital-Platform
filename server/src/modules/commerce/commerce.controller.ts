@@ -83,11 +83,41 @@ export class CommerceController {
     }
   }
 
+  static async checkCourseAccess(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const studentId = req.user!.userId;
+      const courseId = req.params.courseId as string;
+
+      const result = await CommerceService.checkCourseAccess(studentId, courseId);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // Vouchers
+  static async getAllVouchers(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const vouchers = await CommerceService.getAllVouchers();
+      res.status(200).json({ success: true, data: vouchers });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async createVoucher(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const voucher = await CommerceService.createVoucher(req.body);
       res.status(201).json({ success: true, data: voucher });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteVoucher(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await CommerceService.deleteVoucher(req.params.id as string);
+      res.status(200).json({ success: true, message: 'Voucher deactivated successfully' });
     } catch (err) {
       next(err);
     }

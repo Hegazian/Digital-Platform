@@ -1,5 +1,6 @@
 import { prisma } from '../../prisma';
 import { SubscriptionPeriod } from '@prisma/client';
+import { NotFoundError, BadRequestError } from '../../utils/errors';
 
 export class SubjectService {
   /**
@@ -127,6 +128,61 @@ export class SubjectService {
       where: { id },
       data,
       include: { pricing: true },
+    });
+  }
+
+  static async deleteSubject(id: string) {
+    const subject = await prisma.subject.findUnique({ where: { id } });
+    if (!subject) {
+      throw new NotFoundError('Subject not found');
+    }
+
+    // A subject delete would cascade into its courses (schema-defined) — block
+    // when courses still exist so content is never destroyed implicitly.
+    const courseCount = await prisma.course.count({ where: { subjectId: id } });
+    if (courseCount > 0) {
+      throw new BadRequestError(
+        `Cannot delete a subject that still has ${courseCount} course(s). Reassign or delete them first.`
+      );
+    }
+
+    await prisma.subject.delete({ where: { id } });
+  }
+
+  static async updateSubjectPricing(
+    subjectId: string,
+    pricingTiers: Array<{ period: SubscriptionPeriod; priceEgp: number; priceUsd: number; isActive?: boolean }>
+  ) {
+    const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+    if (!subject) {
+      throw new Error('Subject not found');
+    }
+
+    for (const tier of pricingTiers) {
+      await prisma.subjectPricing.upsert({
+        where: {
+          subjectId_period: {
+            subjectId,
+            period: tier.period,
+          },
+        },
+        create: {
+          subjectId,
+          period: tier.period,
+          priceEgp: tier.priceEgp,
+          priceUsd: tier.priceUsd,
+          isActive: tier.isActive ?? true,
+        },
+        update: {
+          priceEgp: tier.priceEgp,
+          priceUsd: tier.priceUsd,
+          isActive: tier.isActive ?? true,
+        },
+      });
+    }
+
+    return await prisma.subjectPricing.findMany({
+      where: { subjectId },
     });
   }
 }

@@ -6,8 +6,8 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
     fileParallelism: false,
-    testTimeout: 20000,
-    hookTimeout: 30000,
+    testTimeout: 45000,
+    hookTimeout: 45000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

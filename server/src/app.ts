@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import { prisma } from './prisma';
 import { Logger } from './utils/logger';
+import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
 
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
@@ -34,6 +35,7 @@ import apiTokenRoutes from './modules/developer/api-token.routes';
 import webhookRoutes from './modules/developer/webhook.routes';
 import mfaRoutes from './modules/auth/mfa.routes';
 import auditRoutes from './modules/audit/audit.routes';
+import assignmentRoutes from './modules/assignments/assignment.routes';
 
 const app: Express = express();
 
@@ -150,17 +152,36 @@ app.use('/api/v1/developer', apiTokenRoutes);
 app.use('/api/v1/developer', webhookRoutes);
 app.use('/api/v1/mfa', mfaRoutes);
 app.use('/api/v1/audit', auditRoutes);
+app.use('/api/v1/assignments', assignmentRoutes);
 
 // 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const requestId = req.headers['x-request-id'] as string;
+
+  // Map well-known Prisma errors to safe HTTP semantics instead of raw 500s.
+  if (err?.code === 'P2002') {
+    // Unique constraint violation -> Conflict
+    const target = Array.isArray(err.meta?.target) ? err.meta.target.join(', ') : err.meta?.target;
+    err = new ConflictError(
+      target
+        ? `A record with the same ${target} already exists`
+        : 'A record with these unique values already exists'
+    );
+  } else if (err?.code === 'P2025') {
+    // Record not found / required relation missing
+    err = new NotFoundError(err.meta?.cause || 'Related record not found');
+  } else if (err?.code === 'P2003') {
+    // Foreign key constraint failed
+    err = new BadRequestError('Referenced record does not exist');
+  }
+
   Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
 
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    message: statusCode >= 500 ? 'Internal Server Error' : err.message,
+    ...(process.env.NODE_ENV === 'development' && statusCode < 500 && { detail: err.message }),
   });
 });
 

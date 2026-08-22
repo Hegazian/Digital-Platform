@@ -12,3 +12,10 @@ beforeAll(async () => {
   // Session level SET commands are not supported on PgBouncer transaction mode poolers
 });
 
+afterAll(async () => {
+  try {
+    await prisma.$disconnect();
+  } catch (e) {
+    // Ignore disconnect errors
+  }
+});

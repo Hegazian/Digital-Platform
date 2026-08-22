@@ -89,18 +89,20 @@ export class MaterialService {
       return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
     }
 
-    // Check student active subscription
-    const activeSub = await prisma.subscription.findFirst({
-      where: {
-        userId,
-        subjectId,
-        status: SubscriptionStatus.ACTIVE,
-        endDate: { gte: new Date() },
-      },
-    });
+    const courseId = lesson.module?.courseId || lesson.section?.courseId;
 
-    if (!activeSub) {
-      throw new ForbiddenError('Active subscription required to access lesson materials');
+    // Check student entitlement / subscription via EntitlementResolver
+    const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+    let hasAccess = false;
+
+    if (courseId && (await EntitlementResolver.hasCourseAccess(userId, courseId))) {
+      hasAccess = true;
+    } else if (subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
+      hasAccess = true;
+    }
+
+    if (!hasAccess) {
+      throw new ForbiddenError('Active course access or subscription required to access lesson materials');
     }
 
     return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });

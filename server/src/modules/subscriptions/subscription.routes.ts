@@ -8,7 +8,7 @@ import { createManualSubscriptionSchema } from '../../utils/schemas';
 const subscriptionRouter = Router();
 
 // Static Routes
-subscriptionRouter.post('/manual', authenticate, validateBody(createManualSubscriptionSchema), SubscriptionController.createManualSubscription);
+subscriptionRouter.post('/manual', authenticate, requireRole([Role.STUDENT], false), validateBody(createManualSubscriptionSchema), SubscriptionController.createManualSubscription);
 subscriptionRouter.get('/me', authenticate, SubscriptionController.getMySubscriptions);
 subscriptionRouter.get('/pending', authenticate, requireRole([Role.ADMIN]), SubscriptionController.getPending);
 

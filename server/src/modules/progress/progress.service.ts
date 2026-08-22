@@ -32,6 +32,9 @@ export class ProgressService {
    * Marks a lesson as fully completed.
    */
   static async markCompleted(userId: string, lessonId: string) {
+    const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { id: true } });
+    if (!lesson) throw new NotFoundError('Lesson not found');
+
     const progress = await prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: { userId, lessonId },
@@ -52,6 +55,35 @@ export class ProgressService {
   }
 
   /**
+   * Completed lesson IDs for one course — used by the player to hydrate
+   * prior completion state (TC-STUDENT-060).
+   */
+  static async getCourseLessonProgress(userId: string, courseId: string) {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        modules: { select: { lessons: { select: { id: true } } } },
+        sections: { select: { lessons: { select: { id: true } } } },
+      },
+    });
+    if (!course) throw new NotFoundError('Course not found');
+
+    const lessonIds = [
+      ...(course.modules || []).flatMap((m) => m.lessons.map((l) => l.id)),
+      ...(course.sections || []).flatMap((s) => s.lessons.map((l) => l.id)),
+    ];
+
+    if (lessonIds.length === 0) return { completedLessonIds: [], totalLessons: 0 };
+
+    const records = await prisma.lessonProgress.findMany({
+      where: { userId, lessonId: { in: lessonIds }, isCompleted: true },
+      select: { lessonId: true },
+    });
+
+    return { completedLessonIds: records.map((r) => r.lessonId), totalLessons: lessonIds.length };
+  }
+
+  /**
    * Fetches the overall progress summary for all courses the student is enrolled in.
    * Based on active subscriptions.
    */
@@ -69,6 +101,11 @@ export class ProgressService {
       },
       include: {
         subject: true,
+        modules: {
+          include: {
+            lessons: true,
+          },
+        },
         sections: {
           include: {
             lessons: true,
@@ -99,46 +136,71 @@ export class ProgressService {
     quizAttempts.forEach((q) => (totalScore += q.score));
     const avgQuizScore = quizAttempts.length > 0 ? Math.round(totalScore / quizAttempts.length) : 0;
 
+    // 4. Recent assignment grades for grade history (TC-STUDENT-063)
+    const gradedSubmissions = await prisma.assignmentSubmission.findMany({
+      where: { studentId: userId, status: 'GRADED' },
+      orderBy: { gradedAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        score: true,
+        feedback: true,
+        gradedAt: true,
+        assignment: { select: { titleEn: true, maxScore: true } },
+      },
+    });
+
+    const recentGrades = gradedSubmissions.map((s) => ({
+      submissionId: s.id,
+      assignmentTitle: s.assignment?.titleEn ?? 'Assignment',
+      score: s.score,
+      maxScore: s.assignment?.maxScore ?? null,
+      feedback: s.feedback,
+      gradedAt: s.gradedAt,
+    }));
+
     const courseProgressList: any[] = [];
 
     // Calculate progress per course
-    courses.forEach((course) => {
+    courses.forEach((course: any) => {
       let totalLessons = 0;
       let completedLessons = 0;
       let lastLessonTitle = 'Get Started';
       let lastWatchedDate = new Date(0);
 
-      course.sections.forEach((sec) => {
-        sec.lessons.forEach((les) => {
-          totalLessons++;
-          const p = progressMap.get(les.id);
-          if (p) {
-            if (p.isCompleted) completedLessons++;
-            if (p.lastWatched > lastWatchedDate) {
-              lastWatchedDate = p.lastWatched;
-              lastLessonTitle = les.titleEn;
-            }
+      const allLessons = [
+        ...(course.modules || []).flatMap((m: any) => m.lessons || []),
+        ...(course.sections || []).flatMap((s: any) => s.lessons || []),
+      ];
+
+      allLessons.forEach((les: any) => {
+        totalLessons++;
+        const p = progressMap.get(les.id);
+        if (p) {
+          if (p.isCompleted) completedLessons++;
+          if (p.lastWatched > lastWatchedDate) {
+            lastWatchedDate = p.lastWatched;
+            lastLessonTitle = les.titleEn;
           }
-        });
+        }
       });
 
-      if (totalLessons > 0) {
-        courseProgressList.push({
-          id: course.id,
-          titleEn: course.titleEn,
-          titleAr: course.titleAr,
-          subject: course.subject?.nameEn || 'General',
-          totalLessons,
-          completedLessons,
-          progress: Math.round((completedLessons / totalLessons) * 100),
-          lastLesson: lastLessonTitle,
-        });
-      }
+      courseProgressList.push({
+        id: course.id,
+        titleEn: course.titleEn,
+        titleAr: course.titleAr,
+        subject: course.subject?.nameEn || 'General',
+        totalLessons,
+        completedLessons,
+        progress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+        lastLesson: lastLessonTitle,
+      });
     });
 
     return {
       totalWatchTimeSec,
       avgQuizScore,
+      recentGrades,
       courses: courseProgressList,
     };
   }

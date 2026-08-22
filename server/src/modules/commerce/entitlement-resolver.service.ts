@@ -1,7 +1,88 @@
 import { prisma } from '../../prisma';
-import { EntitlementType, EntitlementStatus } from '@prisma/client';
+import { EntitlementType, EntitlementStatus, Role } from '@prisma/client';
+import { ForbiddenError, NotFoundError } from '../../utils/errors';
 
 export class EntitlementResolver {
+  /**
+   * Resolves the course (and its owner) that a lesson belongs to,
+   * through either its module or its section parent.
+   */
+  static async resolveLessonCourse(lessonId: string): Promise<{ courseId: string; teacherId: string } | null> {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        moduleId: true,
+        sectionId: true,
+        module: { select: { courseId: true, course: { select: { teacherId: true } } } },
+        section: { select: { courseId: true, course: { select: { teacherId: true } } } },
+      },
+    });
+    if (!lesson) return null;
+
+    const courseId = lesson.module?.courseId || lesson.section?.courseId;
+    const teacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
+    return courseId && teacherId ? { courseId, teacherId } : null;
+  }
+
+  /**
+   * Resolves the course a quiz belongs to (via its optional lesson).
+   * Standalone (unattached) quizzes return null -> treated as open practice.
+   */
+  static async resolveQuizCourse(quizId: string): Promise<{ courseId: string; teacherId: string } | null> {
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      select: {
+        lesson: {
+          select: {
+            module: { select: { courseId: true, course: { select: { teacherId: true } } } },
+            section: { select: { courseId: true, course: { select: { teacherId: true } } } },
+          },
+        },
+      },
+    });
+    const lesson = quiz?.lesson;
+    const courseId = lesson?.module?.courseId || lesson?.section?.courseId;
+    const teacherId = lesson?.module?.course?.teacherId || lesson?.section?.course?.teacherId;
+    return courseId && teacherId ? { courseId, teacherId } : null;
+  }
+
+  /**
+   * Resolves the course an assignment belongs to (assignments always carry a
+   * lessonId when relevant to learning flows).
+   */
+  static async resolveAssignmentCourse(assignmentId: string): Promise<{ courseId: string; teacherId: string } | null> {
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      select: { lessonId: true },
+    });
+    if (!assignment?.lessonId) return null;
+    return this.resolveLessonCourse(assignment.lessonId);
+  }
+
+  /**
+   * NFR-001 / TC-STUDENT-032/033: only enrolled students (active entitlement),
+   * the owning teacher, or admins may interact with paid learning content.
+   * Throws NotFoundError for unknown content and ForbiddenError otherwise.
+   */
+  static async assertLearningAccess(
+    userId: string,
+    userRole: Role | undefined,
+    content: { courseId: string | null; teacherId?: string | null }
+  ): Promise<void> {
+    if (!content.courseId) {
+      // Content not anchored to any course — nothing to protect here.
+      return;
+    }
+    if (userRole === Role.ADMIN) return;
+    if (content.teacherId && content.teacherId === userId) return;
+
+    const hasAccess = await this.hasCourseAccess(userId, content.courseId);
+
+    if (!hasAccess) {
+      throw new ForbiddenError('You must be enrolled in this course to access its learning activities');
+    }
+  }
+
   /**
    * Checks whether a student has an active access grant for a given subject.
    * Access is confirmed if:

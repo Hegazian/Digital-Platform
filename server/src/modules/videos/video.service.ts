@@ -42,6 +42,11 @@ export class VideoService {
                 course: true,
               },
             },
+            module: {
+              include: {
+                course: true,
+              },
+            },
           },
         },
       },
@@ -63,8 +68,8 @@ export class VideoService {
     }
 
     // Check active entitlement or subscription via EntitlementResolver
-    const courseId = video.lesson?.section?.courseId;
-    const subjectId = video.lesson?.section?.course?.subjectId;
+    const courseId = video.lesson?.module?.courseId || video.lesson?.section?.courseId;
+    const subjectId = video.lesson?.module?.course?.subjectId || video.lesson?.section?.course?.subjectId;
 
     if (courseId || subjectId) {
       const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');

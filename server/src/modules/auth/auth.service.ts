@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { Role, TeacherStatus } from '@prisma/client';
 import { prisma } from '../../prisma';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt';
-import { ConflictError, UnauthorizedError, BadRequestError, ForbiddenError } from '../../utils/errors';
+import { ConflictError, UnauthorizedError, BadRequestError, ForbiddenError, NotFoundError } from '../../utils/errors';
 
 export class AuthService {
   static async register(data: any) {
@@ -188,4 +188,96 @@ export class AuthService {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
   }
+
+  /**
+   * Get user profile details.
+   */
+  static async getProfile(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        teacherStatus: true,
+        avatar: true,
+        gradeId: true,
+        grade: {
+          select: {
+            id: true,
+            nameEn: true,
+            nameAr: true,
+            code: true,
+          },
+        },
+        mfaEnabled: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return user;
+  }
+
+  /**
+   * Update student / user profile information (name, avatar, grade).
+   */
+  static async updateProfile(
+    userId: string,
+    data: {
+      name?: string;
+      avatar?: string;
+      gradeId?: string | null;
+    }
+  ) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (data.gradeId) {
+      const grade = await prisma.grade.findUnique({ where: { id: data.gradeId } });
+      if (!grade) {
+        throw new BadRequestError('Invalid grade ID');
+      }
+    }
+
+    if (data.name !== undefined && data.name.trim().length < 2) {
+      throw new BadRequestError('Name must be at least 2 characters long');
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name && { name: data.name.trim() }),
+        ...(data.avatar !== undefined && { avatar: data.avatar }),
+        ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        teacherStatus: true,
+        avatar: true,
+        gradeId: true,
+        grade: {
+          select: {
+            id: true,
+            nameEn: true,
+            nameAr: true,
+            code: true,
+          },
+        },
+        mfaEnabled: true,
+      },
+    });
+
+    return updated;
+  }
 }
+

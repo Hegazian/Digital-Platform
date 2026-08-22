@@ -48,10 +48,59 @@ export class TeacherService {
       throw new NotFoundError('Student not found');
     }
 
-    const completedLessons = await prisma.lessonProgress.count({
-      where: { userId: studentId, isCompleted: true },
+    // Ownership (NFR-001 / TC-TEACHER-102): teachers may only view progress
+    // for students enrolled in THEIR courses. Resolve the intersection of
+    // the student's active entitlements and the teacher's course subjects.
+    const teacherCourses = await prisma.course.findMany({
+      where: { teacherId },
+      select: { id: true, subjectId: true },
+    });
+    const mySubjectIds = Array.from(new Set(teacherCourses.map((c) => c.subjectId)));
+
+    if (mySubjectIds.length === 0) {
+      throw new ForbiddenError('You have no courses to view student progress for');
+    }
+
+    const access = await prisma.entitlement.findFirst({
+      where: {
+        studentId,
+        status: 'ACTIVE',
+        OR: [
+          { resourceType: 'SUBJECT', resourceId: { in: mySubjectIds } },
+          {
+            resourceType: 'COURSE',
+            resourceId: { in: teacherCourses.map((c) => c.id) },
+          },
+        ],
+      },
     });
 
+    if (!access) {
+      throw new ForbiddenError('This student is not enrolled in any of your courses');
+    }
+
+    // Scope counts to lessons inside THIS teacher's courses only.
+    const myLessons = await prisma.lesson.findMany({
+      where: {
+        OR: [
+          { module: { course: { teacherId } } },
+          { section: { course: { teacherId } } },
+        ],
+      },
+      select: { id: true },
+    });
+    const myLessonIds = myLessons.map((l) => l.id);
+
+    const completedLessons =
+      myLessonIds.length > 0
+        ? await prisma.lessonProgress.count({
+            where: { userId: studentId, isCompleted: true, lessonId: { in: myLessonIds } },
+          })
+        : 0;
+
+    // Assessments tied to this student. (Assessment has no lesson relation in
+    // the current schema; cross-teacher exposure is bounded by the enrollment
+    // gate above — only students enrolled in THIS teacher's subjects pass.)
     const attempts = await prisma.assessmentAttempt.findMany({
       where: { studentId },
       select: { score: true, isPassed: true },

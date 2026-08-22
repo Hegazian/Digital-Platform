@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Role } from '@prisma/client';
 import { CourseService } from '../course.service';
+import { AssignmentService } from '../../assignments/assignment.service';
 import { prisma } from '../../../prisma';
 
 describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
@@ -34,7 +36,7 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
       expect(result.status).toBe('UNDER_REVIEW');
       expect(prisma.course.update).toHaveBeenCalledWith({
         where: { id: 'course-1' },
-        data: { status: 'UNDER_REVIEW' },
+        data: { status: 'UNDER_REVIEW', rejectionReason: null },
       });
     });
 
@@ -111,6 +113,12 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
         sortOrder: 1,
       };
 
+      // Ownership guard resolves the lesson's parent course first.
+      vi.spyOn(prisma.lesson, 'findUnique').mockResolvedValue({
+        id: 'lesson-1',
+        module: { course: { teacherId: 'teacher-1' } },
+        section: null,
+      } as any);
       vi.spyOn(prisma.lessonBlock, 'create').mockResolvedValue(mockBlock as any);
 
       const result = await CourseService.addLessonBlock('lesson-1', {
@@ -124,6 +132,11 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
     });
 
     it('should reorder modules transactionally', async () => {
+      vi.spyOn(prisma.course, 'findUnique').mockResolvedValue({ id: 'course-1', teacherId: 'teacher-1' } as any);
+      vi.spyOn(prisma.courseModule, 'findMany').mockResolvedValue([
+        { id: 'mod-2', courseId: 'course-1' },
+        { id: 'mod-1', courseId: 'course-1' },
+      ] as any);
       vi.spyOn(prisma, '$transaction').mockResolvedValue([{}, {}] as any);
 
       const reordered = await CourseService.reorderModules('course-1', [
@@ -136,13 +149,15 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
   });
 
   describe('Assignments & Student Submissions Engine', () => {
+    // Grading is owned by the assignments module (secure path with ownership
+    // checks + score bounds). These tests exercise that implementation.
     it('should allow teacher to grade an assignment submission and update status', async () => {
       const mockSubmission = {
         id: 'sub-1',
         assignmentId: 'assign-1',
         studentId: 'student-1',
         status: 'SUBMITTED',
-        assignment: { maxScore: 100 },
+        assignment: { id: 'assign-1', maxScore: 100, createdById: 'teacher-1' },
       };
 
       vi.spyOn(prisma.assignmentSubmission, 'findUnique').mockResolvedValue(mockSubmission as any);
@@ -154,7 +169,7 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
         gradedById: 'teacher-1',
       } as any);
 
-      const result = await CourseService.gradeAssignmentSubmission('sub-1', 'teacher-1', {
+      const result = await AssignmentService.gradeSubmission('sub-1', 'teacher-1', Role.TEACHER, {
         score: 88,
         feedback: 'Great effort',
       });
@@ -166,13 +181,13 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
     it('should reject score higher than maxScore', async () => {
       const mockSubmission = {
         id: 'sub-1',
-        assignment: { maxScore: 100 },
+        assignment: { id: 'assign-1', maxScore: 100, createdById: 'teacher-1' },
       };
 
       vi.spyOn(prisma.assignmentSubmission, 'findUnique').mockResolvedValue(mockSubmission as any);
 
       await expect(
-        CourseService.gradeAssignmentSubmission('sub-1', 'teacher-1', {
+        AssignmentService.gradeSubmission('sub-1', 'teacher-1', Role.TEACHER, {
           score: 120,
           feedback: 'Too high',
         })
@@ -183,7 +198,20 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
   describe('Teacher Dashboard & Analytics Aggregation', () => {
     it('should aggregate teacher dashboard metrics', async () => {
       vi.spyOn(prisma.course, 'count').mockResolvedValue(5);
-      vi.spyOn(prisma.entitlement, 'count').mockResolvedValue(140);
+      // Scoped stats: resolve the teacher's courses first...
+      vi.spyOn(prisma.course, 'findMany').mockResolvedValue([
+        { id: 'course-1' },
+        { id: 'course-2' },
+      ] as any);
+      // ...then count DISTINCT students holding active entitlements to them.
+      vi.spyOn(prisma.entitlement, 'findMany').mockResolvedValue(
+        Array.from({ length: 140 }, (_, i) => ({ studentId: `student-${i}` })) as any
+      );
+      // Pending grading: submissions on this teacher's lessons only.
+      vi.spyOn(prisma.lesson, 'findMany').mockResolvedValue([
+        { id: 'lesson-1' },
+        { id: 'lesson-2' },
+      ] as any);
       vi.spyOn(prisma.assignmentSubmission, 'count').mockResolvedValue(8);
 
       const stats = await CourseService.getTeacherDashboardStats('teacher-1');

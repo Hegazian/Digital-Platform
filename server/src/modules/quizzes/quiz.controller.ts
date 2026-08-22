@@ -12,6 +12,27 @@ export class QuizController {
     }
   }
 
+  static async updateQuiz(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const quiz = await QuizService.updateQuiz(id as string, req.body, req.user?.userId, req.user?.role);
+      res.status(200).json({ success: true, data: quiz });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async startAttempt(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.userId;
+      const attempt = await QuizService.startAttempt(userId, id as string);
+      res.status(201).json({ success: true, data: attempt });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getQuiz(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

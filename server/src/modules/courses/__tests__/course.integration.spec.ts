@@ -143,13 +143,47 @@ describe('Course & Subject Integration Tests', () => {
       expect(res.body.data.isFreePreview).toBe(true);
     });
 
-    it('PATCH /api/v1/courses/:courseId/publish - owner teacher can publish course', async () => {
+    it('PATCH /api/v1/courses/:courseId/publish - teacher cannot self-publish (403)', async () => {
       const res = await request(app)
         .patch(`/api/v1/courses/${courseId}/publish`)
         .set('Authorization', `Bearer ${teacherToken}`);
 
+      expect(res.status).toBe(403);
+    });
+
+    it('PATCH /api/v1/courses/:courseId/publish - admin cannot publish incomplete course (TC-ADMIN-034)', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/courses/${courseId}/publish`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/incomplete/i);
+    });
+
+    it('PATCH /api/v1/courses/:courseId/publish - admin can publish a complete course', async () => {
+      // Make the course complete: module -> lesson -> attached video resource.
+      const mod = await prisma.courseModule.create({
+        data: { courseId, titleEn: 'Pub Mod', titleAr: 'وحدة' },
+      });
+      const video = await prisma.video.create({
+        data: {
+          teacherId,
+          videoUrl: '/uploads/lesson-videos/pub.mp4',
+          originalFileName: 'pub.mp4',
+          status: 'READY',
+        },
+      });
+      await prisma.lesson.create({
+        data: { moduleId: mod.id, titleEn: 'Pub Lesson', titleAr: 'درس', videoId: video.id },
+      });
+
+      const res = await request(app)
+        .patch(`/api/v1/courses/${courseId}/publish`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
       expect(res.status).toBe(200);
       expect(res.body.data.isPublished).toBe(true);
+      expect(res.body.data.status).toBe('PUBLISHED');
     });
   });
 });

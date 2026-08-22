@@ -3,16 +3,25 @@ import { prisma } from '../../../prisma';
 import { QuizService } from '../quiz.service';
 import { NotFoundError, BadRequestError } from '../../../utils/errors';
 
+const prismaMock = vi.hoisted(() => ({
+  quiz: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+  },
+  quizAttempt: {
+    create: vi.fn(),
+    update: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    count: vi.fn(),
+  },
+}));
+
 vi.mock('../../../prisma', () => ({
   prisma: {
-    quiz: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    quizAttempt: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-    },
+    ...prismaMock,
+    // Pass-through transaction: run the callback against the same mocks.
+    $transaction: vi.fn((fn: (tx: any) => Promise<any>) => fn(prismaMock)),
   },
 }));
 
@@ -28,6 +37,7 @@ describe('QuizService Unit Tests', () => {
         titleEn: 'Test Quiz',
         titleAr: 'اختبار تجريبي',
         passingScore: 50,
+        maxAttempts: 1,
         questions: [{ id: 'qu1', questionText: 'Q1' }],
       };
       (prisma.quiz.create as any).mockResolvedValue(mockQuiz);
@@ -35,11 +45,38 @@ describe('QuizService Unit Tests', () => {
       const result = await QuizService.createQuiz({
         titleEn: 'Test Quiz',
         titleAr: 'اختبار تجريبي',
-        questions: [{ questionText: 'Q1', options: [], points: 1 }],
+        questions: [
+          {
+            questionText: 'Q1',
+            options: [
+              { id: 'opt1', text: 'Option 1', isCorrect: true },
+              { id: 'opt2', text: 'Option 2', isCorrect: false },
+            ],
+            points: 1,
+          },
+        ],
       });
 
       expect(result.id).toBe('q1');
       expect(prisma.quiz.create).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestError if a question has no correct option', async () => {
+      await expect(
+        QuizService.createQuiz({
+          titleEn: 'Test Quiz',
+          titleAr: 'اختبار تجريبي',
+          questions: [
+            {
+              questionText: 'Q1',
+              options: [
+                { id: 'opt1', text: 'Option 1', isCorrect: false },
+                { id: 'opt2', text: 'Option 2', isCorrect: false },
+              ],
+            },
+          ],
+        })
+      ).rejects.toThrow(BadRequestError);
     });
 
     it('should throw BadRequestError if questions array is missing', async () => {
@@ -125,6 +162,20 @@ describe('QuizService Unit Tests', () => {
           }),
         })
       );
+    });
+
+    it('should throw BadRequestError if max attempts limit is exceeded', async () => {
+      const mockQuiz = {
+        id: 'q1',
+        maxAttempts: 1,
+        questions: [{ id: 'qu1', points: 10, options: [] }],
+      };
+      (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
+      (prisma.quizAttempt.count as any).mockResolvedValue(1);
+
+      await expect(
+        QuizService.submitAttempt('u1', 'q1', { answers: [{ questionId: 'qu1', selectedOptionId: 'o1' }] })
+      ).rejects.toThrow(BadRequestError);
     });
   });
 });
