@@ -33,6 +33,9 @@ vi.mock('../../../prisma', () => ({
     quiz: {
       count: vi.fn(),
     },
+    refreshToken: {
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
   },
 }));
 

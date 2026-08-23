@@ -121,10 +121,13 @@ export class CourseService {
 
     const enrichedCourses = courses.map((c) => {
       const prod = productMap.get(c.id);
+      // Free courses always display as free, regardless of any stale product row.
+      const priceEgp = c.isFree ? 0 : prod ? Number(prod.priceEgp) : 150;
+      const priceUsd = c.isFree ? 0 : prod ? Number(prod.priceUsd) : 10;
       const enriched = {
         ...c,
-        priceEgp: prod ? Number(prod.priceEgp) : 150,
-        priceUsd: prod ? Number(prod.priceUsd) : 10,
+        priceEgp,
+        priceUsd,
         productId: prod?.id,
       };
       return this.canManageCourse(c, user) ? enriched : this.sanitizeCourseContent(enriched);
@@ -204,30 +207,62 @@ export class CourseService {
 
     const enriched = {
       ...course,
-      priceEgp: product ? Number(product.priceEgp) : 150,
-      priceUsd: product ? Number(product.priceUsd) : 10,
+      priceEgp: course.isFree ? 0 : product ? Number(product.priceEgp) : 150,
+      priceUsd: course.isFree ? 0 : product ? Number(product.priceUsd) : 10,
       productId: product?.id,
     };
 
     return canManage ? enriched : this.sanitizeCourseContent(enriched);
   }
 
-  static async createCourse(data: any) {
-    let subject = await prisma.subject.findUnique({
-      where: { id: data.subjectId },
+  /**
+   * Resolves a Subject for course create/update:
+   * - explicit subjectId wins (validated)
+   * - otherwise subjectName is find-or-created (teachers may invent new
+   *   subjects on the fly; duplicates collapse onto the existing row)
+   */
+  private static async resolveSubject(data: { subjectId?: string; subjectName?: string }) {
+    if (data.subjectId) {
+      let subject = await prisma.subject.findUnique({ where: { id: data.subjectId } });
+      if (!subject) {
+        const { SubjectService } = await import('./subject.service');
+        await SubjectService.ensureDefaultSubjectsExist();
+        subject = await prisma.subject.findUnique({ where: { id: data.subjectId } });
+      }
+      if (!subject) {
+        throw new NotFoundError('Selected subject does not exist. Please select a valid subject.');
+      }
+      return subject;
+    }
+
+    const name = data.subjectName?.trim();
+    if (!name) {
+      throw new BadRequestError('A subject must be selected or named');
+    }
+
+    const existing = await prisma.subject.findFirst({
+      where: { nameEn: { equals: name, mode: 'insensitive' } },
     });
+    if (existing) return existing;
 
-    if (!subject) {
-      const { SubjectService } = await import('./subject.service');
-      await SubjectService.ensureDefaultSubjectsExist();
-      subject = await prisma.subject.findUnique({
-        where: { id: data.subjectId },
+    try {
+      return await prisma.subject.create({
+        data: { nameEn: name, nameAr: name },
       });
+    } catch (err: any) {
+      // Concurrent creation hit the same unique value - reuse it.
+      if (err?.code === 'P2002') {
+        const raced = await prisma.subject.findFirst({
+          where: { nameEn: { equals: name, mode: 'insensitive' } },
+        });
+        if (raced) return raced;
+      }
+      throw err;
     }
+  }
 
-    if (!subject) {
-      throw new NotFoundError('Selected subject does not exist. Please select a valid subject.');
-    }
+  static async createCourse(data: any) {
+    const subject = await this.resolveSubject(data);
 
     if (data.gradeId) {
       const grade = await prisma.grade.findUnique({ where: { id: data.gradeId } });
@@ -243,15 +278,19 @@ export class CourseService {
         description: data.description,
         thumbnail: data.thumbnail,
         teacherId: data.teacherId,
-        subjectId: data.subjectId,
+        subjectId: subject.id,
         gradeId: data.gradeId || null,
         academicYearId: data.academicYearId || null,
+        isFree: Boolean(data.isFree),
         status: 'DRAFT',
       },
     });
 
-    const priceEgp = data.priceEgp !== undefined ? Number(data.priceEgp) : 150;
-    const priceUsd = data.priceUsd !== undefined ? Number(data.priceUsd) : 10;
+    // Free courses get a zero-priced product so catalog/pricing views stay
+    // uniform; paid courses default to the platform price when unspecified.
+    const isFree = Boolean(data.isFree);
+    const priceEgp = isFree ? 0 : data.priceEgp !== undefined ? Number(data.priceEgp) : 150;
+    const priceUsd = isFree ? 0 : data.priceUsd !== undefined ? Number(data.priceUsd) : 10;
 
     if (prisma.product) {
       await prisma.product.create({
@@ -287,6 +326,13 @@ export class CourseService {
       throw new ForbiddenError('Only the course owner or Admin can edit this course');
     }
 
+    // Renaming the subject by name (dynamic subject support)
+    let resolvedSubjectId: string | undefined;
+    if (data.subjectName && !data.subjectId) {
+      const subject = await this.resolveSubject({ subjectName: data.subjectName });
+      resolvedSubjectId = subject.id;
+    }
+
     const updatedCourse = await prisma.course.update({
       where: { id },
       data: {
@@ -295,8 +341,10 @@ export class CourseService {
         ...(data.description !== undefined && { description: data.description }),
         ...(data.thumbnail !== undefined && { thumbnail: data.thumbnail }),
         ...(data.subjectId && { subjectId: data.subjectId }),
+        ...(resolvedSubjectId && { subjectId: resolvedSubjectId }),
         ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
         ...(data.academicYearId !== undefined && { academicYearId: data.academicYearId }),
+        ...(data.isFree !== undefined && { isFree: data.isFree }),
         ...(data.teacherId && userRole === Role.ADMIN && { teacherId: data.teacherId }),
         // NOTE: `status` and `isPublished` are intentionally NOT writable here.
         // Lifecycle transitions go through /submit (teacher) and /review or
@@ -305,9 +353,33 @@ export class CourseService {
       },
     });
 
-    if ((data.priceEgp !== undefined || data.priceUsd !== undefined) && prisma.product) {
-      const priceEgp = data.priceEgp !== undefined ? Number(data.priceEgp) : 150;
-      const priceUsd = data.priceUsd !== undefined ? Number(data.priceUsd) : 10;
+    // Pricing rules (see isFree flag):
+    // - isFree true  -> product prices are forced to 0
+    // - isFree false -> explicit prices win; a course that was free gets the
+    //   platform default rather than staying accidentally purchasable at 0
+    if (
+      (data.isFree !== undefined || data.priceEgp !== undefined || data.priceUsd !== undefined) &&
+      prisma.product
+    ) {
+      const willBeFree = data.isFree ?? course.isFree;
+      let priceEgp = data.priceEgp !== undefined ? Number(data.priceEgp) : null;
+      let priceUsd = data.priceUsd !== undefined ? Number(data.priceUsd) : null;
+
+      if (!willBeFree && (priceEgp === null || priceUsd === null)) {
+        const existingProduct = await prisma.product.findFirst({
+          where: { productType: 'COURSE', resourceId: id },
+        });
+        const currentPaid =
+          existingProduct && Number(existingProduct.priceEgp) > 0
+            ? existingProduct
+            : null;
+        priceEgp = priceEgp ?? (currentPaid ? Number(currentPaid.priceEgp) : 150);
+        priceUsd = priceUsd ?? (currentPaid ? Number(currentPaid.priceUsd) : 10);
+      }
+      if (willBeFree) {
+        priceEgp = 0;
+        priceUsd = 0;
+      }
 
       const existingProduct = await prisma.product.findFirst({
         where: {
@@ -344,7 +416,9 @@ export class CourseService {
 
     // NFR-003: audit course updates (track which fields changed)
     await logAuditAction(teacherId, 'COURSE_UPDATED', id, 'Course', {
-      changedFields: Object.keys(data).filter((k) => k !== 'priceEgp' && k !== 'priceUsd'),
+      changedFields: Object.keys(data).filter(
+        (k) => k !== 'priceEgp' && k !== 'priceUsd' && k !== 'isFree'
+      ),
     });
 
     return updatedCourse;
@@ -430,6 +504,23 @@ export class CourseService {
 
     if (!course.isPublished && course.status !== 'PUBLISHED') {
       throw new ForbiddenError('Cannot enroll in unpublished courses');
+    }
+
+    // Free courses are open-enrollment by definition. Everything else must
+    // not have an active priced product - paid courses go through checkout.
+    if (!course.isFree) {
+      const paidProduct = await prisma.product.findFirst({
+        where: {
+          productType: 'COURSE',
+          resourceId: courseId,
+          isActive: true,
+          priceEgp: { gt: 0 },
+        },
+      });
+
+      if (paidProduct) {
+        throw new ForbiddenError('This course requires purchase. Please complete checkout to enroll.');
+      }
     }
 
     const existingEntitlement = await prisma.entitlement.findFirst({

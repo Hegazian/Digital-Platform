@@ -10,6 +10,13 @@ vi.mock('../../../prisma', () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
     },
+    refreshToken: {
+      create: vi.fn().mockResolvedValue({ id: 'rt-1' }),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    $transaction: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -108,7 +115,21 @@ describe('AuthService Unit Tests', () => {
     it('should return new tokens for a valid refresh token', async () => {
       const { generateRefreshToken } = await import('../../../utils/jwt');
       const sampleRefreshToken = generateRefreshToken({ userId: 'user-1', role: Role.STUDENT });
+      const crypto = await import('crypto');
 
+      // Registered, live session matching the presented token:
+      (prisma.refreshToken.findUnique as any).mockImplementation(({ where }: any) =>
+        Promise.resolve({
+          id: 'rt-1',
+          userId: 'user-1',
+          tokenHash: crypto
+            .createHash('sha256')
+            .update(sampleRefreshToken)
+            .digest('hex'),
+          expiresAt: new Date(Date.now() + 86400_000),
+          revokedAt: null,
+        })
+      );
       (prisma.user.findUnique as any).mockResolvedValue({
         id: 'user-1',
         email: 'student@test.com',
@@ -120,6 +141,9 @@ describe('AuthService Unit Tests', () => {
       const res = await AuthService.refreshToken(sampleRefreshToken);
       expect(res.accessToken).toBeDefined();
       expect(res.refreshToken).toBeDefined();
+      // Rotation must revoke the old row and register the new one:
+      expect(prisma.refreshToken.update).toHaveBeenCalled();
+      expect(prisma.refreshToken.create).toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedError for invalid token', async () => {

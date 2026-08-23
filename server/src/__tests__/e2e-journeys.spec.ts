@@ -167,6 +167,15 @@ describe('End-to-End Journeys', () => {
       expect(course.body.data.status).toBe('DRAFT');
       cleanupIds.courseId = course.body.data.id;
 
+      // This journey models a FREE course. Courses are monetized by default,
+      // so flag it free explicitly: enrollment stays closed for any course
+      // that still has an active priced product (no checkout bypass).
+      const pricing = await request(app)
+        .patch(`/api/v1/courses/${cleanupIds.courseId}`)
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({ isFree: true });
+      expect(pricing.status).toBe(200);
+
       const mod = await request(app)
         .post(`/api/v1/courses/${cleanupIds.courseId}/modules`)
         .set('Authorization', `Bearer ${teacherToken}`)

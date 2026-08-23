@@ -1,8 +1,24 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { Role, TeacherStatus } from '@prisma/client';
 import { prisma } from '../../prisma';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt';
 import { ConflictError, UnauthorizedError, BadRequestError, ForbiddenError, NotFoundError } from '../../utils/errors';
+
+const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // keep in sync with JWT_REFRESH_EXPIRES_IN
+
+/** High-entropy random tokens only need a collision-resistant digest. */
+const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+
+async function persistRefreshToken(userId: string, token: string): Promise<void> {
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      tokenHash: hashToken(token),
+      expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+    },
+  });
+}
 
 export class AuthService {
   static async register(data: any) {
@@ -98,6 +114,7 @@ export class AuthService {
     const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+    await persistRefreshToken(user.id, refreshToken);
 
     return {
       user: {
@@ -146,6 +163,7 @@ export class AuthService {
     const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
+    await persistRefreshToken(user.id, refreshToken);
 
     return {
       user: {
@@ -162,31 +180,86 @@ export class AuthService {
     };
   }
 
+  /**
+   * Refresh with server-side session validation + rotation:
+   * - the token must match a stored, unrevoked, unexpired hash
+   * - presenting a REVOKED token suggests theft -> the whole family for that
+   *   user is revoked (all sessions must re-login)
+   */
   static async refreshToken(token: string) {
     if (!token) {
       throw new BadRequestError('Refresh token is required');
     }
 
+    let decoded: any;
     try {
       const { verifyRefreshToken } = await import('../../utils/jwt');
-      const decoded = verifyRefreshToken(token) as any;
-
-      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-      if (!user || !user.isActive) {
-        throw new UnauthorizedError('User account is invalid or deactivated');
-      }
-
-      const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
-      const newAccessToken = generateAccessToken(payload);
-      const newRefreshToken = generateRefreshToken(payload);
-
-      return {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      };
+      decoded = verifyRefreshToken(token) as any;
     } catch (err: any) {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
+
+    const stored = await prisma.refreshToken.findUnique({
+      where: { tokenHash: hashToken(token) },
+    });
+
+    if (!stored || stored.expiresAt < new Date()) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
+
+    if (stored.revokedAt) {
+      // Replay of a rotated-out token: assume compromise and kill all sessions.
+      await prisma.refreshToken.updateMany({
+        where: { userId: decoded.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      throw new UnauthorizedError('Session revoked. Please log in again.');
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedError('User account is invalid or deactivated');
+    }
+
+    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
+    const newAccessToken = generateAccessToken(payload);
+    const newRefreshToken = generateRefreshToken(payload);
+
+    await prisma.$transaction([
+      prisma.refreshToken.update({
+        where: { id: stored.id },
+        data: { revokedAt: new Date() },
+      }),
+      prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(newRefreshToken),
+          expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+        },
+      }),
+    ]);
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  /** Revokes the presented session (logout). Idempotent by design. */
+  static async logout(rawRefreshToken?: string): Promise<void> {
+    if (!rawRefreshToken) return;
+    await prisma.refreshToken.updateMany({
+      where: { tokenHash: hashToken(rawRefreshToken), revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
+  /** Kills every live session for a user (deactivation, future password change). */
+  static async revokeAllForUser(userId: string): Promise<void> {
+    await prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
 
   /**

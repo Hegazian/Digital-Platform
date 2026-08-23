@@ -88,6 +88,7 @@ describe('CourseService Unit Tests', () => {
           subjectId: courseData.subjectId,
           gradeId: null,
           academicYearId: null,
+          isFree: false,
           status: 'DRAFT',
         },
       });

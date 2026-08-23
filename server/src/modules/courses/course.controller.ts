@@ -310,8 +310,10 @@ export class CourseController {
 
   static async getTeacherCourses(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const teacherId = req.user!.userId;
-      const result = await CourseService.getAllCourses({ teacherId });
+      // MUST forward the authenticated user: role-scoped visibility in
+      // getAllCourses lets teachers see their own drafts/rejected courses.
+      // Omitting it made every unpublished course invisible to its owner.
+      const result = await CourseService.getAllCourses({}, req.user);
       res.status(200).json({ success: true, data: result.courses || result });
     } catch (error) {
       next(error);

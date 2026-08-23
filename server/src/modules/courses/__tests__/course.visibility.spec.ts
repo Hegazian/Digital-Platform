@@ -173,8 +173,28 @@ describe('Course Read Visibility & Answer Sanitization', () => {
     expect(res.body.data.modules[0].lessons[0].quiz.questions[0].explanation).toBeNull();
   });
 
-  it('owning teacher can read own draft in full, including answer keys', async () => {
-    const res = await request(app)
+  it('teacher portal (my-courses) lists the owning teacher DRAFT courses', async () => {
+    // Regression: getTeacherCourses previously dropped req.user, so
+    // getAllCourses treated the call as anonymous and hid every draft -
+    // newly created courses never appeared in the teacher portal.
+    const list = await request(app)
+      .get('/api/v1/courses/teacher/my-courses')
+      .set('Authorization', `Bearer ${teacherAToken}`);
+
+    expect(list.status).toBe(200);
+    const titles: string[] = (list.body.data ?? []).map((c: any) => c.titleEn);
+    expect(titles.some((t) => t.includes('VIS-DRAFT'))).toBe(true);
+
+    // Teacher B's list must still exclude foreign drafts:
+    const other = await request(app)
+      .get('/api/v1/courses/teacher/my-courses')
+      .set('Authorization', `Bearer ${teacherBToken}`);
+    expect(other.status).toBe(200);
+    const otherTitles: string[] = (other.body.data ?? []).map((c: any) => c.titleEn);
+    expect(otherTitles.some((t) => t.includes('VIS-DRAFT'))).toBe(false);
+  });
+
+  it('owning teacher can read own draft in full, including answer keys', async () => {    const res = await request(app)
       .get(`/api/v1/courses/${draftCourseId}`)
       .set('Authorization', `Bearer ${teacherAToken}`);
 

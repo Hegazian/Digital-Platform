@@ -15,7 +15,10 @@ const router = Router();
 router.post('/register', validateBody(registerSchema), AuthController.register);
 router.post('/login', validateBody(loginSchema), AuthController.login);
 router.post('/mfa-login', validateBody(mfaLoginSchema), AuthController.mfaLogin);
+// Refresh accepts an httpOnly cookie (preferred) or body token (legacy).
 router.post('/refresh', validateBody(refreshTokenSchema), AuthController.refreshToken);
+// Logout requires no access token: it acts on the refresh cookie itself.
+router.post('/logout', AuthController.logout);
 
 // Protected user endpoint
 router.get('/me', authenticate, (req: AuthRequest, res) => {

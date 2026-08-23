@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { PAYMOB_HMAC_SECRET, FAWRY_SECRET_KEY } from './env';
 
 /**
  * Calculates Paymob SHA-512 HMAC signature from sorted dictionary keys.
@@ -21,7 +22,7 @@ export function verifyPaymobSignature(
 ): boolean {
   if (!receivedHmac) return false;
 
-  const secret = secretKey || process.env.PAYMOB_HMAC_SECRET || 'test_paymob_hmac_secret_key_123';
+  const secret = secretKey || PAYMOB_HMAC_SECRET;
   const calculatedHmac = calculatePaymobHmac(data, secret);
 
   if (calculatedHmac.length !== receivedHmac.length) {
@@ -57,7 +58,7 @@ export function verifyFawrySignature(
   secretKey?: string
 ): boolean {
   if (!data.signature) return false;
-  const secret = secretKey || process.env.FAWRY_SECRET_KEY || 'test_fawry_secret_key_123';
+  const secret = secretKey || FAWRY_SECRET_KEY;
   const calculated = calculateFawrySignature(data.merchantCode, data.merchantRefNum, data.amount, secret);
 
   if (calculated.length !== data.signature.length) {

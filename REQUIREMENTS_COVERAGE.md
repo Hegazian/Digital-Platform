@@ -186,6 +186,11 @@ Ordered by the doc's delivery phases. Each item lists files to touch and done-cr
 Update the Status column as work lands. A requirement may only move to ✅ when its TC-* tests pass (Definition of Done).
 
 ### Changelog
+- **2026-08-23 — Horizon 1 (H1) executed:**
+  - Git history purged via `git-filter-repo`: `server/.env`, `server/.env.test`, `server/test-db6.js`, `server/test-db7.js` (hardcoded DB creds in scratch files) removed from **all 6 commits**; reflog expired + gc pruned; force-pushed to `origin/main` (backup bundle: `/tmp/opencode/dp-backup-pre-purge.bundle`).
+  - JWT secrets rotated (48-byte random, local env files only); token roundtrip smoke-tested.
+  - Scratch `test-db*.js` files deleted from worktree.
+  - ⚠️ **User must still rotate at the providers** (cannot be done from code): ① Supabase → reset DB password (then update `DATABASE_URL`/`DIRECT_URL` locally), regenerate `SERVICE_ROLE` key if it appeared anywhere shared; ② Resend → revoke old API key, issue new one; ③ confirm no other clones of the repo are pulled/used (old clones retain leaked history).
 - **2026-08-22 — Phase 4 (Verification) complete:**
   - Fixed 3 regressions from the revocation change: config API tests now create a real admin user; auth middleware unit test made async with prisma mock (10/10 green).
   - NFR-003 ✅ `COURSE_CREATED` / `COURSE_UPDATED` audit events added to course service.

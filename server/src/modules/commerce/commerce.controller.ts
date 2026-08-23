@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../auth/auth.middleware';
 import { CommerceService } from './commerce.service';
-import { EntitlementType } from '@prisma/client';
+import { EntitlementType, OrderStatus } from '@prisma/client';
 import { UnauthorizedError } from '../../utils/errors';
 import { verifyPaymobSignature, verifyFawrySignature } from '../../utils/webhook-security';
 
@@ -36,6 +36,49 @@ export class CommerceController {
     }
   }
 
+  static async getMyOrders(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const studentId = req.user!.userId;
+      const orders = await CommerceService.getMyOrders(studentId);
+      res.status(200).json({ success: true, data: orders });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Admin manual payment reconciliation
+  static async adminListOrders(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const status = req.query.status as keyof typeof OrderStatus | undefined;
+      const orders = await CommerceService.adminListOrders(
+        status && (OrderStatus as any)[status] ? (OrderStatus as any)[status] : undefined
+      );
+      res.status(200).json({ success: true, data: orders });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async adminApproveOrder(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const adminId = req.user!.userId;
+      const result = await CommerceService.adminApproveOrder(req.params.id as string, adminId);
+      res.status(200).json({ success: true, data: result.order ?? null, message: result.message });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async adminRejectOrder(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const adminId = req.user!.userId;
+      const order = await CommerceService.adminRejectOrder(req.params.id as string, adminId);
+      res.status(200).json({ success: true, data: order, message: 'Order rejected' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // Webhooks (Cryptographically Verified)
   static async processPaymobWebhook(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -62,7 +105,7 @@ export class CommerceController {
         throw new UnauthorizedError('Invalid or missing Fawry signature');
       }
 
-      const result = await CommerceService.processPaymobWebhook(req.body);
+      const result = await CommerceService.processFawryWebhook(req.body);
       res.status(200).json({ success: true, data: result.order, message: result.message });
     } catch (err) {
       next(err);

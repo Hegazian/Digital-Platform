@@ -53,6 +53,12 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     return next(new UnauthorizedError('Invalid or expired token'));
   }
 
+  // MFA challenge tokens are intermediate credentials, NOT session tokens.
+  // Accepting them here would let an attacker skip the second factor.
+  if (decoded.purpose === 'mfa_challenge') {
+    return next(new UnauthorizedError('Complete multi-factor authentication first'));
+  }
+
   // Revocation check: deactivated users are rejected within the cache TTL.
   const active = await isUserActive(decoded.userId);
   if (!active) {
@@ -76,11 +82,13 @@ export const optionalAuth = (req: AuthRequest, _res: Response, next: NextFunctio
   if (authHeader && authHeader.startsWith('Bearer ')) {
     try {
       const decoded = verifyAccessToken(authHeader.split(' ')[1]) as any;
-      req.user = {
-        userId: decoded.userId,
-        role: decoded.role,
-        teacherStatus: decoded.teacherStatus
-      };
+      if (decoded.purpose !== 'mfa_challenge') {
+        req.user = {
+          userId: decoded.userId,
+          role: decoded.role,
+          teacherStatus: decoded.teacherStatus
+        };
+      }
     } catch {
       // Invalid/expired token -> treat as anonymous instead of failing.
       // Public catalog browsing must keep working with stale tokens.

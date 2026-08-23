@@ -4,6 +4,15 @@ import { AssessmentService } from './assessment.service';
 
 export class AssessmentController {
   // Question Pools
+  static async listQuestionPools(_req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const pools = await AssessmentService.listQuestionPools();
+      res.status(200).json({ success: true, data: pools });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async createQuestionPool(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const pool = await AssessmentService.createQuestionPool(req.body);
@@ -24,6 +33,15 @@ export class AssessmentController {
   }
 
   // Assessments
+  static async listAssessments(_req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const assessments = await AssessmentService.listAssessments();
+      res.status(200).json({ success: true, data: assessments });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async createAssessment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const assessment = await AssessmentService.createAssessment(req.body);

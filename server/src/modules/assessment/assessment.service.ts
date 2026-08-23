@@ -58,6 +58,30 @@ export class AssessmentService {
   }
 
   // Assessments
+  /** Teacher listing: pools with their items for authoring UIs. */
+  static async listQuestionPools() {
+    return prisma.questionPool.findMany({
+      include: {
+        questions: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
+
+  /** Exam catalog for students & teachers. */
+  static async listAssessments() {
+    return prisma.assessment.findMany({
+      include: {
+        pool: { select: { id: true, titleEn: true, titleAr: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
+
   static async createAssessment(data: {
     poolId: string;
     titleEn: string;

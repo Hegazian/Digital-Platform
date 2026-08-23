@@ -1,7 +1,30 @@
 services:
-  postgres:
+  # ── Development database ──────────────────────────────────────────
+  # Used by server/.env (DATABASE_URL) for daily development work.
+  postgres-dev:
     image: postgres:15-alpine
-    container_name: eduplatform-postgres
+    container_name: eduplatform-postgres-dev
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: eduplatform_dev
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d eduplatform_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Test database ────────────────────────────────────────────────
+  # Used by server/.env.test (loaded by vitest). Fully isolated from
+  # dev: tests can wipe/reset this database freely.
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: eduplatform-postgres-test
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpassword
@@ -9,8 +32,8 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
+      - postgres_test_data:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U testuser -d eduplatform_test"]
       interval: 5s
@@ -27,5 +50,6 @@ services:
     restart: always
 
 volumes:
-  postgres_data:
+  postgres_dev_data:
+  postgres_test_data:
   redis_data:

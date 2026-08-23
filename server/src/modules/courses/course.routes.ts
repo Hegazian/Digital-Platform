@@ -22,7 +22,8 @@ export const courseRouter = Router();
 // Subject Routes
 subjectRouter.get('/', CourseController.getAllSubjects);
 subjectRouter.get('/:id', CourseController.getSubjectById);
-subjectRouter.post('/', authenticate, requireRole([Role.ADMIN]), validateBody(createSubjectSchema), CourseController.createSubject);
+// Dynamic subjects: approved teachers may create subjects on the fly.
+subjectRouter.post('/', authenticate, requireApprovedTeacher, validateBody(createSubjectSchema), CourseController.createSubject);
 subjectRouter.patch('/:id', authenticate, requireRole([Role.ADMIN]), validateBody(updateSubjectSchema), CourseController.updateSubject);
 subjectRouter.delete('/:id', authenticate, requireRole([Role.ADMIN]), CourseController.deleteSubject);
 subjectRouter.put(

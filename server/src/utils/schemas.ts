@@ -20,8 +20,9 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+// Refresh token comes from the httpOnly cookie; body field is legacy-only.
 export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required'),
+  refreshToken: z.string().min(1, 'Refresh token is required').optional(),
 });
 
 export const mfaLoginSchema = z.object({
@@ -30,17 +31,30 @@ export const mfaLoginSchema = z.object({
 });
 
 // Course Schemas
-export const createCourseSchema = z.object({
-  titleEn: z.string().min(2, 'English title is required'),
-  titleAr: z.string().min(2, 'Arabic title is required'),
-  description: z.string().min(5, 'Description must be at least 5 characters'),
-  subjectId: z.string().min(1, 'Subject ID is required'),
-  gradeId: z.string().optional(),
-  academicYearId: z.string().optional(),
-  thumbnail: z.string().optional(),
-  priceEgp: z.number().optional(),
-  priceUsd: z.number().optional(),
-});
+export const createCourseSchema = z
+  .object({
+    titleEn: z.string().min(2, 'English title is required'),
+    titleAr: z.string().min(2, 'Arabic title is required'),
+    description: z.string().min(5, 'Description must be at least 5 characters'),
+    // Dynamic subjects: either an existing subjectId OR a free-form name
+    // (created on the fly, owned by the authoring teacher).
+    subjectId: z.string().optional(),
+    subjectName: z.string().min(2, 'Subject name must be at least 2 characters').optional(),
+    gradeId: z.string().optional(),
+    academicYearId: z.string().optional(),
+    thumbnail: z.string().optional(),
+    isFree: z.boolean().optional(),
+    priceEgp: z.number().optional(),
+    priceUsd: z.number().optional(),
+  })
+  .refine((d) => Boolean(d.subjectId || d.subjectName), {
+    message: 'A subject ID or subject name is required',
+    path: ['subjectName'],
+  })
+  .refine(
+    (d) => !(d.isFree && ((d.priceEgp ?? 0) > 0 || (d.priceUsd ?? 0) > 0)),
+    { message: 'A free course cannot have a positive price', path: ['isFree'] }
+  );
 
 export const createSectionSchema = z.object({
   titleEn: z.string().min(2, 'English section title is required'),
@@ -55,6 +69,124 @@ export const createManualSubscriptionSchema = z.object({
   period: z.enum(['MONTHLY', 'SIX_MONTHS', 'YEARLY']),
   paymentMethod: z.string().min(1, 'Payment method is required'),
   transactionId: z.string().min(1, 'Transaction reference/ID is required'),
+});
+
+// Commerce Order Schema (student checkout)
+export const createOrderSchema = z.object({
+  productId: z.string().uuid('Valid productId is required'),
+  paymentMethod: z.enum(['MANUAL', 'PAYMOB', 'FAWRY']),
+  // Client-generated UUID; replaying the same key returns the same order.
+  idempotencyKey: z.string().min(8, 'Idempotency key is required'),
+  transactionRef: z.string().max(120).optional(),
+});
+
+// ── Assessment (exam) engine schemas ────────────────────────────────
+export const createQuestionPoolSchema = z.object({
+  titleEn: z.string().min(2, 'English title is required'),
+  titleAr: z.string().min(2, 'Arabic title is required'),
+  description: z.string().optional(),
+});
+
+export const addQuestionItemSchema = z
+  .object({
+    textEn: z.string().min(2, 'English question text is required'),
+    textAr: z.string().min(1).optional(),
+    questionType: z.enum(['MCQ', 'TRUE_FALSE', 'ESSAY']),
+    difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).default('MEDIUM'),
+    // Accepts ["a","b"] or a pre-stringified JSON array - both stored as JSON text.
+    optionsJson: z.union([z.array(z.string()), z.string()]).default([]),
+    // Accepts raw values ('true', 42) or already-encoded JSON ('"4"', '"true"').
+    correctAnswerJson: z.union([z.string(), z.number()]).optional(),
+    explanation: z.string().optional(),
+    points: z.number().int().min(1).max(100).default(10),
+  })
+  .superRefine((d, ctx) => {
+    let optionCount = 0;
+    if (Array.isArray(d.optionsJson)) {
+      optionCount = d.optionsJson.length;
+    } else {
+      try {
+        const parsed = JSON.parse(d.optionsJson);
+        optionCount = Array.isArray(parsed) ? parsed.length : 0;
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['optionsJson'],
+          message: 'optionsJson must be a JSON array of option strings',
+        });
+        return;
+      }
+    }
+
+    if (d.questionType === 'MCQ' && (optionCount < 2 || !d.correctAnswerJson)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['optionsJson'],
+        message: 'MCQ questions need at least two options and a correct answer',
+      });
+    }
+
+    if (d.questionType === 'TRUE_FALSE') {
+      let answer: any = d.correctAnswerJson;
+      if (typeof answer === 'string') {
+        try {
+          answer = JSON.parse(answer);
+        } catch {}
+      }
+      if (!answer || !['true', 'false'].includes(String(answer).toLowerCase())) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['correctAnswerJson'],
+          message: 'TRUE_FALSE questions need a correct answer of true or false',
+        });
+      }
+    }
+  })
+  .transform((d) => ({
+    ...d,
+    textAr: d.textAr && d.textAr.trim() ? d.textAr : d.textEn,
+    optionsJson: Array.isArray(d.optionsJson) ? JSON.stringify(d.optionsJson) : d.optionsJson,
+    correctAnswerJson:
+      d.correctAnswerJson === undefined
+        ? undefined
+        : typeof d.correctAnswerJson === 'number'
+        ? JSON.stringify(d.correctAnswerJson)
+        : isProbablyEncoded(d.correctAnswerJson)
+        ? d.correctAnswerJson
+        : JSON.stringify(d.correctAnswerJson),
+  }));
+
+/** True for values that are already JSON scalars/collections ('"4"', 'true', '[..]', '{..}'). */
+function isProbablyEncoded(v: string): boolean {
+  const trimmed = v.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) ||
+    trimmed === 'true' ||
+    trimmed === 'false' ||
+    trimmed === 'null'
+  ) {
+    return true;
+  }
+  return trimmed.startsWith('[') || trimmed.startsWith('{');
+}
+
+// Expired sessions legitimately arrive with zero answers.
+export const createAssessmentSchema = z.object({
+  poolId: z.string().uuid('Valid poolId is required'),
+  titleEn: z.string().min(2, 'English title is required'),
+  titleAr: z.string().min(2, 'Arabic title is required'),
+  durationMinutes: z.number().int().min(1).max(300).default(30),
+  passingScore: z.number().int().min(0).max(100).default(60),
+  totalQuestions: z.number().int().min(1).max(100).default(10),
+});
+
+export const submitAssessmentAttemptSchema = z.object({
+  answers: z.array(
+    z.object({
+      questionId: z.string().min(1),
+      answer: z.union([z.string(), z.number(), z.null()]),
+    })
+  ),
 });
 
 // Quiz Schema
@@ -284,17 +416,24 @@ export const updateSubjectPricingSchema = z.object({
 });
 
 // --- Course update (lifecycle fields are NOT accepted here; status/isPublished are admin-only via review endpoints) ---
-export const updateCourseSchema = z.object({
-  titleEn: z.string().min(2).optional(),
-  titleAr: z.string().min(2).optional(),
-  description: z.string().min(5, 'Description must be at least 5 characters').optional(),
-  thumbnail: z.string().optional(),
-  subjectId: z.string().optional(),
-  gradeId: z.string().nullable().optional(),
-  academicYearId: z.string().nullable().optional(),
-  priceEgp: z.number().min(0).optional(),
-  priceUsd: z.number().min(0).optional(),
-});
+export const updateCourseSchema = z
+  .object({
+    titleEn: z.string().min(2).optional(),
+    titleAr: z.string().min(2).optional(),
+    description: z.string().min(5, 'Description must be at least 5 characters').optional(),
+    thumbnail: z.string().optional(),
+    subjectId: z.string().optional(),
+    subjectName: z.string().min(2).optional(),
+    gradeId: z.string().nullable().optional(),
+    academicYearId: z.string().nullable().optional(),
+    isFree: z.boolean().optional(),
+    priceEgp: z.number().min(0).optional(),
+    priceUsd: z.number().min(0).optional(),
+  })
+  .refine(
+    (d) => !(d.isFree && ((d.priceEgp ?? 0) > 0 || (d.priceUsd ?? 0) > 0)),
+    { message: 'A free course cannot have a positive price', path: ['isFree'] }
+  );
 
 // --- Assignments ---
 export const updateAssignmentSchema = z.object({

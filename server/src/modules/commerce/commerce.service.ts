@@ -1,5 +1,6 @@
 import { prisma } from '../../prisma';
 import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors';
+import { logAuditAction } from '../audit/audit.service';
 import {
   ProductType,
   OrderStatus,
@@ -47,6 +48,7 @@ export class CommerceService {
       productId: string;
       paymentMethod: PaymentMethod;
       idempotencyKey: string;
+      transactionRef?: string;
     }
   ) {
     // Check existing order with idempotencyKey
@@ -64,6 +66,12 @@ export class CommerceService {
       throw new NotFoundError('Product not found or inactive');
     }
 
+    // Zero-priced products are not purchasable - the course is either free
+    // (open enrollment) or misconfigured. Point students at enroll instead.
+    if (Number(product.priceEgp) <= 0) {
+      throw new BadRequestError('This product is free or unavailable for purchase');
+    }
+
     return await prisma.order.create({
       data: {
         student: { connect: { id: studentId } },
@@ -73,6 +81,7 @@ export class CommerceService {
         totalAmountUsd: product.priceUsd,
         paymentMethod: data.paymentMethod,
         idempotencyKey: data.idempotencyKey,
+        ...(data.transactionRef && { transactionRef: data.transactionRef }),
       },
       include: {
         product: true,
@@ -80,11 +89,89 @@ export class CommerceService {
     });
   }
 
+  /** Student's own order history (purchase tracking / status polling). */
+  static async getMyOrders(studentId: string) {
+    return prisma.order.findMany({
+      where: { studentId },
+      include: {
+        product: {
+          select: { id: true, nameEn: true, nameAr: true, productType: true, resourceId: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+  }
+
+  /** Admin queue of orders pending manual payment reconciliation. */
+  static async adminListOrders(status?: OrderStatus) {
+    return prisma.order.findMany({
+      where: status ? { status } : undefined,
+      include: {
+        product: { select: { id: true, nameEn: true, nameAr: true, priceEgp: true } },
+        student: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
+
+  /** Admin confirms an offline payment (Vodafone Cash/InstaPay receipt verified). */
+  static async adminApproveOrder(orderId: string, adminId: string) {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+    if (order.status === OrderStatus.PAID) {
+      return { message: 'Order already processed', status: order.status };
+    }
+    if (order.paymentMethod === PaymentMethod.VOUCHER) {
+      throw new BadRequestError('Voucher-based orders are fulfilled by redeeming the voucher code');
+    }
+
+    const result = await this.fulfillOrder(
+      orderId,
+      order.status,
+      order.transactionRef || `ADMIN-APPROVED-${adminId}`,
+      true
+    );
+
+    await logAuditAction(adminId, 'ORDER_APPROVED', orderId, 'Order', {
+      studentId: order.studentId,
+      amountEgp: Number(order.totalAmountEgp),
+    });
+
+    return result;
+  }
+
+  /** Admin rejects a manual payment (invalid/missing transaction proof). */
+  static async adminRejectOrder(orderId: string, adminId: string) {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+    if (order.status === OrderStatus.PAID) {
+      throw new ConflictError('Cannot reject an already-paid order - issue a refund instead');
+    }
+
+    const failed = await prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.FAILED },
+    });
+
+    await logAuditAction(adminId, 'ORDER_REJECTED', orderId, 'Order', {
+      studentId: order.studentId,
+    });
+
+    return failed;
+  }
+
   // Webhook Reconciliation (Paymob & Fawry Idempotent Processing)
   static async processPaymobWebhook(data: {
     orderId: string;
     transactionRef: string;
     success: boolean;
+    amount?: number;
   }) {
     const order = await prisma.order.findUnique({
       where: { id: data.orderId },
@@ -94,14 +181,87 @@ export class CommerceService {
       throw new NotFoundError('Order not found');
     }
 
-    if (order.status === OrderStatus.PAID) {
+    // Amount reconciliation: never fulfill an order for less than its price.
+    if (data.amount !== undefined) {
+      const expected = Number(order.totalAmountEgp);
+      if (!Number.isFinite(data.amount) || data.amount + 0.009 < expected) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { status: OrderStatus.FAILED, transactionRef: data.transactionRef },
+        });
+        throw new BadRequestError('Payment amount does not match the order total');
+      }
+    }
+
+    return this.fulfillOrder(order.id, order.status, data.transactionRef, data.success);
+  }
+
+  /**
+   * Fawry webhooks arrive in Fawry's body shape ({merchantCode,
+   * merchantRefNum, amount, statusCode}) - NOT Paymob's. merchantRefNum is
+   * whatever reference the merchant set at charge time; we accept either our
+   * orderId or our idempotencyKey as that reference.
+   */
+  static async processFawryWebhook(data: {
+    merchantRefNum: string;
+    amount: string | number;
+    success?: boolean;
+    statusCode?: string | number;
+  }) {
+    if (!data.merchantRefNum) {
+      throw new BadRequestError('merchantRefNum is required');
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [{ id: data.merchantRefNum }, { idempotencyKey: data.merchantRefNum }],
+      },
+      include: { product: true },
+    });
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const paidAmount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+    const expected = Number(order.totalAmountEgp);
+    if (!Number.isFinite(paidAmount) || paidAmount + 0.009 < expected) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.FAILED, transactionRef: data.merchantRefNum },
+      });
+      throw new BadRequestError('Payment amount does not match the order total');
+    }
+
+    // Fawry signals success via statusCode === 200; fall back to a boolean flag.
+    const success =
+      data.statusCode !== undefined ? String(data.statusCode) === '200' : data.success !== false;
+
+    return this.fulfillOrder(order.id, order.status, data.merchantRefNum, success);
+  }
+
+  /** Idempotent PAID/FAILED transition + atomic entitlement grant. */
+  private static async fulfillOrder(
+    orderId: string,
+    currentStatus: OrderStatus,
+    transactionRef: string,
+    success: boolean
+  ) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { product: true },
+    });
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    if (currentStatus === OrderStatus.PAID || order.status === OrderStatus.PAID) {
       return { message: 'Order already processed', status: order.status, order };
     }
 
-    if (!data.success) {
+    if (!success) {
       const failedOrder = await prisma.order.update({
-        where: { id: data.orderId },
-        data: { status: OrderStatus.FAILED, transactionRef: data.transactionRef },
+        where: { id: orderId },
+        data: { status: OrderStatus.FAILED, transactionRef },
       });
       return { message: 'Order payment failed', status: OrderStatus.FAILED, order: failedOrder };
     }
@@ -110,8 +270,8 @@ export class CommerceService {
       async (tx) => {
         // Update order status to PAID
         const paidOrder = await tx.order.update({
-          where: { id: data.orderId },
-          data: { status: OrderStatus.PAID, transactionRef: data.transactionRef },
+          where: { id: orderId },
+          data: { status: OrderStatus.PAID, transactionRef },
         });
 
         // Grant Entitlement inside the exact same atomic transaction

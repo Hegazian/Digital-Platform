@@ -31,6 +31,7 @@ vi.mock('../../../prisma', () => ({
       findMany: vi.fn().mockResolvedValue([]),
       findFirst: vi.fn().mockResolvedValue(null),
       create: vi.fn(),
+      update: vi.fn().mockResolvedValue({ id: 'p1' }),
       deleteMany: vi.fn(),
     },
     discussionThread: { deleteMany: vi.fn() },
@@ -135,6 +136,92 @@ describe('Course Governance & Lifecycle Unit Tests', () => {
       const result = await CourseService.enrollStudentFree('c1', 's1');
       expect(result.message).toContain('Already enrolled');
       expect(prisma.entitlement.create).not.toHaveBeenCalled();
+    });
+
+    it('should block enrollment when an active priced product exists (no checkout bypass)', async () => {
+      const mockCourse = { id: 'c1', isPublished: true, status: 'PUBLISHED', isFree: false };
+      (prisma.course.findUnique as any).mockResolvedValue(mockCourse);
+      (prisma.product.findFirst as any).mockResolvedValue({ id: 'p1', priceEgp: 150, isActive: true });
+
+      await expect(CourseService.enrollStudentFree('c1', 's1')).rejects.toThrow(ForbiddenError);
+      expect(prisma.entitlement.create).not.toHaveBeenCalled();
+    });
+
+    it('should enroll into an isFree course without consulting products at all', async () => {
+      const mockCourse = { id: 'c1', isPublished: true, status: 'PUBLISHED', isFree: true };
+      (prisma.course.findUnique as any).mockResolvedValue(mockCourse);
+      // Even a stale priced product must NOT block an isFree course:
+      (prisma.product.findFirst as any).mockResolvedValue({ id: 'p1', priceEgp: 150, isActive: true });
+      (prisma.entitlement.findFirst as any).mockResolvedValue(null);
+      (prisma.entitlement.create as any).mockResolvedValue({ id: 'ent-2', status: 'ACTIVE' });
+
+      const result = await CourseService.enrollStudentFree('c1', 's1');
+      expect(result.success).toBe(true);
+      expect(prisma.product.findFirst).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isFree pricing transitions (updateCourse)', () => {
+    it('should force product prices to 0 when marking a course free', async () => {
+      (prisma.course.findUnique as any).mockResolvedValue({
+        id: 'c1',
+        teacherId: 't1',
+        isFree: false,
+        titleEn: 'Old',
+        titleAr: 'قديم',
+      });
+      (prisma.course.update as any).mockImplementation((args: any) => Promise.resolve({ ...args.data, id: 'c1' }));
+      (prisma.product.findFirst as any).mockResolvedValue({ id: 'p1', priceEgp: 150, priceUsd: 10 });
+      (prisma.product.update as any).mockResolvedValue({ id: 'p1' });
+
+      await CourseService.updateCourse('c1', 't1', { isFree: true });
+
+      expect(prisma.course.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isFree: true }) })
+      );
+      expect(prisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 0, priceUsd: 0 }) })
+      );
+    });
+
+    it('should apply platform default price when un-freeing without explicit prices', async () => {
+      (prisma.course.findUnique as any).mockResolvedValue({
+        id: 'c1',
+        teacherId: 't1',
+        isFree: true,
+        titleEn: 'Old',
+        titleAr: 'قديم',
+      });
+      (prisma.course.update as any).mockImplementation((args: any) => Promise.resolve({ ...args.data, id: 'c1' }));
+      // The course was free -> its product is zero-priced:
+      (prisma.product.findFirst as any).mockResolvedValue({ id: 'p1', priceEgp: 0, priceUsd: 0 });
+      (prisma.product.update as any).mockResolvedValue({ id: 'p1' });
+
+      await CourseService.updateCourse('c1', 't1', { isFree: false });
+
+      // Must not stay accidentally purchasable at 0:
+      expect(prisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 150, priceUsd: 10 }) })
+      );
+    });
+
+    it('should keep explicit prices when un-freeing with prices provided', async () => {
+      (prisma.course.findUnique as any).mockResolvedValue({
+        id: 'c1',
+        teacherId: 't1',
+        isFree: true,
+        titleEn: 'Old',
+        titleAr: 'قديم',
+      });
+      (prisma.course.update as any).mockImplementation((args: any) => Promise.resolve({ ...args.data, id: 'c1' }));
+      (prisma.product.findFirst as any).mockResolvedValue({ id: 'p1', priceEgp: 0, priceUsd: 0 });
+      (prisma.product.update as any).mockResolvedValue({ id: 'p1' });
+
+      await CourseService.updateCourse('c1', 't1', { isFree: false, priceEgp: 250, priceUsd: 15 });
+
+      expect(prisma.product.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 250, priceUsd: 15 }) })
+      );
     });
   });
 });

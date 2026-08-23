@@ -2,6 +2,7 @@ import { prisma } from '../../prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { VideoStatus } from '@prisma/client';
 import { StorageService } from '../../utils/storage';
+import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import jwt from 'jsonwebtoken';
 
 export class VideoService {
@@ -100,8 +101,7 @@ export class VideoService {
 
     if (video.videoUrl.startsWith('/uploads/')) {
       // Local fallback: generate a short-lived JWT token that the frontend can use to hit our streaming endpoint
-      const secret = process.env.JWT_SECRET || 'fallback-secret';
-      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, secret, { expiresIn: '2h' });
+      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '2h' });
       return `/api/v1/videos/${video.id}/stream?token=${token}`;
     }
 

@@ -8,6 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest run --no-file-parallelism",
+    "db:push": "prisma db push",
+    "db:push:test": "node scripts/db-env.js .env.test db push",
+    "db:reset:test": "node scripts/db-env.js .env.test db push --force-reset",
     "db:seed": "npx prisma db seed",
     "create:admin": "node create-admin.js"
   },

@@ -172,6 +172,13 @@ export class AdminService {
     // Instant revocation: next request from this user re-checks the DB.
     invalidateActivationCache(userId);
 
+    // Deactivation also kills every live refresh session immediately
+    // (reactivation requires a fresh login).
+    if (!isActive) {
+      const { AuthService } = await import('../auth/auth.service');
+      await AuthService.revokeAllForUser(userId);
+    }
+
     await logAuditAction(
       userId,
       isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',

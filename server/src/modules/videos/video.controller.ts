@@ -1,7 +1,8 @@
 import { Response, NextFunction } from 'express';
 import { VideoService } from './video.service';
 import { AuthRequest } from '../auth/auth.middleware';
-import { BadRequestError, UnauthorizedError } from '../../utils/errors';
+import { BadRequestError, UnauthorizedError, ForbiddenError } from '../../utils/errors';
+import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
@@ -67,7 +68,7 @@ export class VideoController {
         throw new UnauthorizedError('Stream token is missing');
       }
 
-      const secret = process.env.JWT_SECRET || 'fallback-secret';
+      const secret = VIDEO_STREAM_SECRET;
       let payload: any;
       try {
         payload = jwt.verify(token as string, secret);
@@ -85,8 +86,13 @@ export class VideoController {
         throw new BadRequestError('Local video not found');
       }
 
-      // Convert '/uploads/lesson-videos/xxx.mp4' to absolute path
+      // Convert '/uploads/lesson-videos/xxx.mp4' to absolute path and pin it
+      // inside the uploads directory (defense against crafted stored paths).
+      const uploadsRoot = path.join(process.cwd(), 'uploads');
       const filePath = path.join(process.cwd(), video.videoUrl);
+      if (!filePath.startsWith(uploadsRoot + path.sep)) {
+        throw new ForbiddenError('Invalid video storage path');
+      }
       if (!fs.existsSync(filePath)) {
         throw new BadRequestError('Video file missing from disk');
       }

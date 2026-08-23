@@ -102,8 +102,25 @@ model User {
   apiTokens          ApiToken[]
   webhooks           WebhookEndpoint[]
   auditLogs          AuditLog[]
+  refreshTokens      RefreshToken[]
 
   @@map("users")
+}
+
+/// Server-side session registry: hashed refresh tokens that can be rotated,
+/// revoked individually (logout) or wholesale (theft detection, deactivation).
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 
@@ -183,6 +200,7 @@ model Course {
   status          CourseStatus     @default(DRAFT)
   visibility      CourseVisibility @default(PUBLIC)
   isPublished     Boolean          @default(false)
+  isFree          Boolean          @default(false) // true = open enrollment; must have no priced product
   rejectionReason String?          @db.Text
   deletedAt       DateTime?
   createdAt       DateTime         @default(now())
