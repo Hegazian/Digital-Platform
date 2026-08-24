@@ -1,54 +1,74 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../auth/auth.middleware';
-import { prisma } from '../../prisma';
+import { Role } from '@prisma/client';
+import { CollectionsService } from './collection.service';
 
-const inMemoryCollections: any[] = [];
+const isAdmin = (req: AuthRequest) => req.user?.role === Role.ADMIN;
 
-export const createCollection = async (req: AuthRequest, res: Response) => {
-  const { titleEn, titleAr, slug, description, thumbnail } = req.body;
-
-  if (!titleEn || !titleAr || !slug) {
-    return res.status(400).json({ success: false, message: 'Titles and slug are required' });
-  }
-
+export const listCollections = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const collection = await prisma.collection.create({
-      data: {
-        titleEn,
-        titleAr,
-        slug,
-        description,
-        thumbnail,
-      },
-    });
-
-    return res.status(201).json({ success: true, data: collection });
-  } catch (error) {
-    const mockColl = {
-      id: `mock-coll-${Date.now()}`,
-      titleEn,
-      titleAr,
-      slug,
-      description,
-      thumbnail,
-      isPublished: true,
-      createdAt: new Date().toISOString(),
-    };
-    inMemoryCollections.push(mockColl);
-    return res.status(201).json({ success: true, data: mockColl });
+    const includeUnpublished = isAdmin(req) && req.query.includeUnpublished === 'true';
+    const collections = await CollectionsService.listCollections({ includeUnpublished });
+    res.status(200).json({ success: true, data: collections });
+  } catch (err) {
+    next(err);
   }
 };
 
-export const getCollections = async (req: Request, res: Response) => {
+export const getCollectionById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const collections = await prisma.collection.findMany({
-      where: { isPublished: true },
-      include: { courses: true },
-      orderBy: { createdAt: 'desc' },
+    const collection = await CollectionsService.getCollectionById(req.params.id as string, {
+      includeUnpublished: isAdmin(req),
     });
+    res.status(200).json({ success: true, data: collection });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    return res.status(200).json({ success: true, data: collections });
-  } catch (error) {
-    return res.status(200).json({ success: true, data: inMemoryCollections });
+export const createCollection = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const collection = await CollectionsService.createCollection(req.body);
+    res.status(201).json({ success: true, data: collection });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateCollection = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const collection = await CollectionsService.updateCollection(
+      req.params.id as string,
+      req.body
+    );
+    res.status(200).json({ success: true, data: collection });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteCollection = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await CollectionsService.deleteCollection(req.params.id as string);
+    res.status(200).json({ success: true, message: 'Collection deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const setCollectionCourses = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courseIds = (req.body?.courseIds ?? []) as string[];
+    const collection = await CollectionsService.setCollectionCourses(
+      req.params.id as string,
+      courseIds
+    );
+    res.status(200).json({ success: true, data: collection });
+  } catch (err) {
+    next(err);
   }
 };

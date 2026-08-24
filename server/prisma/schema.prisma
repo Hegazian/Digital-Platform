@@ -83,6 +83,10 @@ model User {
   mfaSecret     String?
   mfaEnabled    Boolean   @default(false)
 
+  /// Career personalization (onboarding picker)
+  interestedTrackId String?
+  interestedTrack   CareerTrack? @relation(fields: [interestedTrackId], references: [id], onDelete: SetNull)
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -139,8 +143,41 @@ model Subject {
   subscriptions Subscription[]
   gradeSubjects GradeSubject[]
   liveSessions  LiveSession[]
+  careerTracks  CareerTrackSubject[]
 
   @@map("subjects")
+}
+
+/// Aspirational grouping (Future Engineers, Future Doctors...) used to
+/// personalize the catalog and dashboards. Subjects are linked by keywords
+/// at seed time and manageable later.
+model CareerTrack {
+  id        String   @id @default(uuid())
+  slug      String   @unique // engineering | medicine | science | development ...
+  nameEn    String
+  nameAr    String
+  iconKey   String   @default("star") // client-side icon key
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subjects CareerTrackSubject[]
+
+  users User[]
+
+  @@map("career_tracks")
+}
+
+model CareerTrackSubject {
+  trackId   String
+  subjectId String
+
+  track   CareerTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, subjectId])
+  @@map("career_track_subjects")
 }
 
 model SubjectPricing {
@@ -211,6 +248,7 @@ model Course {
   grade           Grade?           @relation(fields: [gradeId], references: [id])
   sections        Section[]
   modules         CourseModule[]
+  collectionLinks CollectionCourse[]
 
   @@map("courses")
 }
@@ -794,6 +832,12 @@ model AppConfig {
   siteNameAr                String   @default("منصة التعليم")
   siteDescriptionEn         String?
   siteDescriptionAr         String?
+  sloganEn                  String   @default("") // aspirational tagline, e.g. "Where future engineers are built"
+  sloganAr                  String   @default("")
+  hostDomain                String   @default("localhost:3000")
+  supportEmail              String   @default("support@eduplatform.com")
+  currency                  String   @default("EGP")
+  requireCourseApproval     Boolean  @default(true)
   allowTeacherRegistration  Boolean  @default(true)
   enableCodePlaygrounds     Boolean  @default(true)
   enableCollaborativeBoards Boolean  @default(true)
@@ -854,6 +898,7 @@ model PodcastEpisode {
   titleAr     String
   audioUrl    String
   durationSec Int      @default(0)
+  sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
   podcast     Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
@@ -895,6 +940,7 @@ model CollectionCourse {
   sortOrder    Int        @default(0)
 
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, courseId])
   @@map("collection_courses")

@@ -11,23 +11,8 @@ export const getAppConfig = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        siteNameEn: config?.siteNameEn || "EduPlatform",
-        siteNameAr: config?.siteNameAr || "منصة التعليم",
-        siteDescriptionEn: config?.siteDescriptionEn || "Next-generation Egyptian secondary education platform",
-        siteDescriptionAr: config?.siteDescriptionAr || "المنصة التعليمية المتقدمة لطلاب المرحلة الثانوية",
-        hostDomain: "localhost:3000",
-        supportEmail: "support@eduplatform.com",
-        currency: "EGP",
-        requireCourseApproval: true,
-        allowTeacherRegistration: config?.allowTeacherRegistration ?? true,
-        enableCodePlaygrounds: config?.enableCodePlaygrounds ?? true,
-        enableCollaborativeBoards: config?.enableCollaborativeBoards ?? true,
-        primaryColor: config?.primaryColor || "#4f46e5",
-      },
-    });
+    // Return the stored row as-is; schema defaults cover every field.
+    res.status(200).json({ success: true, data: config ?? {} });
   } catch (error) {
     res.status(200).json({
       success: true,
@@ -56,6 +41,8 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       siteNameAr,
       siteDescriptionEn,
       siteDescriptionAr,
+      sloganEn,
+      sloganAr,
       hostDomain,
       supportEmail,
       currency,
@@ -71,6 +58,14 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       ...(siteNameAr !== undefined && { siteNameAr }),
       ...(siteDescriptionEn !== undefined && { siteDescriptionEn }),
       ...(siteDescriptionAr !== undefined && { siteDescriptionAr }),
+      ...(sloganEn !== undefined && { sloganEn }),
+      ...(sloganAr !== undefined && { sloganAr }),
+      ...(hostDomain !== undefined && { hostDomain }),
+      ...(supportEmail !== undefined && { supportEmail }),
+      ...(currency !== undefined && { currency }),
+      ...(requireCourseApproval !== undefined && {
+        requireCourseApproval: Boolean(requireCourseApproval),
+      }),
       ...(allowTeacherRegistration !== undefined && { allowTeacherRegistration: Boolean(allowTeacherRegistration) }),
       ...(enableCodePlaygrounds !== undefined && { enableCodePlaygrounds: Boolean(enableCodePlaygrounds) }),
       ...(enableCollaborativeBoards !== undefined && { enableCollaborativeBoards: Boolean(enableCollaborativeBoards) }),
@@ -93,24 +88,8 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        ...(config || {}),
-        siteNameEn: siteNameEn || config?.siteNameEn || "EduPlatform",
-        siteNameAr: siteNameAr || config?.siteNameAr || "منصة التعليم",
-        siteDescriptionEn: siteDescriptionEn || config?.siteDescriptionEn || "Next-generation Egyptian secondary education platform",
-        siteDescriptionAr: siteDescriptionAr || config?.siteDescriptionAr || "المنصة التعليمية المتقدمة لطلاب المرحلة الثانوية",
-        hostDomain: hostDomain || "localhost:3000",
-        supportEmail: supportEmail || "support@eduplatform.com",
-        currency: currency || "EGP",
-        requireCourseApproval: requireCourseApproval !== undefined ? Boolean(requireCourseApproval) : true,
-        allowTeacherRegistration: allowTeacherRegistration !== undefined ? Boolean(allowTeacherRegistration) : true,
-        enableCodePlaygrounds: enableCodePlaygrounds !== undefined ? Boolean(enableCodePlaygrounds) : true,
-        enableCollaborativeBoards: enableCollaborativeBoards !== undefined ? Boolean(enableCollaborativeBoards) : true,
-        primaryColor: primaryColor || config?.primaryColor || "#4f46e5",
-      },
-    });
+    // The row already contains exactly what was provided + prior values.
+    res.status(200).json({ success: true, data: config ?? {} });
   } catch (error: any) {
     console.error("Failed to update config:", error);
     res.status(500).json({ success: false, message: error?.message || "Failed to update config" });

@@ -36,6 +36,7 @@ import webhookRoutes from './modules/developer/webhook.routes';
 import mfaRoutes from './modules/auth/mfa.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import assignmentRoutes from './modules/assignments/assignment.routes';
+import careersRoutes from './modules/careers/careers.routes';
 
 const app: Express = express();
 
@@ -153,6 +154,7 @@ app.use('/api/v1/developer', webhookRoutes);
 app.use('/api/v1/mfa', mfaRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
+app.use('/api/v1/careers', careersRoutes);
 
 // 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
