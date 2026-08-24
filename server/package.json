@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest run --no-file-parallelism",
+    "typecheck": "tsc --noEmit",
     "db:push": "prisma db push",
     "db:push:test": "node scripts/db-env.js .env.test db push",
     "db:reset:test": "node scripts/db-env.js .env.test db push --force-reset",
