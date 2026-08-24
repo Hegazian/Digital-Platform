@@ -123,7 +123,7 @@ export class CommerceService {
       throw new NotFoundError('Order not found');
     }
     if (order.status === OrderStatus.PAID) {
-      return { message: 'Order already processed', status: order.status };
+      return { message: 'Order already processed', status: order.status, order };
     }
     if (order.paymentMethod === PaymentMethod.VOUCHER) {
       throw new BadRequestError('Voucher-based orders are fulfilled by redeeming the voucher code');

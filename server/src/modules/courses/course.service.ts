@@ -362,23 +362,37 @@ export class CourseService {
       prisma.product
     ) {
       const willBeFree = data.isFree ?? course.isFree;
-      let priceEgp = data.priceEgp !== undefined ? Number(data.priceEgp) : null;
-      let priceUsd = data.priceUsd !== undefined ? Number(data.priceUsd) : null;
+      let priceEgp: number;
+      let priceUsd: number;
 
-      if (!willBeFree && (priceEgp === null || priceUsd === null)) {
-        const existingProduct = await prisma.product.findFirst({
-          where: { productType: 'COURSE', resourceId: id },
-        });
-        const currentPaid =
-          existingProduct && Number(existingProduct.priceEgp) > 0
-            ? existingProduct
-            : null;
-        priceEgp = priceEgp ?? (currentPaid ? Number(currentPaid.priceEgp) : 150);
-        priceUsd = priceUsd ?? (currentPaid ? Number(currentPaid.priceUsd) : 10);
-      }
       if (willBeFree) {
         priceEgp = 0;
         priceUsd = 0;
+      } else {
+        let explicitEgp =
+          data.priceEgp !== undefined ? Number(data.priceEgp) : undefined;
+        let explicitUsd =
+          data.priceUsd !== undefined ? Number(data.priceUsd) : undefined;
+
+        if (explicitEgp === undefined || explicitUsd === undefined) {
+          const existingProduct = await prisma.product.findFirst({
+            where: { productType: 'COURSE', resourceId: id },
+          });
+          const currentPaid =
+            existingProduct && Number(existingProduct.priceEgp) > 0
+              ? existingProduct
+              : null;
+
+          if (explicitEgp === undefined) {
+            explicitEgp = currentPaid ? Number(currentPaid.priceEgp) : 150;
+          }
+          if (explicitUsd === undefined) {
+            explicitUsd = currentPaid ? Number(currentPaid.priceUsd) : 10;
+          }
+        }
+
+        priceEgp = explicitEgp as number;
+        priceUsd = explicitUsd as number;
       }
 
       const existingProduct = await prisma.product.findFirst({
