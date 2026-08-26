@@ -24,6 +24,7 @@ export const getAppConfig = async (req: Request, res: Response) => {
         hostDomain: "localhost:3000",
         supportEmail: "support@eduplatform.com",
         currency: "EGP",
+        exchangeRateUsdToEgp: 48,
         requireCourseApproval: true,
         allowTeacherRegistration: true,
         enableCodePlaygrounds: true,
@@ -46,6 +47,7 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       hostDomain,
       supportEmail,
       currency,
+      exchangeRateUsdToEgp,
       requireCourseApproval,
       allowTeacherRegistration,
       enableCodePlaygrounds,
@@ -63,6 +65,13 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       ...(hostDomain !== undefined && { hostDomain }),
       ...(supportEmail !== undefined && { supportEmail }),
       ...(currency !== undefined && { currency }),
+      // Exchange rate must be a positive number — it drives every USD price.
+      ...(exchangeRateUsdToEgp !== undefined && {
+        exchangeRateUsdToEgp: Math.max(
+          0.01,
+          Number(exchangeRateUsdToEgp) || 48
+        ),
+      }),
       ...(requireCourseApproval !== undefined && {
         requireCourseApproval: Boolean(requireCourseApproval),
       }),

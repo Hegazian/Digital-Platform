@@ -11,6 +11,8 @@ describe('Zod Validation Middleware', () => {
         password: 'Password123!',
         name: 'Test Student',
         role: 'STUDENT',
+        studentNumber: 'STU-2026-001',
+        gradeId: 'grade-id-1',
       },
     } as AuthRequest;
     const mRes = {} as any;

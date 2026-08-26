@@ -8,6 +8,8 @@ const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  * The refresh token travels ONLY as an httpOnly cookie scoped to the auth
  * API - JavaScript (and therefore XSS) can never read or exfiltrate it.
  * Same-origin API proxying on the client makes this cookie first-party.
+ * It must NEVER be serialized into a JSON response body, so every handler
+ * passes its service result through publicAuthPayload() before responding.
  */
 function setRefreshCookie(res: Response, token: string) {
   res.cookie(REFRESH_COOKIE, token, {
@@ -36,10 +38,27 @@ export function getRefreshTokenFromRequest(req: Request): string | undefined {
     const idx = part.indexOf('=');
     if (idx === -1) continue;
     if (part.slice(0, idx).trim() === REFRESH_COOKIE) {
-      return decodeURIComponent(part.slice(idx + 1).trim());
+      try {
+        return decodeURIComponent(part.slice(idx + 1).trim());
+      } catch {
+        // Malformed escape sequence: treat as no cookie rather than a 500.
+        return undefined;
+      }
     }
   }
   return undefined;
+}
+
+type WithTokens = { tokens?: { accessToken?: string; refreshToken?: string } };
+
+/**
+ * Removes refresh tokens from a service result so they can never leak into
+ * the response body while the cookie is still set from the original value.
+ */
+function publicAuthPayload<T extends WithTokens>(result: T) {
+  if (!result.tokens) return { ...result, tokens: undefined };
+  const { refreshToken: _omit, ...safeTokens } = result.tokens;
+  return { ...result, tokens: safeTokens };
 }
 
 export class AuthController {
@@ -58,7 +77,7 @@ export class AuthController {
       if (!result.mfaRequired && result.tokens?.refreshToken) {
         setRefreshCookie(res, result.tokens.refreshToken);
       }
-      res.status(200).json({ success: true, data: result });
+      res.status(200).json({ success: true, data: publicAuthPayload(result) });
     } catch (error) {
       next(error);
     }
@@ -70,7 +89,7 @@ export class AuthController {
       if (result.tokens?.refreshToken) {
         setRefreshCookie(res, result.tokens.refreshToken);
       }
-      res.status(200).json({ success: true, data: result });
+      res.status(200).json({ success: true, data: publicAuthPayload(result) });
     } catch (error) {
       next(error);
     }
@@ -84,7 +103,8 @@ export class AuthController {
       if (result.refreshToken) {
         setRefreshCookie(res, result.refreshToken);
       }
-      res.status(200).json({ success: true, data: result });
+      // New refresh token is delivered via the cookie only.
+      res.status(200).json({ success: true, data: { accessToken: result.accessToken } });
     } catch (error) {
       next(error);
     }

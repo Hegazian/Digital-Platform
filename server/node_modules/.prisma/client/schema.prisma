@@ -78,10 +78,14 @@ model User {
   teacherStatus TeacherStatus? 
   avatar        String?
   gradeId       String?
+  /// School/national student identifier — required for STUDENT accounts,
+  /// null for teachers/admins. Unique so one number maps to one student.
+  studentNumber String?   @unique
   
   // Enterprise MFA
   mfaSecret     String?
   mfaEnabled    Boolean   @default(false)
+  mfaLastTimeStep Int?
 
   /// Career personalization (onboarding picker)
   interestedTrackId String?
@@ -678,6 +682,7 @@ model Entitlement {
   student      User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
   order        Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
+  @@unique([orderId])
   @@index([studentId, status])
   @@index([resourceType, resourceId, status])
   @@map("entitlements")
@@ -757,6 +762,7 @@ model Assessment {
   durationMinutes Int                 @default(30)
   passingScore    Int                 @default(60)
   totalQuestions  Int                 @default(10)
+  maxAttempts     Int                 @default(1)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
@@ -837,6 +843,9 @@ model AppConfig {
   hostDomain                String   @default("localhost:3000")
   supportEmail              String   @default("support@eduplatform.com")
   currency                  String   @default("EGP")
+  /// Single source of truth for money: admins set EGP prices; USD is always
+  /// DERIVED from this rate so both currencies represent the same amount.
+  exchangeRateUsdToEgp      Float    @default(48)
   requireCourseApproval     Boolean  @default(true)
   allowTeacherRegistration  Boolean  @default(true)
   enableCodePlaygrounds     Boolean  @default(true)
@@ -906,16 +915,7 @@ model PodcastEpisode {
   @@map("podcast_episodes")
 }
 
-model Certificate {
-  id              String   @id @default(uuid())
-  userId          String
-  courseId        String
-  certificateCode String   @unique
-  issuedAt        DateTime @default(now())
-  pdfUrl          String?
 
-  @@map("certificates")
-}
 
 model Collection {
   id          String             @id @default(uuid())

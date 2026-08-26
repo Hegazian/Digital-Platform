@@ -2,58 +2,58 @@ import { prisma } from '../../prisma';
 import { NotFoundError } from '../../utils/errors';
 
 /**
- * Default aspirational tracks. Subjects are linked by keyword matching so the
- * feature works with dynamically teacher-created subjects (name-based).
+ * Default aspirational tracks. The platform serves ONE audience: Egyptian
+ * Thanaweya Amma — Scientific Math track, targeting Engineering and
+ * Computer/Programming faculties. Subjects are linked by keyword matching so
+ * the feature works with dynamically teacher-created subjects (name-based).
  */
 const DEFAULT_TRACKS = [
   {
     slug: 'engineering',
-    nameEn: 'Future Engineers',
-    nameAr: 'مهندسو المستقبل',
+    nameEn: 'Engineering Faculties',
+    nameAr: 'كليات الهندسة',
     iconKey: 'cpu',
     sortOrder: 1,
     keywords: ['physics', 'math', 'mechanics', 'engineering', 'فيزياء', 'رياضيات'],
   },
   {
-    slug: 'medicine',
-    nameEn: 'Future Doctors',
-    nameAr: 'أطباء المستقبل',
-    iconKey: 'stethoscope',
-    sortOrder: 2,
-    keywords: ['biology', 'chemistry', 'science', 'أحياء', 'كيمياء', 'علوم'],
-  },
-  {
     slug: 'development',
-    nameEn: 'Future Developers',
-    nameAr: 'مطورو المستقبل',
+    nameEn: 'Computers & AI Faculties',
+    nameAr: 'حاسبات وذكاء اصطناعي',
     iconKey: 'code',
-    sortOrder: 3,
-    keywords: ['programming', 'computer', 'code', 'software', 'برمجة', 'حاسوب'],
-  },
-  {
-    slug: 'science',
-    nameEn: 'Future Scientists',
-    nameAr: 'علماء المستقبل',
-    iconKey: 'flask',
-    sortOrder: 4,
-    keywords: ['physics', 'chemistry', 'biology', 'geology', 'علوم', 'فيزياء', 'كيمياء', 'أحياء'],
+    sortOrder: 2,
+    keywords: [
+      'programming',
+      'computer',
+      'code',
+      'software',
+      'ai',
+      'برمجة',
+      'حاسوب',
+      'ذكاء اصطناعي',
+    ],
   },
 ];
+
+/** Legacy tracks from the old generic positioning — hidden, not deleted. */
+const DEPRECATED_TRACK_SLUGS = ['medicine', 'science'];
 
 export class CareersService {
   /** Idempotently creates default tracks and links matching existing subjects. */
   static async ensureDefaultTracksExist(): Promise<void> {
-    const existingCount = await prisma.careerTrack.count();
-    if (existingCount > 0) {
-      // Still opportunistically link newly created matching subjects
-      await CareersService.linkMatchingSubjects();
-      return;
-    }
+    // Hide legacy off-positioning tracks (old DBs) without deleting them —
+    // student selections reference them (onDelete: SetNull keeps history).
+    await prisma.careerTrack.updateMany({
+      where: { slug: { in: DEPRECATED_TRACK_SLUGS } },
+      data: { isActive: false },
+    });
 
+    // Keep the on-position defaults present and named correctly, even in
+    // databases that already had tracks seeded under the old copy.
     for (const track of DEFAULT_TRACKS) {
       await prisma.careerTrack.upsert({
         where: { slug: track.slug },
-        update: {},
+        update: { nameEn: track.nameEn, nameAr: track.nameAr, isActive: true },
         create: {
           slug: track.slug,
           nameEn: track.nameEn,

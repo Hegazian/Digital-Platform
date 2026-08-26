@@ -82,7 +82,8 @@ export class CommerceController {
   // Webhooks (Cryptographically Verified)
   static async processPaymobWebhook(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const hmac = (req.headers['x-paymob-hmac'] || req.headers['hmac'] || req.query.hmac) as string;
+      // Headers only: signatures in query strings leak into access/proxy logs.
+      const hmac = (req.headers['x-paymob-hmac'] || req.headers['hmac']) as string;
       const isValid = verifyPaymobSignature(req.body, hmac);
 
       if (!isValid) {
@@ -98,8 +99,9 @@ export class CommerceController {
 
   static async processFawryWebhook(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const signature = (req.headers['x-fawry-signature'] || req.body.signature) as string;
-      const isValid = verifyFawrySignature({ ...req.body, signature });
+      // The signature covers the whole body (minus the signature field), so
+      // statusCode/success cannot be tampered with post-signing.
+      const isValid = verifyFawrySignature({ ...req.body });
 
       if (!isValid) {
         throw new UnauthorizedError('Invalid or missing Fawry signature');

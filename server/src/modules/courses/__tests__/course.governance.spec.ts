@@ -27,6 +27,10 @@ vi.mock('../../../prisma', () => ({
     auditLog: {
       create: vi.fn().mockResolvedValue({ id: 'audit-1' }),
     },
+    // Currency util reads the exchange rate from AppConfig; null -> fallback.
+    appConfig: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
     product: {
       findMany: vi.fn().mockResolvedValue([]),
       findFirst: vi.fn().mockResolvedValue(null),
@@ -36,7 +40,6 @@ vi.mock('../../../prisma', () => ({
     },
     discussionThread: { deleteMany: vi.fn() },
     collectionCourse: { deleteMany: vi.fn() },
-    certificate: { deleteMany: vi.fn() },
   },
 }));
 
@@ -200,8 +203,9 @@ describe('Course Governance & Lifecycle Unit Tests', () => {
       await CourseService.updateCourse('c1', 't1', { isFree: false });
 
       // Must not stay accidentally purchasable at 0:
+      // USD is derived from EGP (150) at the fallback rate of 48.
       expect(prisma.product.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 150, priceUsd: 10 }) })
+        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 150, priceUsd: 3.13 }) })
       );
     });
 
@@ -219,8 +223,10 @@ describe('Course Governance & Lifecycle Unit Tests', () => {
 
       await CourseService.updateCourse('c1', 't1', { isFree: false, priceEgp: 250, priceUsd: 15 });
 
+      // EGP (250) wins; USD is derived at the fallback rate of 48 — the
+      // incoming priceUsd: 15 is intentionally ignored.
       expect(prisma.product.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 250, priceUsd: 15 }) })
+        expect.objectContaining({ data: expect.objectContaining({ priceEgp: 250, priceUsd: 5.21 }) })
       );
     });
   });

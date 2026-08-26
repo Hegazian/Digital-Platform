@@ -123,11 +123,12 @@ describe('Commerce & Entitlement Integration Tests', () => {
         });
       const orderId = orderRes.body.data.id;
 
-      // Simulate Paymob webhook notification
+      // Simulate Paymob webhook notification (amount matches the order total)
       const payload1 = {
         orderId,
         transactionRef: `paymob_tx_${Date.now()}`,
         success: true,
+        amount: 450,
       };
       const { calculatePaymobHmac } = await import('../../../utils/webhook-security');
       const hmac1 = calculatePaymobHmac(payload1, process.env.PAYMOB_HMAC_SECRET || 'test_paymob_hmac_secret_key_123');

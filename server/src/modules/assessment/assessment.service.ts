@@ -89,6 +89,7 @@ export class AssessmentService {
     durationMinutes?: number;
     passingScore?: number;
     totalQuestions?: number;
+    maxAttempts?: number;
   }) {
     const pool = await prisma.questionPool.findUnique({
       where: { id: data.poolId },
@@ -105,6 +106,7 @@ export class AssessmentService {
         durationMinutes: data.durationMinutes ?? 30,
         passingScore: data.passingScore ?? 60,
         totalQuestions: data.totalQuestions ?? 10,
+        maxAttempts: data.maxAttempts ?? 1,
       },
     });
   }
@@ -138,22 +140,60 @@ export class AssessmentService {
     // Save frozen snapshot with full data (internal DB record)
     const questionsSnapshotJson = JSON.stringify(selectedQuestions);
 
-    const startedAt = new Date();
-    const expiresAt = new Date(startedAt.getTime() + assessment.durationMinutes * 60 * 1000);
+    // Serializable transaction so two concurrent starts cannot both pass the
+    // attempt-limit check and exceed maxAttempts.
+    const attempt = await prisma.$transaction(
+      async (tx) => {
+        // Resume an open attempt when one is still live.
+        const openAttempt = await tx.assessmentAttempt.findFirst({
+          where: { assessmentId, studentId, status: AssessmentAttemptStatus.IN_PROGRESS },
+          orderBy: { startedAt: 'desc' },
+        });
+        if (openAttempt) {
+          if (openAttempt.expiresAt > new Date()) {
+            return openAttempt;
+          }
+          // Expired while abandoned: finalize it so it counts as a used try.
+          await tx.assessmentAttempt.update({
+            where: { id: openAttempt.id },
+            data: { status: AssessmentAttemptStatus.EXPIRED },
+          });
+        }
 
-    const attempt = await prisma.assessmentAttempt.create({
-      data: {
-        assessment: { connect: { id: assessmentId } },
-        student: { connect: { id: studentId } },
-        startedAt,
-        expiresAt,
-        status: AssessmentAttemptStatus.IN_PROGRESS,
-        questionsSnapshotJson,
+        const usedAttempts = await tx.assessmentAttempt.count({
+          where: { assessmentId, studentId, status: { not: AssessmentAttemptStatus.IN_PROGRESS } },
+        });
+        if (usedAttempts >= assessment.maxAttempts) {
+          throw new BadRequestError(
+            `Maximum attempts (${assessment.maxAttempts}) exceeded for this assessment`
+          );
+        }
+
+        const startedAt = new Date();
+        return tx.assessmentAttempt.create({
+          data: {
+            assessment: { connect: { id: assessmentId } },
+            student: { connect: { id: studentId } },
+            startedAt,
+            expiresAt: new Date(startedAt.getTime() + assessment.durationMinutes * 60 * 1000),
+            status: AssessmentAttemptStatus.IN_PROGRESS,
+            questionsSnapshotJson,
+          },
+        });
       },
-    });
+      { isolationLevel: 'Serializable', timeout: 20000, maxWait: 15000 }
+    );
 
-    // Sanitize questions snapshot for student (strip correct answers & explanations)
-    const sanitizedSnapshot = selectedQuestions.map((q) => {
+    // Sanitize questions snapshot for student (strip correct answers &
+    // explanations) from the attempt's own frozen copy — this also covers
+    // resumed attempts whose randomized selection differs from a fresh one.
+    let snapshotSource: any[] = [];
+    try {
+      snapshotSource = JSON.parse(attempt.questionsSnapshotJson);
+    } catch (e) {
+      snapshotSource = [];
+    }
+    const sanitizedSnapshot = snapshotSource.map((q: any) => {
       let options: any[] = [];
       try {
         options = JSON.parse(q.optionsJson);

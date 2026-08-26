@@ -1,6 +1,7 @@
 import { prisma } from '../../prisma';
 import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors';
 import { logAuditAction } from '../audit/audit.service';
+import { egpToUsd } from '../../utils/currency';
 import {
   ProductType,
   OrderStatus,
@@ -19,7 +20,7 @@ export class CommerceService {
     productType: ProductType;
     resourceId?: string;
     priceEgp: number;
-    priceUsd: number;
+    priceUsd?: number; // ignored — USD is derived from the exchange rate
   }) {
     return await prisma.product.create({
       data: {
@@ -29,7 +30,7 @@ export class CommerceService {
         productType: data.productType,
         resourceId: data.resourceId,
         priceEgp: data.priceEgp,
-        priceUsd: data.priceUsd,
+        priceUsd: await egpToUsd(data.priceEgp),
       },
     });
   }
@@ -78,7 +79,8 @@ export class CommerceService {
         product: { connect: { id: data.productId } },
         status: OrderStatus.PENDING,
         totalAmountEgp: product.priceEgp,
-        totalAmountUsd: product.priceUsd,
+        // USD snapshot derived from EGP at order time (single source of truth).
+        totalAmountUsd: await egpToUsd(Number(product.priceEgp)),
         paymentMethod: data.paymentMethod,
         idempotencyKey: data.idempotencyKey,
         ...(data.transactionRef && { transactionRef: data.transactionRef }),
@@ -131,15 +133,17 @@ export class CommerceService {
 
     const result = await this.fulfillOrder(
       orderId,
-      order.status,
       order.transactionRef || `ADMIN-APPROVED-${adminId}`,
       true
     );
 
-    await logAuditAction(adminId, 'ORDER_APPROVED', orderId, 'Order', {
-      studentId: order.studentId,
-      amountEgp: Number(order.totalAmountEgp),
-    });
+    // Audit only real transitions - idempotent no-ops must not spam the trail.
+    if (result.grantedEntitlement) {
+      await logAuditAction(adminId, 'ORDER_APPROVED', orderId, 'Order', {
+        studentId: order.studentId,
+        amountEgp: Number(order.totalAmountEgp),
+      });
+    }
 
     return result;
   }
@@ -154,10 +158,16 @@ export class CommerceService {
       throw new ConflictError('Cannot reject an already-paid order - issue a refund instead');
     }
 
-    const failed = await prisma.order.update({
-      where: { id: orderId },
+    // Conditional so a rejection can never clobber a PAID status that a
+    // concurrent webhook fulfillment just set.
+    const rejected = await prisma.order.updateMany({
+      where: { id: orderId, status: { not: OrderStatus.PAID } },
       data: { status: OrderStatus.FAILED },
     });
+    if (rejected.count === 0) {
+      throw new ConflictError('Cannot reject an already-paid order - issue a refund instead');
+    }
+    const failed = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
 
     await logAuditAction(adminId, 'ORDER_REJECTED', orderId, 'Order', {
       studentId: order.studentId,
@@ -181,19 +191,25 @@ export class CommerceService {
       throw new NotFoundError('Order not found');
     }
 
-    // Amount reconciliation: never fulfill an order for less than its price.
-    if (data.amount !== undefined) {
-      const expected = Number(order.totalAmountEgp);
-      if (!Number.isFinite(data.amount) || data.amount + 0.009 < expected) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { status: OrderStatus.FAILED, transactionRef: data.transactionRef },
-        });
-        throw new BadRequestError('Payment amount does not match the order total');
-      }
+    // Amount reconciliation is MANDATORY and fail-closed: an omitted amount
+    // means we cannot verify what was actually paid, so the order must never
+    // be fulfilled on an unverified amount. The FAILED transition is
+    // conditional so a late bad-amount retry cannot downgrade an order another
+    // delivery already marked PAID.
+    const expected = Number(order.totalAmountEgp);
+    if (
+      data.amount === undefined ||
+      !Number.isFinite(data.amount) ||
+      data.amount + 0.009 < expected
+    ) {
+      await prisma.order.updateMany({
+        where: { id: order.id, status: { not: OrderStatus.PAID } },
+        data: { status: OrderStatus.FAILED, transactionRef: data.transactionRef },
+      });
+      throw new BadRequestError('Payment amount does not match the order total');
     }
 
-    return this.fulfillOrder(order.id, order.status, data.transactionRef, data.success);
+    return this.fulfillOrder(order.id, data.transactionRef, data.success);
   }
 
   /**
@@ -225,8 +241,8 @@ export class CommerceService {
     const paidAmount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
     const expected = Number(order.totalAmountEgp);
     if (!Number.isFinite(paidAmount) || paidAmount + 0.009 < expected) {
-      await prisma.order.update({
-        where: { id: order.id },
+      await prisma.order.updateMany({
+        where: { id: order.id, status: { not: OrderStatus.PAID } },
         data: { status: OrderStatus.FAILED, transactionRef: data.merchantRefNum },
       });
       throw new BadRequestError('Payment amount does not match the order total');
@@ -236,13 +252,12 @@ export class CommerceService {
     const success =
       data.statusCode !== undefined ? String(data.statusCode) === '200' : data.success !== false;
 
-    return this.fulfillOrder(order.id, order.status, data.merchantRefNum, success);
+    return this.fulfillOrder(order.id, data.merchantRefNum, success);
   }
 
   /** Idempotent PAID/FAILED transition + atomic entitlement grant. */
   private static async fulfillOrder(
     orderId: string,
-    currentStatus: OrderStatus,
     transactionRef: string,
     success: boolean
   ) {
@@ -254,49 +269,102 @@ export class CommerceService {
       throw new NotFoundError('Order not found');
     }
 
-    if (currentStatus === OrderStatus.PAID || order.status === OrderStatus.PAID) {
-      return { message: 'Order already processed', status: order.status, order };
-    }
-
     if (!success) {
-      const failedOrder = await prisma.order.update({
-        where: { id: orderId },
+      // Conditional transition so two concurrent failure deliveries can't
+      // double-write; last writer wins harmlessly (same target state).
+      const failedTransition = await prisma.order.updateMany({
+        where: { id: orderId, status: { not: OrderStatus.PAID } },
         data: { status: OrderStatus.FAILED, transactionRef },
       });
-      return { message: 'Order payment failed', status: OrderStatus.FAILED, order: failedOrder };
+      // Audit ONLY real state transitions so gateway retries don't spam.
+      if (failedTransition.count > 0) {
+        await logAuditAction(
+          order.studentId,
+          'PAYMENT_FAILED',
+          orderId,
+          'Order',
+          { actor: 'webhooksystem', gatewayTransactionRef: transactionRef }
+        );
+      }
+      const failedOrder = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+      return { message: 'Order payment failed', status: OrderStatus.FAILED, order: failedOrder, grantedEntitlement: false };
     }
 
-    return await prisma.$transaction(
+    const result = await prisma.$transaction(
       async (tx) => {
-        // Update order status to PAID
-        const paidOrder = await tx.order.update({
-          where: { id: orderId },
+        // Conditional PAID transition: the WHERE clause is re-evaluated after
+        // any concurrent transaction's row lock is released, so exactly one
+        // webhook delivery (or admin approval) can win this update. The loser
+        // sees count === 0 and returns idempotently instead of granting a
+        // second entitlement.
+        const claimed = await tx.order.updateMany({
+          where: { id: orderId, status: { not: OrderStatus.PAID } },
           data: { status: OrderStatus.PAID, transactionRef },
         });
-
-        // Grant Entitlement inside the exact same atomic transaction
-        if (order.product.resourceId) {
-          const startsAt = new Date();
-          const expiresAt = new Date(startsAt.getTime() + 180 * 24 * 60 * 60 * 1000);
-
-          await tx.entitlement.create({
-            data: {
-              student: { connect: { id: order.studentId } },
-              order: { connect: { id: order.id } },
-              resourceType: order.product.productType as unknown as EntitlementType,
-              resourceId: order.product.resourceId,
-              sourceType: EntitlementSource.PURCHASE,
-              startsAt,
-              expiresAt,
-              status: EntitlementStatus.ACTIVE,
-            },
-          });
+        if (claimed.count === 0) {
+          const paidOrder = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
+          return { message: 'Order already processed', status: paidOrder.status, order: paidOrder, grantedEntitlement: false };
         }
 
-        return { message: 'Payment successfully reconciled', status: OrderStatus.PAID, order: paidOrder };
+        // Grant Entitlement inside the exact same atomic transaction.
+        if (!order.product.resourceId) {
+          // Misconfigured catalog product: money was collected but there is
+          // nothing to grant. Keep the PAID transition (the payment IS real)
+          // but surface it loudly instead of failing silently.
+          console.error(
+            `[commerce] Product ${order.productId} has no resourceId - paid order ${orderId} fulfilled WITHOUT an entitlement`
+          );
+          const paidOrderOnly = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
+          return { message: 'Payment reconciled but product has no resource to grant', status: OrderStatus.PAID, order: paidOrderOnly, grantedEntitlement: false };
+        }
+
+        const startsAt = new Date();
+        const expiresAt = new Date(startsAt.getTime() + 180 * 24 * 60 * 60 * 1000);
+
+        await tx.entitlement.create({
+          data: {
+            student: { connect: { id: order.studentId } },
+            order: { connect: { id: order.id } },
+            resourceType: order.product.productType as unknown as EntitlementType,
+            resourceId: order.product.resourceId,
+            sourceType: EntitlementSource.PURCHASE,
+            startsAt,
+            expiresAt,
+            status: EntitlementStatus.ACTIVE,
+          },
+        });
+
+        const paidOrder = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
+        return { message: 'Payment successfully reconciled', status: OrderStatus.PAID, order: paidOrder, grantedEntitlement: true };
       },
       { timeout: 20000, maxWait: 15000 }
     );
+
+    // Audit after commit so we never record transitions that rolled back.
+    if (result.grantedEntitlement) {
+      await logAuditAction(
+        order.studentId,
+        'PAYMENT_CONFIRMED',
+        orderId,
+        'Order',
+        {
+          actor: 'webhooksystem',
+          gatewayTransactionRef: transactionRef,
+          resourceType: order.product.productType,
+          resourceId: order.product.resourceId,
+        }
+      );
+    } else if (result.status === OrderStatus.PAID && !order.product.resourceId) {
+      await logAuditAction(
+        order.studentId,
+        'FULFILLMENT_INCOMPLETE',
+        orderId,
+        'Order',
+        { actor: 'webhooksystem', reason: 'product_missing_resourceId', productId: order.productId }
+      );
+    }
+
+    return result;
   }
 
   // Entitlements
@@ -437,40 +505,62 @@ export class CommerceService {
       throw new BadRequestError('Voucher code has expired');
     }
 
-    // Atomic conditional increment
-    const updateResult = await prisma.voucher.updateMany({
-      where: {
-        id: voucher.id,
-        isActive: true,
-        usedCount: { lt: voucher.maxUses },
-        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      },
-      data: {
-        usedCount: { increment: 1 },
-      },
-    });
-
-    if (updateResult.count === 0) {
-      throw new BadRequestError('Voucher code has reached maximum usage limit');
-    }
-
-    // Grant Entitlement for the student
     const startsAt = new Date();
     const expiresAt = voucher.durationDays
       ? new Date(startsAt.getTime() + voucher.durationDays * 24 * 60 * 60 * 1000)
       : null;
 
-    return await prisma.entitlement.create({
-      data: {
-        student: { connect: { id: studentId } },
-        resourceType: voucher.resourceType,
-        resourceId: voucher.resourceId,
-        sourceType: EntitlementSource.VOUCHER,
-        startsAt,
-        expiresAt,
-        status: EntitlementStatus.ACTIVE,
+    return await prisma.$transaction(
+      async (tx) => {
+        // Per-student dedupe: an already-active voucher grant for the same
+        // resource is returned instead of burning another use.
+        const existingGrant = await tx.entitlement.findFirst({
+          where: {
+            studentId,
+            resourceType: voucher.resourceType,
+            resourceId: voucher.resourceId,
+            sourceType: EntitlementSource.VOUCHER,
+            status: EntitlementStatus.ACTIVE,
+            OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+          },
+        });
+        if (existingGrant) {
+          return existingGrant;
+        }
+
+        // Atomic conditional increment — caps maxUses under concurrency.
+        const updateResult = await tx.voucher.updateMany({
+          where: {
+            id: voucher.id,
+            isActive: true,
+            usedCount: { lt: voucher.maxUses },
+            OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+          },
+          data: {
+            usedCount: { increment: 1 },
+          },
+        });
+
+        if (updateResult.count === 0) {
+          throw new BadRequestError('Voucher code has reached maximum usage limit');
+        }
+
+        // Grant Entitlement in the SAME transaction so a failed grant rolls
+        // the use-counter back instead of burning a redemption for nothing.
+        return await tx.entitlement.create({
+          data: {
+            student: { connect: { id: studentId } },
+            resourceType: voucher.resourceType,
+            resourceId: voucher.resourceId,
+            sourceType: EntitlementSource.VOUCHER,
+            startsAt,
+            expiresAt,
+            status: EntitlementStatus.ACTIVE,
+          },
+        });
       },
-    });
+      { timeout: 20000, maxWait: 15000 }
+    );
   }
 
   static async getAllVouchers() {

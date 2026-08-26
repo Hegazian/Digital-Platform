@@ -62,7 +62,10 @@ describe('MFA Enforcement at Login (TDD)', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.tokens.accessToken).toBeDefined();
-    expect(res.body.data.tokens.refreshToken).toBeDefined();
+    // Refresh token must travel ONLY as an httpOnly cookie, never in the body.
+    expect(res.body.data.tokens.refreshToken).toBeUndefined();
+    const cookies = res.headers['set-cookie'] as unknown as string[];
+    expect(cookies?.some((c) => c.startsWith('eduplat_rt='))).toBe(true);
   });
 
   it('should require MFA challenge (return mfaRequired & mfaSessionToken) when MFA is enabled', async () => {
@@ -109,6 +112,9 @@ describe('MFA Enforcement at Login (TDD)', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.email).toBe(userWithMfaEmail);
     expect(res.body.data.tokens.accessToken).toBeDefined();
-    expect(res.body.data.tokens.refreshToken).toBeDefined();
+    // Refresh token must travel ONLY as an httpOnly cookie, never in the body.
+    expect(res.body.data.tokens.refreshToken).toBeUndefined();
+    const cookies = res.headers['set-cookie'] as unknown as string[];
+    expect(cookies?.some((c) => c.startsWith('eduplat_rt='))).toBe(true);
   });
 });

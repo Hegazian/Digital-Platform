@@ -3,6 +3,7 @@ import { VideoService } from './video.service';
 import { AuthRequest } from '../auth/auth.middleware';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../../utils/errors';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
+import { getUploadsRoot } from '../../utils/storage';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
@@ -86,10 +87,12 @@ export class VideoController {
         throw new BadRequestError('Local video not found');
       }
 
-      // Convert '/uploads/lesson-videos/xxx.mp4' to absolute path and pin it
-      // inside the uploads directory (defense against crafted stored paths).
-      const uploadsRoot = path.join(process.cwd(), 'uploads');
-      const filePath = path.join(process.cwd(), video.videoUrl);
+      // Resolve the stored '/uploads/<bucket>/<file>' against the server's
+      // real uploads root (cwd-independent - see getUploadsRoot) and pin it
+      // inside that root (defense against crafted stored paths).
+      const uploadsRoot = getUploadsRoot();
+      const relativePath = video.videoUrl.replace(/^\/uploads\//, '');
+      const filePath = path.join(uploadsRoot, relativePath);
       if (!filePath.startsWith(uploadsRoot + path.sep)) {
         throw new ForbiddenError('Invalid video storage path');
       }

@@ -195,7 +195,7 @@ export class AdminService {
    */
   static async createUser(data: {
     email: string;
-    password?: string;
+    password: string;
     name: string;
     role?: Role;
     teacherStatus?: TeacherStatus;
@@ -203,6 +203,12 @@ export class AdminService {
     isActive?: boolean;
   }) {
     const { email, password, name, role = Role.STUDENT, teacherStatus, gradeId, isActive = true } = data;
+
+    // Defense in depth: the zod layer enforces this for HTTP traffic, but
+    // direct callers must never be able to provision a guessable credential.
+    if (!password || password.length < 8) {
+      throw new BadRequestError('A password of at least 8 characters is required');
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -217,7 +223,7 @@ export class AdminService {
     }
 
     const { default: bcrypt } = await import('bcrypt');
-    const hashedPassword = await bcrypt.hash(password || 'EduPlatform123!', 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const resolvedTeacherStatus = role === Role.TEACHER ? (teacherStatus || TeacherStatus.APPROVED) : null;
 
     const user = await prisma.user.create({

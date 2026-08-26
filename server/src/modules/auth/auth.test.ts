@@ -1,18 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../../app';
+import { prisma } from '../../prisma';
 
 describe('Auth Module API', () => {
-  const getTestUser = () => ({
-    name: 'Test Student',
-    email: `test-${Date.now()}-${Math.random()}@student.com`,
-    password: 'password123',
-    role: 'STUDENT',
-  });
+  const getTestUser = async () => {
+    // Students must register with a student number + grade year.
+    const existingGrade = await prisma.grade.findFirst({ select: { id: true } });
+    let gradeId: string | undefined = existingGrade?.id;
+    if (!gradeId) {
+      const stage = await prisma.educationalStage.create({
+        data: {
+          nameEn: 'Auth API Test Stage',
+          nameAr: 'مرحلة اختبار',
+          code: `AUTH_API_${Date.now()}`,
+        },
+      });
+      const grade = await prisma.grade.create({
+        data: {
+          stageId: stage.id,
+          nameEn: '1st Secondary',
+          nameAr: 'الأول الثانوي',
+          code: `AUTH_API_${Date.now()}`,
+        },
+      });
+      gradeId = grade.id;
+    }
+    return {
+      name: 'Test Student',
+      email: `test-${Date.now()}-${Math.random()}@student.com`,
+      password: 'password123',
+      role: 'STUDENT',
+      studentNumber: `T-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      gradeId,
+    };
+  };
 
   describe('POST /api/v1/auth/register', () => {
     it('should successfully register a new student', async () => {
-      const testUser = getTestUser();
+      const testUser = await getTestUser();
       const res = await request(app)
         .post('/api/v1/auth/register')
         .send(testUser);
@@ -23,7 +49,7 @@ describe('Auth Module API', () => {
     });
 
     it('should fail if email is already registered', async () => {
-      const testUser = getTestUser();
+      const testUser = await getTestUser();
       await request(app).post('/api/v1/auth/register').send(testUser);
       const res = await request(app).post('/api/v1/auth/register').send(testUser);
 
@@ -35,7 +61,7 @@ describe('Auth Module API', () => {
 
   describe('POST /api/v1/auth/login', () => {
     it('should login successfully with correct credentials', async () => {
-      const testUser = getTestUser();
+      const testUser = await getTestUser();
       await request(app).post('/api/v1/auth/register').send(testUser);
 
       const res = await request(app)
@@ -51,7 +77,7 @@ describe('Auth Module API', () => {
     });
 
     it('should fail login with wrong password', async () => {
-      const testUser = getTestUser();
+      const testUser = await getTestUser();
       await request(app).post('/api/v1/auth/register').send(testUser);
 
       const res = await request(app)

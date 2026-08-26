@@ -1,18 +1,51 @@
 import { z } from 'zod';
 
 // Auth Schemas
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  role: z.enum(['STUDENT', 'TEACHER']).optional(),
-  gradeId: z.string().optional(),
-});
+export const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters long'),
+    name: z.string().min(2, 'Name must be at least 2 characters long'),
+    role: z.enum(['STUDENT', 'TEACHER']).optional(),
+    gradeId: z.string().optional(),
+    studentNumber: z
+      .string()
+      .trim()
+      .min(3, 'Student number must be at least 3 characters')
+      .max(32, 'Student number must be at most 32 characters')
+      .regex(/^[A-Za-z0-9-]+$/, 'Student number may only contain letters, digits and dashes')
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Students must identify themselves: student number + grade year.
+    if ((data.role ?? 'STUDENT') === 'STUDENT') {
+      if (!data.studentNumber) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['studentNumber'],
+          message: 'Student number is required for student accounts',
+        });
+      }
+      if (!data.gradeId) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['gradeId'],
+          message: 'Grade year is required for student accounts',
+        });
+      }
+    }
+  });
 
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters long').optional(),
-  avatar: z.string().optional(),
+  avatar: z.string().max(500).optional(),
   gradeId: z.string().optional().nullable(),
+  studentNumber: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9-]+$/, 'Student number may only contain letters, digits and dashes')
+    .nullable()
+    .optional(),
 });
 
 export const loginSchema = z.object({
@@ -178,6 +211,7 @@ export const createAssessmentSchema = z.object({
   durationMinutes: z.number().int().min(1).max(300).default(30),
   passingScore: z.number().int().min(0).max(100).default(60),
   totalQuestions: z.number().int().min(1).max(100).default(10),
+  maxAttempts: z.number().int().min(1).max(20).default(1),
 });
 
 export const submitAssessmentAttemptSchema = z.object({
@@ -304,7 +338,12 @@ export const updateWatchTimeSchema = z.object({
 // --- Admin: user management ---
 export const createAdminUserSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters long').optional(),
+  // Required: accounts must never be provisioned with a guessable default
+  // credential (the old hardcoded 'EduPlatform123!' fallback).
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters long')
+    .max(72, 'Password must be at most 72 characters long'),
   name: z.string().min(2, 'Name must be at least 2 characters long'),
   role: z.enum(['STUDENT', 'TEACHER', 'ADMIN']),
   gradeId: z.string().optional().nullable(),
@@ -393,7 +432,8 @@ export const createGradeSubjectSchema = z.object({
 export const subjectPricingEntrySchema = z.object({
   period: z.enum(['MONTHLY', 'SIX_MONTHS', 'YEARLY']),
   priceEgp: z.number().min(0, 'priceEgp must be non-negative'),
-  priceUsd: z.number().min(0, 'priceUsd must be non-negative'),
+  // Optional: USD is derived server-side from the configured exchange rate.
+  priceUsd: z.number().min(0).optional(),
 });
 
 export const createSubjectSchema = z.object({
@@ -470,7 +510,8 @@ export const reorderLessonsSchema = z.object({
 export const updateModuleSchema = z.object({
   titleEn: z.string().min(2).optional(),
   titleAr: z.string().min(1).optional(),
-  description: z.string().optional(),
+  // Nullable so teachers can clear the description entirely.
+  description: z.string().max(5000).nullable().optional(),
   sortOrder: z.number().int().min(0).optional(),
 });
 

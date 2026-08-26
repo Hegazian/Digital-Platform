@@ -132,6 +132,7 @@ describe('AdminService Unit Tests', () => {
 
       const result = await AdminService.createUser({
         email: 'newteacher@test.com',
+        password: 'Password123!',
         name: 'New Teacher',
         role: 'TEACHER' as any,
       });
@@ -147,6 +148,7 @@ describe('AdminService Unit Tests', () => {
       await expect(
         AdminService.createUser({
           email: 'duplicate@test.com',
+          password: 'Password123!',
           name: 'Dupe',
         })
       ).rejects.toThrow(BadRequestError);
@@ -159,9 +161,19 @@ describe('AdminService Unit Tests', () => {
       await expect(
         AdminService.createUser({
           email: 'student@test.com',
+          password: 'Password123!',
           name: 'Student',
           gradeId: 'invalid-grade',
         })
+      ).rejects.toThrow(BadRequestError);
+    });
+
+    it('should throw BadRequestError when no password is provided (no default credentials)', async () => {
+      await expect(
+        AdminService.createUser({
+          email: 'nopassword@test.com',
+          name: 'No Password',
+        } as any)
       ).rejects.toThrow(BadRequestError);
     });
   });

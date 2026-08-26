@@ -25,6 +25,32 @@ export class EntitlementResolver {
   }
 
   /**
+   * Resolves the course that owns a collaborative board's lesson block
+   * (LessonBlock -> Lesson -> Module|Section -> Course).
+   */
+  static async resolveLessonBlockCourse(blockId: string): Promise<{ courseId: string; teacherId: string } | null> {
+    const block = await prisma.lessonBlock.findUnique({
+      where: { id: blockId },
+      select: {
+        lesson: {
+          select: {
+            moduleId: true,
+            sectionId: true,
+            module: { select: { courseId: true, course: { select: { teacherId: true } } } },
+            section: { select: { courseId: true, course: { select: { teacherId: true } } } },
+          },
+        },
+      },
+    });
+    const lesson = block?.lesson;
+    if (!lesson) return null;
+
+    const courseId = lesson.module?.courseId || lesson.section?.courseId;
+    const teacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
+    return courseId && teacherId ? { courseId, teacherId } : null;
+  }
+
+  /**
    * Resolves the course a quiz belongs to (via its optional lesson).
    * Standalone (unattached) quizzes return null -> treated as open practice.
    */
@@ -123,6 +149,7 @@ export class EntitlementResolver {
    * Access is confirmed if:
    * 1. The student has direct active `Entitlement` for the course.
    * 2. OR the student has active subject access for the parent subject of the course.
+   * 3. OR the student holds a GRADE_BUNDLE entitlement covering the course's grade.
    */
   static async hasCourseAccess(studentId: string, courseId: string): Promise<boolean> {
     const now = new Date();
@@ -140,29 +167,46 @@ export class EntitlementResolver {
 
     if (courseEnt) return true;
 
-    // 2. Lookup course parent subject and check subject access
+    // 2. Lookup course parent and check subject / grade-bundle access
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { subjectId: true },
+      select: { subjectId: true, gradeId: true },
     });
 
-    if (course && course.subjectId) {
-      return await this.hasSubjectAccess(studentId, course.subjectId);
+    if (!course) return false;
+
+    if (course.subjectId && (await this.hasSubjectAccess(studentId, course.subjectId))) {
+      return true;
+    }
+
+    if (course.gradeId) {
+      const bundleEnt = await prisma.entitlement.findFirst({
+        where: {
+          studentId,
+          resourceType: EntitlementType.GRADE_BUNDLE,
+          resourceId: course.gradeId,
+          status: EntitlementStatus.ACTIVE,
+          OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+        },
+      });
+      if (bundleEnt) return true;
     }
 
     return false;
   }
 
   /**
-   * Aggregates all accessible subjects and courses for a student.
+   * Aggregates all accessible subjects, courses and grade bundles for a student.
    */
   static async getAccessibleResources(studentId: string): Promise<{
     subjectIds: Set<string>;
     courseIds: Set<string>;
+    gradeBundleIds: Set<string>;
   }> {
     const now = new Date();
     const subjectIds = new Set<string>();
     const courseIds = new Set<string>();
+    const gradeBundleIds = new Set<string>();
 
     // 1. Subscriptions
     const subscriptions = await prisma.subscription.findMany({
@@ -190,9 +234,11 @@ export class EntitlementResolver {
         subjectIds.add(e.resourceId);
       } else if (e.resourceType === EntitlementType.COURSE) {
         courseIds.add(e.resourceId);
+      } else if (e.resourceType === EntitlementType.GRADE_BUNDLE) {
+        gradeBundleIds.add(e.resourceId);
       }
     });
 
-    return { subjectIds, courseIds };
+    return { subjectIds, courseIds, gradeBundleIds };
   }
 }

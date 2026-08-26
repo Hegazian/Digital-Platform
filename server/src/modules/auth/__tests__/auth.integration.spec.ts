@@ -9,6 +9,7 @@ describe('Auth Integration Tests', () => {
   const dupEmail = `${testPrefix}-dup@test.com`;
   const loginEmail = `${testPrefix}-login@test.com`;
   const wrongPassEmail = `${testPrefix}-wrongpass@test.com`;
+  let gradeId: string;
 
   const cleanDb = async () => {
     try {
@@ -24,6 +25,33 @@ describe('Auth Integration Tests', () => {
 
   beforeAll(async () => {
     await cleanDb();
+    // Students must register with a grade year — reuse (or create) one.
+    const existing = await prisma.grade.findFirst({ select: { id: true } });
+    if (existing) {
+      gradeId = existing.id;
+    } else {
+      const stage = await prisma.educationalStage.create({
+        data: {
+          nameEn: 'Auth Test Stage',
+          nameAr: 'مرحلة اختبار',
+          code: `AUTH_STAGE_${Date.now()}`,
+        },
+      });
+      const grade = await prisma.grade.create({
+        data: {
+          stageId: stage.id,
+          nameEn: '1st Secondary',
+          nameAr: 'الأول الثانوي',
+          code: `AUTH_${Date.now()}`,
+        },
+      });
+      gradeId = grade.id;
+    }
+    if (!gradeId) {
+      throw new Error(
+        'Test setup failed: no gradeId available. Did you run `npm run db:push:test`?'
+      );
+    }
   }, 15000);
 
   afterAll(async () => {
@@ -37,6 +65,8 @@ describe('Auth Integration Tests', () => {
         password: 'Password123!',
         name: 'Test Student',
         role: 'STUDENT',
+        studentNumber: `SN${Date.now() % 100000000}`,
+        gradeId,
       });
 
       expect(res.status).toBe(201);
@@ -45,17 +75,33 @@ describe('Auth Integration Tests', () => {
       expect(res.body.data.role).toBe('STUDENT');
     });
 
+    it('should reject a student registration missing student number / grade year', async () => {
+      const res = await request(app).post('/api/v1/auth/register').send({
+        email: `${testPrefix}-noid@test.com`,
+        password: 'Password123!',
+        name: 'No Identity',
+        role: 'STUDENT',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
     it('should fail when registering an existing email', async () => {
       await request(app).post('/api/v1/auth/register').send({
         email: dupEmail,
         password: 'password',
         name: 'First User',
+        studentNumber: `D1${Date.now() % 100000000}`,
+        gradeId,
       });
 
       const res = await request(app).post('/api/v1/auth/register').send({
         email: dupEmail,
         password: 'password',
         name: 'Second User',
+        studentNumber: `D2${Date.now() % 100000000}`,
+        gradeId,
       });
 
       expect(res.status).toBe(409);
@@ -70,6 +116,8 @@ describe('Auth Integration Tests', () => {
         email: loginEmail,
         password: 'ValidPassword123',
         name: 'Login User',
+        studentNumber: `L1${Date.now() % 100000000}`,
+        gradeId,
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({
@@ -87,6 +135,8 @@ describe('Auth Integration Tests', () => {
         email: wrongPassEmail,
         password: 'CorrectPassword',
         name: 'User',
+        studentNumber: `W1${Date.now() % 100000000}`,
+        gradeId,
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({

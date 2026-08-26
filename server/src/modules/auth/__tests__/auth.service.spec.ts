@@ -8,7 +8,11 @@ vi.mock('../../../prisma', () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
+    },
+    grade: {
+      findUnique: vi.fn().mockResolvedValue({ id: 'grade-1' }),
     },
     refreshToken: {
       create: vi.fn().mockResolvedValue({ id: 'rt-1' }),
@@ -43,6 +47,8 @@ describe('AuthService Unit Tests', () => {
         password: 'Password123',
         name: 'Student Name',
         role: Role.STUDENT,
+        studentNumber: 'STU-001',
+        gradeId: 'grade-1',
       });
 
       expect(res.email).toBe('student@test.com');

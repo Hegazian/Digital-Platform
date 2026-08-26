@@ -9,6 +9,7 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
   let teacherToken: string;
   let teacherId: string;
   let lessonBlockId: string;
+  let outsiderToken: string;
 
   beforeAll(async () => {
     // Create teacher user
@@ -29,6 +30,17 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
       role: 'TEACHER',
       teacherStatus: 'APPROVED',
     });
+
+    // An unrelated authenticated user (must NOT access the board - IDOR guard)
+    const outsider = await prisma.user.create({
+      data: {
+        email: `student_board_${Date.now()}@eduplatform.com`,
+        password: hashedPassword,
+        name: 'Board Outsider',
+        role: 'STUDENT',
+      },
+    });
+    outsiderToken = generateAccessToken({ userId: outsider.id, role: 'STUDENT' });
 
     // Create a subject, course, module, lesson, and lessonBlock
     const subject = await prisma.subject.create({
@@ -78,6 +90,7 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
       await prisma.lessonBlock.deleteMany({ where: { id: lessonBlockId } });
       await prisma.course.deleteMany({ where: { teacherId } });
       await prisma.user.deleteMany({ where: { email: { contains: 'teacher_board_' } } });
+      await prisma.user.deleteMany({ where: { email: { contains: 'student_board_' } } });
       await prisma.subject.deleteMany({ where: { nameEn: 'Math Board' } });
     } catch (e) {
       console.warn('Board cleanup error:', e);
@@ -112,5 +125,39 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
       .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(fetchRes.body.data.elementsJson).toContain('#00ffff');
+  });
+
+  it('GET board by a non-enrolled outsider is rejected (IDOR guard)', async () => {
+    const res = await request(app)
+      .get(`/api/v1/boards/${lessonBlockId}`)
+      .set('Authorization', `Bearer ${outsiderToken}`);
+
+    expect([403, 404]).toContain(res.status);
+  });
+
+  it('POST board state by a non-owner is rejected (IDOR guard)', async () => {
+    const res = await request(app)
+      .post(`/api/v1/boards/${lessonBlockId}/state`)
+      .set('Authorization', `Bearer ${outsiderToken}`)
+      .send({ elementsJson: '[]' });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('unknown block id returns 404 and creates nothing', async () => {
+    const ghostId = '00000000-0000-4000-8000-000000000000';
+    const res = await request(app)
+      .get(`/api/v1/boards/${ghostId}`)
+      .set('Authorization', `Bearer ${teacherToken}`);
+    expect(res.status).toBe(404);
+
+    const post = await request(app)
+      .post(`/api/v1/boards/${ghostId}/state`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ elementsJson: '[]' });
+    expect(post.status).toBe(404);
+
+    const rows = await prisma.board.findMany({ where: { lessonBlockId: ghostId } });
+    expect(rows.length).toBe(0);
   });
 });

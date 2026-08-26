@@ -25,6 +25,10 @@ vi.mock('../../../prisma', () => ({
       update: vi.fn().mockResolvedValue({ id: 'prod-1' }),
       deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
+    // Currency util reads the exchange rate from AppConfig; null -> fallback 48.
+    appConfig: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
     module: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -100,7 +104,8 @@ describe('CourseService Unit Tests', () => {
           productType: 'COURSE',
           resourceId: mockCourse.id,
           priceEgp: 180,
-          priceUsd: 12,
+          // Derived from EGP (180) at the fallback rate of 48.
+          priceUsd: 3.75,
           isActive: true,
         },
       });

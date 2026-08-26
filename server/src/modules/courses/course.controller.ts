@@ -97,11 +97,42 @@ export class CourseController {
   }
 
   // Section Handlers
-  static async createSection(req: Request, res: Response, next: NextFunction) {
+  static async createSection(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const courseId = req.params.courseId as string;
-      const section = await SectionService.createSection({ ...req.body, courseId });
+      const section = await SectionService.createSection({ ...req.body, courseId }, req.user ?? null);
       res.status(201).json({ success: true, data: section });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateSection(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const sectionId = req.params.sectionId as string;
+      const section = await SectionService.updateSection(sectionId, req.body, req.user ?? null);
+      res.status(200).json({ success: true, data: section });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteSection(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const sectionId = req.params.sectionId as string;
+      const result = await SectionService.deleteSection(sectionId, req.user ?? null);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async reorderSections(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const courseId = req.params.courseId as string;
+      const { sections } = req.body;
+      const result = await SectionService.reorderSections(courseId, sections || [], req.user ?? null);
+      res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
@@ -236,6 +267,19 @@ export class CourseController {
     }
   }
 
+  /** Lessons can also hang directly off a section (dual curriculum layout). */
+  static async createSectionLesson(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user!.userId;
+      const role = req.user?.role;
+      const sectionId = req.params.sectionId as string;
+      const lesson = await CourseService.createLesson(null, req.body, teacherId, role, sectionId);
+      res.status(201).json({ success: true, data: lesson });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async attachVideoToLesson(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const teacherId = req.user!.userId;
@@ -291,6 +335,54 @@ export class CourseController {
       const lessonId = req.params.lessonId as string;
       const lesson = await CourseService.updateLesson(lessonId, req.body, teacherId, role);
       res.status(200).json({ success: true, data: lesson });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async detachQuizFromLesson(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId;
+      const role = req.user?.role;
+      const lessonId = req.params.lessonId as string;
+      const result = await CourseService.detachQuizFromLesson(lessonId, teacherId, role);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async detachVideoFromLesson(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId;
+      const role = req.user?.role;
+      const lessonId = req.params.lessonId as string;
+      const result = await CourseService.detachVideoFromLesson(lessonId, teacherId, role);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateLessonBlock(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId;
+      const role = req.user?.role;
+      const blockId = req.params.blockId as string;
+      const block = await CourseService.updateLessonBlock(blockId, req.body, teacherId, role);
+      res.status(200).json({ success: true, data: block });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteLessonBlock(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId;
+      const role = req.user?.role;
+      const blockId = req.params.blockId as string;
+      const result = await CourseService.deleteLessonBlock(blockId, teacherId, role);
+      res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }

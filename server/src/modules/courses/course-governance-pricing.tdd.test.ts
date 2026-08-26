@@ -144,8 +144,8 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
           titleAr: 'الميكانيكا المتقدمة والجاذبية الكونية',
           description: 'Comprehensive curriculum with single flat pricing unlocking all materials.',
           subjectId: testSubject.id,
+          // EGP is the source of truth; USD is derived server-side.
           priceEgp: 190,
-          priceUsd: 14,
         });
 
       expect(res.status).toBe(201);
@@ -256,7 +256,6 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
         .send({
           titleEn: 'Advanced Mechanics & Gravity (Admin Verified Edition)',
           priceEgp: 220,
-          priceUsd: 16,
           description: 'Officially reviewed and calibrated by Ministry Curriculum Committee.',
         });
 
@@ -368,7 +367,9 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       expect(courseRes.status).toBe(200);
       const data = courseRes.body.data;
       expect(data.priceEgp).toBe(220);
-      expect(data.priceUsd).toBe(16);
+      // USD must be the exact EGP amount converted at the configured rate.
+      const { egpToUsd } = await import('../../utils/currency');
+      expect(data.priceUsd).toBe(await egpToUsd(220));
       expect(data.modules.length).toBeGreaterThan(0);
       expect(data.modules[0].lessons[0].video.videoUrl).toBe('https://stream.eduplatform.com/vod/gravitation1.mp4');
       expect(data.modules[0].lessons[0].materials.length).toBe(1);

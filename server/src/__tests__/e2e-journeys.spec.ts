@@ -251,9 +251,17 @@ describe('End-to-End Journeys', () => {
     let selectedOptionId = '';
 
     it('student registers and browses the published catalog', async () => {
+      const grade = await prisma.grade.findFirst({ select: { id: true } });
       const reg = await request(app)
         .post('/api/v1/auth/register')
-        .send({ email: studentEmail, password, name: 'E2E Student' });
+        .send({
+          email: studentEmail,
+          password,
+          name: 'E2E Student',
+          role: 'STUDENT',
+          studentNumber: `E2E-${ts}`,
+          ...(grade ? { gradeId: grade.id } : {}),
+        });
       expect(reg.status).toBe(201);
 
       const student = await prisma.user.findUnique({ where: { email: studentEmail } });

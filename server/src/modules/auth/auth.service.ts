@@ -22,7 +22,7 @@ async function persistRefreshToken(userId: string, token: string): Promise<void>
 
 export class AuthService {
   static async register(data: any) {
-    const { email, password, name, role } = data;
+    const { email, password, name, role, studentNumber, gradeId } = data;
 
     // SECURITY: Block public registration as ADMIN.
     // Admins can only be created via seed script or by existing admins.
@@ -33,9 +33,37 @@ export class AuthService {
       throw new ForbiddenError('Admin accounts cannot be created through public registration');
     }
 
+    // Students must carry their identifier and grade year (zod enforces for
+    // HTTP; this guard covers direct service callers).
+    if (sanitizedRole === Role.STUDENT) {
+      if (!studentNumber || String(studentNumber).trim().length < 3) {
+        throw new BadRequestError('Student number is required for student accounts');
+      }
+      if (!gradeId) {
+        throw new BadRequestError('Grade year is required for student accounts');
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       throw new ConflictError('User with this email already exists');
+    }
+
+    if (studentNumber) {
+      const existingNumber = await prisma.user.findUnique({
+        where: { studentNumber },
+        select: { id: true },
+      });
+      if (existingNumber) {
+        throw new ConflictError('This student number is already registered');
+      }
+    }
+
+    if (gradeId) {
+      const grade = await prisma.grade.findUnique({ where: { id: gradeId } });
+      if (!grade) {
+        throw new BadRequestError('Invalid grade year');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -49,6 +77,10 @@ export class AuthService {
         role: sanitizedRole,
         teacherStatus,
         isActive: true,
+        ...(sanitizedRole === Role.STUDENT && studentNumber
+          ? { studentNumber: String(studentNumber).trim() }
+          : {}),
+        ...(gradeId ? { gradeId } : {}),
       },
     });
 
@@ -95,9 +127,9 @@ export class AuthService {
     // Enterprise MFA Check
     if (user.mfaEnabled && user.mfaSecret) {
       if (data.mfaCode) {
-        const { verifySync } = await import('otplib');
-        const verification = verifySync({ token: data.mfaCode, secret: user.mfaSecret });
-        if (!verification.valid) {
+        const { verifyTotpToken } = await import('../../utils/totp');
+        const isCodeValid = await verifyTotpToken(user.id, user.mfaSecret, String(data.mfaCode));
+        if (!isCodeValid) {
           throw new UnauthorizedError('Invalid MFA authentication code');
         }
       } else {
@@ -154,9 +186,9 @@ export class AuthService {
       throw new UnauthorizedError('Invalid user account or MFA not configured');
     }
 
-    const { verifySync } = await import('otplib');
-    const verification = verifySync({ token: mfaCode, secret: user.mfaSecret });
-    if (!verification.valid) {
+    const { verifyTotpToken } = await import('../../utils/totp');
+    const isCodeValid = await verifyTotpToken(user.id, user.mfaSecret, mfaCode);
+    if (!isCodeValid) {
       throw new UnauthorizedError('Invalid MFA authentication code');
     }
 
@@ -276,6 +308,7 @@ export class AuthService {
         teacherStatus: true,
         avatar: true,
         gradeId: true,
+        studentNumber: true,
         grade: {
           select: {
             id: true,
@@ -305,6 +338,7 @@ export class AuthService {
       name?: string;
       avatar?: string;
       gradeId?: string | null;
+      studentNumber?: string | null;
     }
   ) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -323,12 +357,30 @@ export class AuthService {
       throw new BadRequestError('Name must be at least 2 characters long');
     }
 
+    // Only students may carry a student number; teachers/admins cannot set one.
+    let studentNumberValue: string | null | undefined;
+    if ('studentNumber' in data && user.role === Role.STUDENT) {
+      if (data.studentNumber === null || data.studentNumber === '') {
+        studentNumberValue = null;
+      } else if (data.studentNumber) {
+        studentNumberValue = data.studentNumber;
+        const clash = await prisma.user.findFirst({
+          where: { studentNumber: studentNumberValue, id: { not: userId } },
+          select: { id: true },
+        });
+        if (clash) {
+          throw new ConflictError('This student number is already registered');
+        }
+      }
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
         ...(data.name && { name: data.name.trim() }),
         ...(data.avatar !== undefined && { avatar: data.avatar }),
         ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
+        ...(studentNumberValue !== undefined && { studentNumber: studentNumberValue }),
       },
       select: {
         id: true,
@@ -338,6 +390,7 @@ export class AuthService {
         teacherStatus: true,
         avatar: true,
         gradeId: true,
+        studentNumber: true,
         grade: {
           select: {
             id: true,

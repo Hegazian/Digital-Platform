@@ -53,6 +53,15 @@ courseRouter.post('/:id/review', authenticate, requireRole([Role.ADMIN]), Course
 // Section & Module Routes
 courseRouter.get('/:courseId/sections', optionalAuth, CourseController.getSectionsByCourse);
 courseRouter.post('/:courseId/sections', authenticate, requireApprovedTeacher, validateBody(createSectionSchema), CourseController.createSection);
+courseRouter.patch('/sections/:sectionId', authenticate, requireApprovedTeacher, CourseController.updateSection);
+courseRouter.delete('/sections/:sectionId', authenticate, requireApprovedTeacher, CourseController.deleteSection);
+courseRouter.post('/sections/:sectionId/lessons', authenticate, requireApprovedTeacher, CourseController.createSectionLesson);
+courseRouter.post(
+  '/:courseId/sections/reorder',
+  authenticate,
+  requireApprovedTeacher,
+  CourseController.reorderSections
+);
 courseRouter.post('/:courseId/modules', authenticate, requireApprovedTeacher, CourseController.createModule);
 courseRouter.patch('/modules/:moduleId', authenticate, requireApprovedTeacher, validateBody(updateModuleSchema), CourseController.updateModule);
 courseRouter.delete('/modules/:moduleId', authenticate, requireApprovedTeacher, CourseController.deleteModule);
@@ -77,6 +86,10 @@ courseRouter.post(
 courseRouter.post('/lessons/:lessonId/video', authenticate, requireApprovedTeacher, CourseController.attachVideoToLesson);
 courseRouter.post('/lessons/:lessonId/material', authenticate, requireApprovedTeacher, CourseController.attachMaterialToLesson);
 courseRouter.post('/lessons/:lessonId/quiz', authenticate, requireApprovedTeacher, CourseController.attachQuizToLesson);
+courseRouter.delete('/lessons/:lessonId/quiz', authenticate, requireApprovedTeacher, CourseController.detachQuizFromLesson);
+courseRouter.delete('/lessons/:lessonId/video', authenticate, requireApprovedTeacher, CourseController.detachVideoFromLesson);
+courseRouter.patch('/blocks/:blockId', authenticate, requireApprovedTeacher, CourseController.updateLessonBlock);
+courseRouter.delete('/blocks/:blockId', authenticate, requireApprovedTeacher, CourseController.deleteLessonBlock);
 courseRouter.delete('/lessons/:lessonId', authenticate, requireApprovedTeacher, CourseController.deleteLesson);
 
 // Lesson Blocks Routes

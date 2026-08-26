@@ -72,6 +72,7 @@ describe('Transactional Webhook Idempotency & Entitlement Issuance (TDD)', () =>
       orderId,
       transactionRef: 'PAYMOB-TXN-123456',
       success: true,
+      amount: 300, // matches order.totalAmountEgp (reconciliation is mandatory)
     });
 
     expect(res.status).toBe(OrderStatus.PAID);
@@ -97,6 +98,7 @@ describe('Transactional Webhook Idempotency & Entitlement Issuance (TDD)', () =>
       orderId,
       transactionRef: 'PAYMOB-TXN-123456',
       success: true,
+      amount: 300,
     });
 
     expect(retryRes.message).toBe('Order already processed');

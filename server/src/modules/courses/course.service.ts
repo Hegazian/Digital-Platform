@@ -2,6 +2,7 @@ import { prisma } from '../../prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { VideoStatus, Role } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
+import { egpToUsd, usdToEgp } from '../../utils/currency';
 
 export class CourseService {
   /**
@@ -37,8 +38,12 @@ export class CourseService {
 
   static async getAllCourses(query: any = {}, user?: { userId: string; role: Role } | null) {
     const { subjectId, teacherId, gradeId, isPublished, status, search, page, limit } = query;
-    const pageNum = page ? parseInt(page as string, 10) : 1;
-    const limitNum = limit ? parseInt(limit as string, 10) : 100;
+    // Clamp pagination: NaN/garbage falls back to defaults and the bounds
+    // prevent negative skip values (Prisma 500s) and unbounded takes.
+    const parsedPage = page ? parseInt(page as string, 10) : 1;
+    const parsedLimit = limit ? parseInt(limit as string, 10) : 100;
+    const pageNum = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+    const limitNum = Number.isFinite(parsedLimit) ? Math.min(Math.max(1, parsedLimit), 100) : 100;
     const skip = (pageNum - 1) * limitNum;
 
     const PUBLISHED_FILTER = { isPublished: true, status: 'PUBLISHED' as const };
@@ -288,9 +293,10 @@ export class CourseService {
 
     // Free courses get a zero-priced product so catalog/pricing views stay
     // uniform; paid courses default to the platform price when unspecified.
+    // USD is ALWAYS derived from EGP via the configured exchange rate.
     const isFree = Boolean(data.isFree);
     const priceEgp = isFree ? 0 : data.priceEgp !== undefined ? Number(data.priceEgp) : 150;
-    const priceUsd = isFree ? 0 : data.priceUsd !== undefined ? Number(data.priceUsd) : 10;
+    const priceUsd = isFree ? 0 : await egpToUsd(priceEgp);
 
     if (prisma.product) {
       await prisma.product.create({
@@ -355,8 +361,9 @@ export class CourseService {
 
     // Pricing rules (see isFree flag):
     // - isFree true  -> product prices are forced to 0
-    // - isFree false -> explicit prices win; a course that was free gets the
-    //   platform default rather than staying accidentally purchasable at 0
+    // - isFree false -> EGP is the single source of truth; USD is always
+    //   DERIVED via the configured exchange rate. A legacy client that sends
+    //   only priceUsd gets it converted back to EGP first.
     if (
       (data.isFree !== undefined || data.priceEgp !== undefined || data.priceUsd !== undefined) &&
       prisma.product
@@ -369,30 +376,24 @@ export class CourseService {
         priceEgp = 0;
         priceUsd = 0;
       } else {
-        let explicitEgp =
-          data.priceEgp !== undefined ? Number(data.priceEgp) : undefined;
-        let explicitUsd =
-          data.priceUsd !== undefined ? Number(data.priceUsd) : undefined;
+        const existingProduct = await prisma.product.findFirst({
+          where: { productType: 'COURSE', resourceId: id },
+        });
+        const currentPaid =
+          existingProduct && Number(existingProduct.priceEgp) > 0
+            ? existingProduct
+            : null;
 
-        if (explicitEgp === undefined || explicitUsd === undefined) {
-          const existingProduct = await prisma.product.findFirst({
-            where: { productType: 'COURSE', resourceId: id },
-          });
-          const currentPaid =
-            existingProduct && Number(existingProduct.priceEgp) > 0
-              ? existingProduct
-              : null;
-
-          if (explicitEgp === undefined) {
-            explicitEgp = currentPaid ? Number(currentPaid.priceEgp) : 150;
-          }
-          if (explicitUsd === undefined) {
-            explicitUsd = currentPaid ? Number(currentPaid.priceUsd) : 10;
-          }
+        if (data.priceEgp !== undefined) {
+          priceEgp = Number(data.priceEgp);
+        } else if (data.priceUsd !== undefined && !currentPaid) {
+          // Legacy caller sent USD only: convert to the canonical EGP amount.
+          priceEgp = await usdToEgp(Number(data.priceUsd));
+        } else {
+          priceEgp = currentPaid ? Number(currentPaid.priceEgp) : 150;
         }
 
-        priceEgp = explicitEgp as number;
-        priceUsd = explicitUsd as number;
+        priceUsd = await egpToUsd(priceEgp);
       }
 
       const existingProduct = await prisma.product.findFirst({
@@ -467,12 +468,6 @@ export class CourseService {
 
     if (prisma.collectionCourse?.deleteMany) {
       await prisma.collectionCourse.deleteMany({
-        where: { courseId: id },
-      });
-    }
-
-    if (prisma.certificate?.deleteMany) {
-      await prisma.certificate.deleteMany({
         where: { courseId: id },
       });
     }
@@ -843,7 +838,7 @@ export class CourseService {
 
   // Lesson & Resource Management
   static async createLesson(
-    moduleId: string,
+    moduleId: string | null,
     data: {
       titleEn: string;
       titleAr?: string;
@@ -855,17 +850,36 @@ export class CourseService {
       quiz?: { title: string; passingScore?: number; timeLimit?: number; questions: Array<{ questionText: string; points?: number; orderIndex?: number; options: Array<{ optionText: string; isCorrect: boolean; orderIndex?: number }> }> };
     },
     teacherId?: string,
-    userRole?: Role
+    userRole?: Role,
+    sectionId?: string
   ) {
-    const module = await prisma.courseModule.findUnique({
-      where: { id: moduleId },
-      include: { course: true },
-    });
-    if (!module) {
-      throw new NotFoundError('Module not found');
+    // Lessons hang off EITHER a module OR a section (dual curriculum layout).
+    let ownerTeacherId: string;
+    const lessonParent: { moduleId?: string; sectionId?: string } = {};
+
+    if (sectionId) {
+      const section = await prisma.section.findUnique({
+        where: { id: sectionId },
+        select: { id: true, course: { select: { teacherId: true } } },
+      });
+      if (!section) {
+        throw new NotFoundError('Section not found');
+      }
+      ownerTeacherId = section.course.teacherId;
+      lessonParent.sectionId = sectionId;
+    } else {
+      const module = await prisma.courseModule.findUnique({
+        where: { id: moduleId! },
+        include: { course: true },
+      });
+      if (!module) {
+        throw new NotFoundError('Module not found');
+      }
+      ownerTeacherId = module.course.teacherId;
+      lessonParent.moduleId = moduleId!;
     }
 
-    if (teacherId && module.course.teacherId !== teacherId && userRole !== Role.ADMIN) {
+    if (teacherId && ownerTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can add lessons to this course');
     }
 
@@ -873,7 +887,7 @@ export class CourseService {
     if (data.video && data.video.videoUrl) {
       const video = await prisma.video.create({
         data: {
-          teacherId: teacherId || module.course.teacherId,
+          teacherId: teacherId || ownerTeacherId,
           status: VideoStatus.READY,
           videoUrl: data.video.videoUrl,
           durationSec: data.video.duration || 0,
@@ -901,7 +915,7 @@ export class CourseService {
 
     const lesson = await prisma.lesson.create({
       data: {
-        moduleId,
+        ...lessonParent,
         titleEn: data.titleEn,
         titleAr: data.titleAr || data.titleEn,
         content: data.content,
@@ -1004,7 +1018,7 @@ export class CourseService {
 
   static async attachQuizToLesson(
     lessonId: string,
-    data: { title: string; passingScore?: number; timeLimit?: number; questions?: Array<{ questionText: string; points?: number; orderIndex?: number; options: Array<{ optionText: string; isCorrect: boolean; orderIndex?: number }> }> },
+    data: { title: string; passingScore?: number; timeLimit?: number; maxAttempts?: number; questions?: Array<{ questionText: string; points?: number; orderIndex?: number; options: Array<{ optionText: string; isCorrect: boolean; orderIndex?: number }> }> },
     teacherId?: string,
     userRole?: Role
   ) {
@@ -1032,6 +1046,7 @@ export class CourseService {
         titleAr: data.title,
         passingScore: data.passingScore,
         timeLimit: data.timeLimit,
+        maxAttempts: data.maxAttempts,
         questions: data.questions || [],
       });
     })();
@@ -1078,6 +1093,30 @@ export class CourseService {
       where: { id: lessonId },
       data,
     });
+  }
+
+  /**
+   * Detaches the quiz from a lesson (quizzes are optional attachments).
+   * Ownership enforced via lesson -> course. The Quiz row itself is left in
+   * place (same lifecycle as quiz replacement) - only the pointer is cleared.
+   */
+  static async detachQuizFromLesson(
+    lessonId: string,
+    teacherId?: string,
+    userRole?: Role
+  ) {
+    const { lesson } = await this.getOwnedLessonOrThrow(lessonId, teacherId, userRole);
+
+    if (!lesson.quizId) {
+      return { detached: false };
+    }
+
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { quizId: null },
+    });
+
+    return { detached: true };
   }
 
   /**
@@ -1160,6 +1199,81 @@ export class CourseService {
         isRequired: data.isRequired ?? true,
       },
     });
+  }
+
+  /** Loads a lesson block with its owning course teacher for ACL checks. */
+  private static async getOwnedBlockOrThrow(blockId: string, teacherId?: string, userRole?: Role) {
+    const block = await prisma.lessonBlock.findUnique({
+      where: { id: blockId },
+      select: {
+        id: true,
+        lesson: {
+          select: {
+            moduleId: true,
+            sectionId: true,
+            module: { select: { course: { select: { teacherId: true } } } },
+            section: { select: { course: { select: { teacherId: true } } } },
+          },
+        },
+      },
+    });
+    if (!block) {
+      throw new NotFoundError('Block not found');
+    }
+
+    const courseTeacherId =
+      (block.lesson as any)?.module?.course?.teacherId ||
+      (block.lesson as any)?.section?.course?.teacherId;
+    if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
+      throw new ForbiddenError('Only the course owner can modify this block');
+    }
+
+    return block;
+  }
+
+  static async updateLessonBlock(
+    blockId: string,
+    data: { blockType?: string; configuration?: any; sortOrder?: number; isRequired?: boolean },
+    teacherId?: string,
+    userRole?: Role
+  ) {
+    await this.getOwnedBlockOrThrow(blockId, teacherId, userRole);
+
+    return await prisma.lessonBlock.update({
+      where: { id: blockId },
+      data: {
+        ...(data.blockType !== undefined && { blockType: data.blockType as any }),
+        ...(data.configuration !== undefined && {
+          configurationJson: JSON.stringify(data.configuration),
+        }),
+        ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+        ...(data.isRequired !== undefined && { isRequired: data.isRequired }),
+      },
+    });
+  }
+
+  /** Deletes a block; its Board/Playground rows cascade (schema-level). */
+  static async deleteLessonBlock(blockId: string, teacherId?: string, userRole?: Role) {
+    await this.getOwnedBlockOrThrow(blockId, teacherId, userRole);
+
+    await prisma.lessonBlock.delete({ where: { id: blockId } });
+    return { deleted: true };
+  }
+
+  /** Removes the video pointer from a lesson (videos are optional). */
+  static async detachVideoFromLesson(lessonId: string, teacherId?: string, userRole?: Role) {
+    const { lesson } = await this.getOwnedLessonOrThrow(lessonId, teacherId, userRole);
+
+    if (!lesson.videoId) {
+      return { detached: false };
+    }
+
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { videoId: null },
+    });
+
+    return { detached: true };
   }
 
   // NOTE: gradeAssignmentSubmission was removed — grading is owned by the

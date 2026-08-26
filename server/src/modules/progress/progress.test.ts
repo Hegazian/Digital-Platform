@@ -59,11 +59,37 @@ describe('Progress Module API', () => {
     });
     testLessonId = lesson.id;
 
-    // 3. Register Student
+    // 3. Register Student (students must carry a student number + grade year)
+    let gradeId: string | undefined;
+    const existingGrade = await prisma.grade.findFirst({ select: { id: true } });
+    if (existingGrade) {
+      gradeId = existingGrade.id;
+    } else {
+      const stage = await prisma.educationalStage.create({
+        data: {
+          nameEn: 'Progress Test Stage',
+          nameAr: 'مرحلة اختبار',
+          code: `PROG_STAGE_${timestamp}`,
+        },
+      });
+      const grade = await prisma.grade.create({
+        data: {
+          stageId: stage.id,
+          nameEn: '1st Secondary',
+          nameAr: 'الأول الثانوي',
+          code: `PROG_${timestamp}`,
+        },
+      });
+      gradeId = grade.id;
+    }
+
     const regRes = await request(app).post('/api/v1/auth/register').send({
       name: 'Student',
       email: studentEmail,
       password: 'password123',
+      role: 'STUDENT',
+      studentNumber: `PROG-${timestamp}`,
+      gradeId,
     });
     studentId = regRes.body.data.id;
 

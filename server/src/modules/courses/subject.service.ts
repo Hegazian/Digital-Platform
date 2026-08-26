@@ -1,6 +1,7 @@
 import { prisma } from '../../prisma';
 import { SubscriptionPeriod } from '@prisma/client';
 import { NotFoundError, BadRequestError } from '../../utils/errors';
+import { egpToUsd } from '../../utils/currency';
 
 export class SubjectService {
   /**
@@ -62,7 +63,7 @@ export class SubjectService {
               subjectId: createdSubject.id,
               period: p.period,
               priceEgp: p.priceEgp,
-              priceUsd: p.priceUsd,
+              priceUsd: await egpToUsd(p.priceEgp),
               isActive: true,
             },
           });
@@ -151,7 +152,7 @@ export class SubjectService {
 
   static async updateSubjectPricing(
     subjectId: string,
-    pricingTiers: Array<{ period: SubscriptionPeriod; priceEgp: number; priceUsd: number; isActive?: boolean }>
+    pricingTiers: Array<{ period: SubscriptionPeriod; priceEgp: number; priceUsd?: number; isActive?: boolean }>
   ) {
     const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
     if (!subject) {
@@ -159,6 +160,8 @@ export class SubjectService {
     }
 
     for (const tier of pricingTiers) {
+      // USD is derived from EGP at the configured exchange rate.
+      const priceUsd = await egpToUsd(tier.priceEgp);
       await prisma.subjectPricing.upsert({
         where: {
           subjectId_period: {
@@ -170,12 +173,12 @@ export class SubjectService {
           subjectId,
           period: tier.period,
           priceEgp: tier.priceEgp,
-          priceUsd: tier.priceUsd,
+          priceUsd,
           isActive: tier.isActive ?? true,
         },
         update: {
           priceEgp: tier.priceEgp,
-          priceUsd: tier.priceUsd,
+          priceUsd,
           isActive: tier.isActive ?? true,
         },
       });

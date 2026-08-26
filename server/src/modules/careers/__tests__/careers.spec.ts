@@ -55,16 +55,21 @@ describe('Career Tracks', () => {
     } catch {}
   });
 
-  it('GET /career-tracks auto-seeds the four default tracks and links matching subjects', async () => {
+  it('GET /career-tracks auto-seeds the default tracks (Scientific Math positioning) and links matching subjects', async () => {
     const res = await request(app).get('/api/v1/careers');
     expect(res.status).toBe(200);
 
     const slugs = res.body.data.map((t: any) => t.slug);
-    for (const slug of ['engineering', 'medicine', 'development', 'science']) {
+    // On-position defaults only — legacy medicine/science tracks are hidden.
+    for (const slug of ['engineering', 'development']) {
       expect(slugs).toContain(slug);
     }
+    expect(slugs).not.toContain('medicine');
+    expect(slugs).not.toContain('science');
 
+    // Names reflect the faculty-oriented repositioning.
     const engineering = res.body.data.find((t: any) => t.slug === 'engineering');
+    expect(engineering.nameEn).toBe('Engineering Faculties');
     expect(engineering.subjects.some((s: any) => s.subject.id === subjectId)).toBe(true);
   });
 

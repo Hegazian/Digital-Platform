@@ -89,14 +89,15 @@ export class ProgressService {
    */
   static async getStudentProgressSummary(userId: string) {
     const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
-    const { subjectIds, courseIds } = await EntitlementResolver.getAccessibleResources(userId);
+    const { subjectIds, courseIds, gradeBundleIds } = await EntitlementResolver.getAccessibleResources(userId);
 
-    // Fetch all courses accessible via subjects OR direct course access
+    // Fetch all courses accessible via subjects OR direct course access OR grade bundles
     const courses = await prisma.course.findMany({
       where: {
         OR: [
           { subjectId: { in: Array.from(subjectIds) } },
           { id: { in: Array.from(courseIds) } },
+          ...(gradeBundleIds.size > 0 ? [{ gradeId: { in: Array.from(gradeBundleIds) } }] : []),
         ],
       },
       include: {

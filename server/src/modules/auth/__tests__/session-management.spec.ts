@@ -22,12 +22,27 @@ describe('Refresh Session Rotation & Revocation', () => {
   let adminId: string;
   const cleanupUsers: string[] = [];
 
+  /**
+   * Refresh tokens are no longer returned in JSON bodies (XSS hardening).
+   * Tests extract the raw token from the httpOnly cookie instead.
+   */
+  function refreshTokenFromCookies(res: { headers: { [k: string]: unknown } }): string {
+    const cookies = res.headers['set-cookie'] as unknown as string[];
+    const rtCookie = cookies?.find((c) => c.startsWith('eduplat_rt='));
+    expect(rtCookie).toBeDefined();
+    return decodeURIComponent(rtCookie!.split(';')[0].split('=').slice(1).join('='));
+  }
+
   async function loginAndGetTokens(password = 'Password123!') {
     const res = await request(app)
       .post('/api/v1/auth/login')
       .send({ email, password });
     expect(res.status).toBe(200);
-    return res.body.data.tokens as { accessToken: string; refreshToken: string };
+    expect(res.body.data.tokens.refreshToken).toBeUndefined();
+    return {
+      accessToken: res.body.data.tokens.accessToken as string,
+      refreshToken: refreshTokenFromCookies(res),
+    };
   }
 
   beforeAll(async () => {
@@ -85,7 +100,11 @@ describe('Refresh Session Rotation & Revocation', () => {
       .post('/api/v1/auth/refresh')
       .send({ refreshToken: tokens.refreshToken });
     expect(res.status).toBe(200);
-    expect(res.body.data.refreshToken).not.toBe(tokens.refreshToken);
+    // New refresh token is delivered via the cookie only, never the body.
+    expect(res.body.data.accessToken).toBeDefined();
+    expect(res.body.data.refreshToken).toBeUndefined();
+    const rotatedCookie = refreshTokenFromCookies(res);
+    expect(rotatedCookie).not.toBe(tokens.refreshToken);
 
     const oldRow = await prisma.refreshToken.findUnique({
       where: { tokenHash: sha256(tokens.refreshToken) },

@@ -14,13 +14,15 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
 
   const TEST_PAYMOB_SECRET = process.env.PAYMOB_HMAC_SECRET || 'test_paymob_hmac_secret_key_123';
 
-  // Helper to generate legitimate Paymob HMAC signature
+  // Helper mirroring the server's canonical Paymob HMAC scheme
+  // (sorted key=value pairs, key names included in the signed material).
   function generatePaymobSignature(data: Record<string, any>, secret: string): string {
-    const concatenatedValues = Object.keys(data)
+    const canonical = Object.keys(data)
+      .filter((k) => data[k] !== undefined)
       .sort()
-      .map((k) => String(data[k]))
-      .join('');
-    return crypto.createHmac('sha512', secret).update(concatenatedValues).digest('hex');
+      .map((k) => `${k}=${String(data[k])}`)
+      .join('&');
+    return crypto.createHmac('sha512', secret).update(canonical).digest('hex');
   }
 
   beforeAll(async () => {
@@ -121,6 +123,7 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
       orderId,
       transactionRef: `legit_tx_${Date.now()}`,
       success: true,
+      amount: 300, // must match the order total (amount reconciliation is mandatory)
     };
 
     const validSignature = generatePaymobSignature(payload, TEST_PAYMOB_SECRET);

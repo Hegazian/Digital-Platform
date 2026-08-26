@@ -28,7 +28,6 @@ import playgroundRoutes from './modules/courses/playground.routes';
 import boardRoutes from './modules/courses/board.routes';
 import discussionRoutes from './modules/discussions/discussion.routes';
 import podcastRoutes from './modules/podcasts/podcast.routes';
-import certificateRoutes from './modules/certificates/certificate.routes';
 import collectionRoutes from './modules/collections/collection.routes';
 import aiRoutes from './modules/ai/ai.routes';
 import apiTokenRoutes from './modules/developer/api-token.routes';
@@ -40,9 +39,24 @@ import careersRoutes from './modules/careers/careers.routes';
 
 const app: Express = express();
 
+// 0. Proxy trust. Behind a reverse proxy (nginx/ALB) every client would
+// otherwise share the proxy's IP, which collapses per-IP rate limiting into a
+// collective lockout of ALL users. Only trust the proxy hop count we expect;
+// directly-exposed deployments keep X-Forwarded-For ignored.
+if (process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
 // 1. Request ID Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  // Honor client-supplied trace IDs, but only if they are safe header values:
+  // printable ASCII and bounded length. This preserves log correlation while
+  // preventing control-character values from crashing res.setHeader or
+  // forging/spoofing log lines.
+  const inboundId = req.headers['x-request-id'] as string | undefined;
+  const isSafeId =
+    !!inboundId && inboundId.length <= 128 && /^[\x20-\x7E]+$/.test(inboundId);
+  const requestId = isSafeId ? inboundId : crypto.randomUUID();
   req.headers['x-request-id'] = requestId;
   res.setHeader('x-request-id', requestId);
   next();
@@ -50,7 +64,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // 2. Standard Middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
+// Accept CLIENT_URL (documented) or FRONTEND_URL (used by existing .env files)
+const allowedOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
 
 if (process.env.NODE_ENV !== 'test') {
@@ -67,10 +83,17 @@ const globalLimiter = rateLimit({
 });
 app.use('/api', globalLimiter);
 
-// Dedicated Auth & Brute Force Rate Limiter
+// Dedicated Auth & Brute Force Rate Limiter.
+// Strict in production (brute-force protection); generous outside production
+// so local E2E runs (which share one localhost IP across many register/login
+// calls) don't exhaust the bucket and fail with silent 429s.
+const authRateLimitMax =
+  process.env.NODE_ENV === 'production'
+    ? Number(process.env.AUTH_RATE_LIMIT_MAX) || 50
+    : 1000;
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 50,
+  limit: authRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
@@ -78,6 +101,13 @@ const authLimiter = rateLimit({
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 app.use('/api/v1/auth/mfa-login', authLimiter);
+
+// Session-rotation and MFA endpoints perform credential-sensitive work but
+// were previously unlimited (beyond the global bucket) - an attacker could
+// brute-force TOTP codes or hammer token rotation across IPs. They share the
+// strict auth budget now.
+app.use('/api/v1/auth/refresh', authLimiter);
+app.use('/api/v1/mfa', authLimiter);
 
 // 4. Health Check Endpoint
 const handleHealthCheck = async (req: Request, res: Response) => {
@@ -146,7 +176,6 @@ app.use('/api/v1/playgrounds', playgroundRoutes);
 app.use('/api/v1/boards', boardRoutes);
 app.use('/api/v1/discussions', discussionRoutes);
 app.use('/api/v1/podcasts', podcastRoutes);
-app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/collections', collectionRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/developer', apiTokenRoutes);

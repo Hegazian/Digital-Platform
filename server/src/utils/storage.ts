@@ -2,6 +2,34 @@ import fs from 'fs';
 import path from 'path';
 
 /**
+ * Absolute uploads root, deliberately independent of process.cwd().
+ *
+ * Dev servers can be launched from different working directories (IDE task,
+ * `npm --prefix`, repo root, a copied workspace). Deriving `/uploads/...`
+ * paths from cwd makes previously uploaded files "vanish" whenever the
+ * launch directory differs from the one used at upload time - the stream
+ * endpoint then 400s and the player appears broken.
+ *
+ * Resolution order:
+ * 1. UPLOADS_DIR env override (explicit deployments / volume mounts)
+ * 2. The server package root, derived from this module's location so it is
+ *    correct whether running from src (tsx) or dist (compiled JS)
+ * 3. process.cwd() as a last-resort fallback (e.g. exotic test runners)
+ */
+export function getUploadsRoot(): string {
+  if (process.env.UPLOADS_DIR) {
+    return path.resolve(process.env.UPLOADS_DIR);
+  }
+  try {
+    // __dirname = <server>/src/utils (dev) or <server>/dist/utils (built);
+    // ../../uploads is <server>/uploads in both layouts.
+    return path.resolve(__dirname, '..', '..', 'uploads');
+  } catch {
+    return path.resolve(process.cwd(), 'uploads');
+  }
+}
+
+/**
  * Storage Utility for handling file uploads (Supabase Storage with local fallback).
  */
 export class StorageService {
@@ -42,7 +70,7 @@ export class StorageService {
     }
 
     // Fallback to local uploads directory
-    const uploadDir = path.join(process.cwd(), 'uploads', bucketName);
+    const uploadDir = path.join(getUploadsRoot(), bucketName);
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -104,7 +132,7 @@ export class StorageService {
       const parts = fileUrl.split('/');
       const fileName = parts.pop()!;
       const bucketName = parts.pop()!;
-      const localFilePath = path.join(process.cwd(), 'uploads', bucketName, fileName);
+      const localFilePath = path.join(getUploadsRoot(), bucketName, fileName);
       if (fs.existsSync(localFilePath)) {
         fs.unlinkSync(localFilePath);
       }
