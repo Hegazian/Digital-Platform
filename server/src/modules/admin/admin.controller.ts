@@ -18,7 +18,7 @@ export class AdminController {
         teacherStatus: teacherStatus as TeacherStatus | undefined,
         search: search as string | undefined,
         page: page ? parseInt(page as string, 10) : 1,
-        limit: limit ? parseInt(limit as string, 10) : 20,
+        limit: limit ? Math.min(parseInt(limit as string, 10) || 20, 100) : 20,
       });
 
       res.status(200).json({ success: true, data: result });
@@ -53,7 +53,7 @@ export class AdminController {
         throw new BadRequestError('status must be "APPROVED" or "REJECTED"');
       }
 
-      const updated = await AdminService.updateTeacherStatus(id as string, status);
+      const updated = await AdminService.updateTeacherStatus(id as string, status, req.user!.userId);
 
       res.status(200).json({
         success: true,
@@ -78,7 +78,7 @@ export class AdminController {
         throw new BadRequestError('isActive must be a boolean');
       }
 
-      const updated = await AdminService.setUserActiveStatus(id as string, isActive);
+      const updated = await AdminService.setUserActiveStatus(id as string, isActive, req.user!.userId);
 
       res.status(200).json({
         success: true,
@@ -95,7 +95,7 @@ export class AdminController {
    */
   static async createUser(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const user = await AdminService.createUser(req.body);
+      const user = await AdminService.createUser(req.body, req.user!.userId);
       res.status(201).json({
         success: true,
         message: 'User created successfully',
@@ -112,7 +112,7 @@ export class AdminController {
   static async updateUser(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const user = await AdminService.updateUser(id as string, req.body);
+      const user = await AdminService.updateUser(id as string, req.body, req.user!.userId);
       res.status(200).json({
         success: true,
         message: 'User updated successfully',

@@ -63,7 +63,9 @@ export class AssignmentService {
         maxScore,
         dueDate: parsedDueDate,
         allowLateSubmission: data.allowLateSubmission !== undefined ? Boolean(data.allowLateSubmission) : true,
-        maxAttempts: data.maxAttempts ? Math.max(1, Number(data.maxAttempts)) : 1,
+        maxAttempts: data.maxAttempts != null && Number.isFinite(Number(data.maxAttempts))
+          ? Math.max(1, Math.floor(Number(data.maxAttempts)))
+          : 1,
       },
     });
 
@@ -129,7 +131,11 @@ export class AssignmentService {
         ...(data.maxScore !== undefined && { maxScore: Number(data.maxScore) }),
         ...(parsedDueDate !== undefined && { dueDate: parsedDueDate }),
         ...(data.allowLateSubmission !== undefined && { allowLateSubmission: Boolean(data.allowLateSubmission) }),
-        ...(data.maxAttempts !== undefined && { maxAttempts: Number(data.maxAttempts) }),
+        ...(data.maxAttempts !== undefined && {
+          maxAttempts: Number.isFinite(Number(data.maxAttempts))
+            ? Math.max(1, Math.floor(Number(data.maxAttempts)))
+            : 1,
+        }),
       },
     });
   }

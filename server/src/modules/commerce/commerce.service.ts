@@ -514,12 +514,13 @@ export class CommerceService {
       async (tx) => {
         // Per-student dedupe: an already-active voucher grant for the same
         // resource is returned instead of burning another use.
+        // Check for ANY active entitlement (purchase, subscription, or voucher)
+        // to avoid wasting a voucher use on a resource the student already owns.
         const existingGrant = await tx.entitlement.findFirst({
           where: {
             studentId,
             resourceType: voucher.resourceType,
             resourceId: voucher.resourceId,
-            sourceType: EntitlementSource.VOUCHER,
             status: EntitlementStatus.ACTIVE,
             OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
           },

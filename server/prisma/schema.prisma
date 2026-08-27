@@ -254,6 +254,11 @@ model Course {
   modules         CourseModule[]
   collectionLinks CollectionCourse[]
 
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([gradeId])
+  @@index([academicYearId])
+  @@index([status])
   @@map("courses")
 }
 
@@ -270,6 +275,7 @@ model CourseModule {
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons     Lesson[]
 
+  @@index([courseId])
   @@map("course_modules")
 }
 
@@ -286,6 +292,7 @@ model Section {
   course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons       Lesson[]
 
+  @@index([courseId])
   @@map("sections")
 }
 
@@ -311,6 +318,8 @@ model Lesson {
   blocks            LessonBlock[]
   progress          LessonProgress[]
 
+  @@index([sectionId])
+  @@index([moduleId])
   @@map("lessons")
 }
 
@@ -328,6 +337,7 @@ model LessonBlock {
   board             Board?
   playground        Playground?
 
+  @@index([lessonId])
   @@map("lesson_blocks")
 }
 

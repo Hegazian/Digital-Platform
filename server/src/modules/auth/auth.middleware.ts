@@ -34,6 +34,15 @@ async function isUserActive(userId: string): Promise<boolean> {
   return active;
 }
 
+/** Periodic cleanup to prevent unbounded memory growth. */
+const ACTIVATION_CACHE_CLEANUP_INTERVAL_MS = 60_000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of activationCache) {
+    if (entry.expiresAt <= now) activationCache.delete(key);
+  }
+}, ACTIVATION_CACHE_CLEANUP_INTERVAL_MS).unref();
+
 /** Forces the next request from this user to re-check the database. */
 export function invalidateActivationCache(userId: string | null | undefined): void {
   if (userId) activationCache.delete(userId);
@@ -77,17 +86,21 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
  * Attaches req.user when a valid Bearer token is present; continues
  * anonymously (req.user undefined) otherwise. Never rejects the request.
  */
-export const optionalAuth = (req: AuthRequest, _res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     try {
       const decoded = verifyAccessToken(authHeader.split(' ')[1]) as any;
       if (decoded.purpose !== 'mfa_challenge') {
-        req.user = {
-          userId: decoded.userId,
-          role: decoded.role,
-          teacherStatus: decoded.teacherStatus
-        };
+        // Deactivated users are treated as anonymous, consistent with authenticate().
+        const active = await isUserActive(decoded.userId);
+        if (active) {
+          req.user = {
+            userId: decoded.userId,
+            role: decoded.role,
+            teacherStatus: decoded.teacherStatus
+          };
+        }
       }
     } catch {
       // Invalid/expired token -> treat as anonymous instead of failing.

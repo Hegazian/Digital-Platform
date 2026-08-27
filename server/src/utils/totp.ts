@@ -11,26 +11,36 @@ export async function verifyTotpToken(
   secret: string,
   token: string
 ): Promise<boolean> {
+  if (!secret || !token) {
+    return false;
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { mfaLastTimeStep: true },
   });
 
-  const verification = verifySync({
-    token,
-    secret,
-    ...(user?.mfaLastTimeStep != null ? { afterTimeStep: user.mfaLastTimeStep } : {}),
-  });
+  try {
+    const verification = verifySync({
+      token: String(token).trim(),
+      secret,
+      ...(user?.mfaLastTimeStep != null ? { afterTimeStep: user.mfaLastTimeStep } : {}),
+    });
 
-  if (!verification.valid) {
+    if (!verification || !verification.valid) {
+      return false;
+    }
+
+    const timeStep = (verification as { timeStep?: number }).timeStep;
+    if (timeStep != null && Number.isFinite(timeStep)) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { mfaLastTimeStep: timeStep },
+      });
+    }
+
+    return true;
+  } catch {
     return false;
   }
-
-  // Strategy is always TOTP here, but the union type includes HOTP results.
-  const timeStep = (verification as { timeStep: number }).timeStep;
-  await prisma.user.update({
-    where: { id: userId },
-    data: { mfaLastTimeStep: timeStep },
-  });
-  return true;
 }

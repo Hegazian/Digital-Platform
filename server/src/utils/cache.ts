@@ -31,3 +31,14 @@ export class CacheService {
     this.memoryStore.clear();
   }
 }
+
+/** Periodic cleanup to prevent unbounded memory growth from expired entries. */
+const CACHE_CLEANUP_INTERVAL_MS = 60_000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of CacheService['memoryStore']) {
+    if (entry.expiresAt && now > entry.expiresAt) {
+      CacheService.del(key);
+    }
+  }
+}, CACHE_CLEANUP_INTERVAL_MS).unref();

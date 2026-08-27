@@ -92,7 +92,8 @@ export class AdminService {
    */
   static async updateTeacherStatus(
     teacherId: string,
-    status: 'APPROVED' | 'REJECTED'
+    status: 'APPROVED' | 'REJECTED',
+    adminId?: string
   ) {
     const teacher = await prisma.user.findUnique({
       where: { id: teacherId },
@@ -133,7 +134,7 @@ export class AdminService {
     }
 
     await logAuditAction(
-      teacherId,
+      adminId || teacherId,
       'TEACHER_STATUS_UPDATED',
       teacherId,
       'User',
@@ -146,7 +147,7 @@ export class AdminService {
   /**
    * Deactivate or reactivate a user account.
    */
-  static async setUserActiveStatus(userId: string, isActive: boolean) {
+  static async setUserActiveStatus(userId: string, isActive: boolean, adminId?: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new NotFoundError('User not found');
@@ -180,7 +181,7 @@ export class AdminService {
     }
 
     await logAuditAction(
-      userId,
+      adminId || userId,
       isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
       userId,
       'User',
@@ -201,7 +202,7 @@ export class AdminService {
     teacherStatus?: TeacherStatus;
     gradeId?: string;
     isActive?: boolean;
-  }) {
+  }, adminId?: string) {
     const { email, password, name, role = Role.STUDENT, teacherStatus, gradeId, isActive = true } = data;
 
     // Defense in depth: the zod layer enforces this for HTTP traffic, but
@@ -249,7 +250,7 @@ export class AdminService {
     });
 
     await logAuditAction(
-      user.id,
+      adminId || user.id,
       'USER_CREATED',
       user.id,
       'User',
@@ -272,7 +273,8 @@ export class AdminService {
       gradeId?: string | null;
       isActive?: boolean;
       password?: string;
-    }
+    },
+    adminId?: string
   ) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -323,7 +325,7 @@ export class AdminService {
     });
 
     await logAuditAction(
-      userId,
+      adminId || userId,
       'USER_UPDATED',
       userId,
       'User',

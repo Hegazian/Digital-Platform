@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from './auth.middleware';
 import { AuthService } from './auth.service';
 
 const REFRESH_COOKIE = 'eduplat_rt';
@@ -112,7 +113,10 @@ export class AuthController {
 
   static async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = getRefreshTokenFromRequest(req) || req.body?.refreshToken;
+      // Only revoke the session carried by the httpOnly cookie.
+      // The legacy body fallback is removed to prevent griefing attacks
+      // where an attacker revokes another user's refresh token.
+      const token = getRefreshTokenFromRequest(req);
       await AuthService.logout(token);
       clearRefreshCookie(res);
       res.status(200).json({ success: true, message: 'Logged out' });
@@ -121,7 +125,7 @@ export class AuthController {
     }
   }
 
-  static async getProfile(req: any, res: Response, next: NextFunction) {
+  static async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user.userId;
       const user = await AuthService.getProfile(userId);
@@ -131,7 +135,7 @@ export class AuthController {
     }
   }
 
-  static async updateProfile(req: any, res: Response, next: NextFunction) {
+  static async updateProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user.userId;
       const updated = await AuthService.updateProfile(userId, req.body);
