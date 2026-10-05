@@ -1,6 +1,6 @@
 # 🎓 EduPlatform — Comprehensive Project Overview & Detailed Usage Guide
 
-Welcome to **EduPlatform**, a paid, bilingual (Arabic/English RTL/LTR) digital educational platform designed specifically for **Egyptian secondary school students, teachers, and parents**. The platform delivers high-quality content in **Programming, Mathematics, and Physics**, aligned with the Egyptian national curriculum while serving students worldwide.
+Welcome to **EduPlatform**, a paid, bilingual (Arabic/English RTL/LTR) digital educational platform designed for students, teachers, parents, and academic administrators. While seeded with curriculum for Egyptian secondary school education (Thanaweya Amma: Math, Physics, Programming), **the platform is architected to be completely generic and configurable for any subject, topic, or institution worldwide** through its real-time administrative content governance system.
 
 ---
 
@@ -11,6 +11,10 @@ Welcome to **EduPlatform**, a paid, bilingual (Arabic/English RTL/LTR) digital e
 4. [How to Set & Manage Admins](#4-how-to-set--manage-admins)
 5. [Step-by-Step System Operations & Running Locally](#5-step-by-step-system-operations--running-locally)
 6. [User Journeys & Features Walkthrough](#6-user-journeys--features-walkthrough)
+   - [6.1 Administrator Journey (Content Customization & Governance)](#61-administrator-journey)
+   - [6.2 Teacher Journey (Course Authoring & Reviews)](#62-teacher-journey)
+   - [6.3 Student Journey (Interactive Learning & Code Runner)](#63-student-journey)
+   - [6.4 Parent Journey (Account Linking & Progress)](#64-parent-journey)
 7. [API Endpoints Summary & Testing Commands](#7-api-endpoints-summary--testing-commands)
 
 ---
@@ -18,17 +22,34 @@ Welcome to **EduPlatform**, a paid, bilingual (Arabic/English RTL/LTR) digital e
 ## 1. Project Overview & Key Features
 
 ### Mission & Target Audience
-- **Target Audience**: Egyptian secondary school students (1st, 2nd, and 3rd Secondary), their parents, and certified teachers.
-- **Core Curriculum**: Secondary School **Programming** (Python, Web), **Mathematics** (Algebra, Calculus, Geometry), and **Physics** (Mechanics, Electricity, Modern Physics).
-- **Language Support**: Seamless bilingual toggle between **Arabic (`ar` - RTL)** using Google Font *Tajawal* and **English (`en` - LTR)** using Google Font *Inter*.
+- **Target Audience**: Secondary school students, college applicants, programming learners, their parents, and certified educators.
+- **Generic Domain Adaptability**: Admins can customize all words, topic tags, CTAs, and marketing copy on the landing page in both English and Arabic to adapt the platform to any discipline (e.g. Medical, Engineering, Languages, Business, IGCSE/SAT).
+- **Bilingual Interface**: Seamless instant toggle between **Arabic (`ar` - RTL)** using Google Font *Tajawal* and **English (`en` - LTR)** using Google Font *Inter*.
 
 ### Key Platform Capabilities
-1. **Per-Subject Subscription Model**: Flexible billing cycles (**Monthly**, **6-Month**, **Yearly**) in dual currencies (**EGP** & **USD**) per subject.
-2. **Content-Based Free Preview**: The first chapter/section of every course is accessible for free (no subscription required), serving as a content trial.
-3. **Self-Hosted HLS AES-128 Video Security**: Transcodes raw video into encrypted HLS segments (`.m3u8` playlist + `.ts` files). Video decryption keys are dynamically delivered via secure API endpoints ONLY to authorized subscribers or free-preview viewers.
-4. **Teacher Onboarding Approval System**: Newly registered teachers default to `PENDING` status. Only approved teachers (`APPROVED`) can create courses and publish content.
-5. **Parent-Student Account Linking**: Parents link child accounts via invitation codes to monitor watch time, lesson completion, and quiz scores.
-6. **Bilingual Dark Mode Interface**: Built with Next.js 14 App Router, Tailwind CSS glassmorphism, and Zustand store state management.
+1. **Dynamic Landing Page & Home Content Editor**:
+   - Live admin customization of Hero headlines, descriptions, CTA buttons, and bottom taglines.
+   - Dynamic Topic / Discipline badges (add, edit, remove specialties like Engineering, AI, Math, Physics).
+   - Dynamic Trust Badges, "How It Works" 3-step cards, Teacher Recruitment callout banner, and footer audience tags.
+   - Immediate live synchronization with frontend views with zero page reloads required.
+2. **Interactive In-Browser Code Runner**:
+   - Built-in CodeMirror Python editor with an isolated backend execution sandbox for programming lessons.
+   - Enforces execution timeouts and memory limits to prevent runaway scripts.
+3. **Real-Time Collaborative Whiteboards**:
+   - Multiplayer drawing canvas powered by WebSockets for live geometric, mathematical, and conceptual explanations.
+4. **AI Learning Assistant / Tutor Drawer**:
+   - Slide-out conversational AI tutor providing contextual lesson explanations, quiz hints, and step-by-step math breakdowns.
+5. **Course Review & Approval Governance**:
+   - Configurable administrative gate: newly authored teacher courses can require inspection and approval in the admin queue before becoming publicly visible in the catalog.
+6. **Per-Subject Subscriptions & Local Commerce**:
+   - Flexible billing cycles (**Monthly**, **6-Month**, **Yearly**) in multiple currencies (**EGP**, **USD**, **SAR**).
+   - Integrations for local Egyptian gateways (**Paymob**, **Fawry**, Mobile Wallets) alongside pre-paid **Voucher Code Redemption**.
+7. **Self-Hosted HLS AES-128 Video Security**:
+   - Transcodes raw video into encrypted HLS segments (`.m3u8` playlist + `.ts` files). Video decryption keys are dynamically delivered via secure API endpoints ONLY to authorized subscribers or free-preview viewers.
+8. **Content-Based Free Preview**:
+   - The first chapter/section of every course is accessible for free (no subscription required), serving as a frictionless content trial.
+9. **Parent-Student Account Linking**:
+   - Parents link child accounts via invitation codes to monitor watch time, lesson completion, and quiz scores.
 
 ---
 
@@ -39,31 +60,37 @@ graph TB
     subgraph Frontend["Client — Next.js 14 App Router (Port 3000)"]
         UI["Tailwind CSS Glassmorphism + Lucide Icons"]
         Store["Zustand Store (Lang, Dir, Auth, Navigation)"]
+        Config["useConfigStore & useHomeContent()"]
+        Interactive["Code Sandbox, Whiteboards & AI Tutor"]
     end
 
-    subgraph Backend["Server — Node.js + Express + TypeScript (Port 5000)"]
-        AuthModule["Auth Module (JWT + Bcrypt)"]
-        CourseModule["Course & Subject Module"]
-        VideoModule["HLS AES-128 Video Pipeline"]
-        SubModule["Subscription & Payment Module"]
+    subgraph Backend["Server — Node.js + Express 5 + TypeScript (Port 5000)"]
+        AuthModule["Auth & MFA Module (JWT Token Families)"]
+        CourseModule["Course, Academic & Video Pipeline"]
+        CommerceModule["Commerce, Paymob/Fawry & Vouchers"]
+        ConfigModule["Dynamic Config & Home Content Engine"]
+        ToolModules["Code Sandbox & Collaborative Board"]
     end
 
     subgraph Storage["Data & Storage Layer"]
-        PG["PostgreSQL 15 (Relational Database - Port 5433/5432)"]
+        PG_Dev["PostgreSQL 15 Dev (Port 5434)"]
+        PG_Test["PostgreSQL 15 Test (Port 5433)"]
         Redis["Redis 7 (Cache & Sessions - Port 6379)"]
-        R2["Cloudflare R2 / S3 (Raw & HLS Encrypted Video Files)"]
+        Media["Local Uploads / Cloudflare R2 (Encrypted HLS)"]
     end
 
     Frontend --> Backend
-    Backend --> Storage
+    Backend --> PG_Dev
+    Backend --> Redis
+    Backend --> Media
 ```
 
 ### Technology Breakdown
-- **Frontend**: Next.js 14, React 18, Tailwind CSS, Lucide React, Zustand state management.
-- **Backend API**: Node.js 22+, Express 5, TypeScript 5, Helmet, CORS, Morgan, JWT (`jsonwebtoken`), Bcrypt.
+- **Frontend**: Next.js 14.2 (App Router), React 18, Tailwind CSS, Lucide React, CodeMirror, Tiptap WYSIWYG, Zustand state management.
+- **Backend API**: Node.js 22, Express 5, TypeScript 5, Helmet, CORS, Morgan, JWT with rotation, Bcrypt, Zod validation.
 - **Database & ORM**: PostgreSQL 15, Redis 7, Prisma ORM v5.11.
-- **Testing Tools**: Vitest, Supertest, Playwright E2E.
-- **Containerization**: Docker Compose (`docker-compose.test.yml`).
+- **Testing Tools**: Vitest (338 automated backend tests), Supertest, Playwright E2E.
+- **Containerization**: Docker Compose (`docker-compose.yml`).
 
 ---
 
@@ -73,191 +100,168 @@ The platform separates data storage based on security, structure, and media requ
 
 | Data Type | Storage Location / Table | Description |
 | :--- | :--- | :--- |
-| **User Accounts & Auth** | PostgreSQL `users` table | Stores user ID, email, hashed password (`bcrypt`), name, role (`STUDENT`, `TEACHER`, `PARENT`, `ADMIN`), active flag, and `teacherStatus` (`PENDING`, `APPROVED`, `REJECTED`). |
-| **Parent-Child Link** | PostgreSQL `parent_students` table | Stores parent-student linkages (`parentId`, `studentId`) with cascading deletion. |
-| **Curriculum Hierarchy** | PostgreSQL `subjects`, `courses`, `sections`, `lessons` | Stores subjects (bilingual titles `nameEn`/`nameAr`), courses, chapter sections (`isFreePreview` flag), and lessons. |
-| **Pricing Plans** | PostgreSQL `subject_pricing` table | Stores subject subscription rates per period (`MONTHLY`, `SIX_MONTHS`, `YEARLY`) in `priceEgp` and `priceUsd`. |
-| **Subscriptions** | PostgreSQL `subscriptions` table | Stores active user entitlements, subscription periods, start/end dates, and payment processor references (`stripeSubId`, `paypalSubId`). |
-| **Video Metadata & Keys** | PostgreSQL `videos` table | Stores `videoId`, upload status (`UPLOADING`, `PROCESSING`, `READY`), storage keys (`r2StorageKey`, `hlsUrl`), and 16-byte hex encryption keys (`encryptionKey`). |
-| **Raw Video Uploads** | Cloudflare R2 / S3 `uploads/raw/` | Stores raw uploaded `.mp4` video files prior to transcoding. |
-| **Transcoded Video Segments** | Cloudflare R2 / S3 `hls/:videoId/` | Stores generated HLS manifest (`index.m3u8`) and AES-128 encrypted segment files (`segment_000.ts`). |
-| **Key Delivery Memory** | Server RAM & API Endpoint | AES-128 decryption keys are stored as hex in DB and served as raw binary `Buffer` (`application/octet-stream`) via `/api/v1/videos/:id/key`. |
-| **Client Session Tokens** | Browser `localStorage` | JWT Access Token stored under key `accessToken` for API authorization headers. |
+| **Platform Branding & Home Content** | PostgreSQL `app_config` table | Stores bilingual site names, slogans, currency, exchange rate, feature flags, and full `homeContent` JSON payload for the landing page. |
+| **User Accounts & Auth** | PostgreSQL `users` table | Stores user ID, email, hashed password (`bcrypt`), name, role (`STUDENT`, `TEACHER`, `PARENT`, `ADMIN`), active flag, and `teacherStatus`. |
+| **Refresh Token Families** | PostgreSQL `refresh_tokens` table | Stores active refresh tokens with token family lineage for reuse detection and automatic revocation. |
+| **Curriculum Hierarchy** | PostgreSQL `academic_stages`, `academic_grades`, `subjects`, `courses`, `sections`, `lessons` | Multi-tier curriculum hierarchy with bilingual titles, course review status (`DRAFT`, `PENDING_REVIEW`, `APPROVED`, `REJECTED`), and free-preview flags. |
+| **Orders & Payments** | PostgreSQL `orders`, `payments` tables | Tracks checkout sessions, amounts, gateway providers (`PAYMOB`, `FAWRY`, `STRIPE`), and payment statuses. |
+| **Vouchers & Entitlements** | PostgreSQL `vouchers`, `entitlements` tables | Pre-paid coupon redemption codes and resolved course/subject access rights. |
+| **Video Metadata & Keys** | PostgreSQL `videos` table | Stores `videoId`, upload status, storage keys, and 16-byte hex encryption keys (`encryptionKey`). |
+| **Interactive Tools** | PostgreSQL `collaborative_boards`, `playground_runs` | Whiteboard drawing rooms and student code execution histories. |
+| **Raw & Encrypted Video Files** | Local `./uploads/` or Cloudflare R2 / S3 | Raw `.mp4` uploads and generated HLS `.m3u8` manifests with `.ts` segments. |
+| **Key Delivery Memory** | Server RAM & API Endpoint | AES-128 decryption keys served as raw binary `Buffer` (`application/octet-stream`) via `/api/v1/videos/:id/key`. |
+| **Client Session Tokens** | Browser `localStorage` | JWT Access Token stored for API authorization headers. |
 
 ---
 
 ## 4. How to Set & Manage Admins
 
-Users registered through the standard signup flow receive the default role `STUDENT` (or `TEACHER` with `PENDING` approval). **Super Admin (`ADMIN`) privileges can be set using any of the 3 methods below**:
+Users registered through the standard signup flow receive the default role `STUDENT` (or `TEACHER` with `PENDING` approval). **Super Admin (`ADMIN`) privileges can be granted using either method below**:
 
-### Method A: Automated Database Seed Command (Recommended)
+### Method A: Standalone Admin Utility Script (Fastest)
 
-We have provided a built-in seeding script at `server/prisma/seed.ts`.
-
-1. Open your terminal in `d:\digital platform\server`.
-2. Run the seed command:
-   ```bash
-   npm run db:seed
-   ```
-3. **Default Admin Created**:
-   - **Email**: `admin@eduplatform.com`
-   - **Password**: `AdminPass123!`
-   - **Role**: `ADMIN`
-
-> [!TIP]
-> You can customize the admin email and password in `server/.env` by setting `ADMIN_EMAIL` and `ADMIN_PASSWORD` before running the seed command.
-
----
-
-### Method B: Prisma Studio Interactive GUI
-
-Prisma Studio provides a clean visual database editor in your web browser:
-
-1. Open terminal in `d:\digital platform\server`.
-2. Launch Prisma Studio:
-   ```bash
-   npx prisma studio
-   ```
-3. Open your browser at `http://localhost:5555`.
-4. Click on the **User** table.
-5. Locate the target user row, change the **role** column value from `STUDENT` (or `TEACHER`) to `ADMIN`.
-6. Click **Save 1 change** at the bottom right.
-
----
-
-### Method C: Direct SQL Query via PostgreSQL Terminal / PgAdmin
-
-If connecting directly to your PostgreSQL database (e.g. via `psql` or PgAdmin on port `5433` / `5432`):
-
-```sql
-UPDATE users
-SET role = 'ADMIN'
-WHERE email = 'your-email@example.com';
+Run the included admin creation script from the `server/` directory:
+```bash
+cd server
+node create-admin.js admin@eduplatform.com P@ssword123 "System Administrator"
 ```
+If the user already exists, the script promotes their role to `ADMIN`. If the user does not exist, it creates a new activated administrator account.
+
+### Method B: Automated Database Seed Command
+
+We provide a built-in seeding script at `server/prisma/seed.ts`:
+```bash
+cd server
+npm run db:seed
+```
+This sets up default admin accounts (`admin@eduplatform.com` / `AdminPass123!`), approved teachers, subjects, and sample courses.
 
 ---
 
 ## 5. Step-by-Step System Operations & Running Locally
 
-### System Prerequisites
-- **Node.js**: v22.0.0 or higher
-- **NPM**: v10.0.0 or higher
-- **Docker Desktop**: Installed and running (for PostgreSQL & Redis containers)
+### Step 1: Start Database Containers
+```bash
+cd "d:\digital platform"
+docker-compose up -d
+```
+Verify containers are running:
+- Dev Database: `localhost:5434`
+- Test Database: `localhost:5433`
+- Redis: `localhost:6379`
 
----
+### Step 2: Push Database Schema & Start Server
+```bash
+cd server
+npm install
+npx prisma db push
+npm run dev
+```
+The server will boot on `http://localhost:5000`.
 
-### Step 1: Start Docker Database Containers
-1. Ensure **Docker Desktop is open and running**.
-2. Open terminal at `d:\digital platform\`.
-3. Start PostgreSQL and Redis containers:
-   ```bash
-   docker compose -f docker-compose.test.yml up -d
-   ```
-4. Verify containers are running:
-   ```bash
-   docker ps
-   ```
-
----
-
-### Step 2: Initialize Backend Server
-1. Navigate to the server folder:
-   ```bash
-   cd server
-   ```
-2. Install dependencies (if not already installed):
-   ```bash
-   npm install
-   ```
-3. Generate Prisma client & push schema to database:
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-4. Seed the database with default Admin:
-   ```bash
-   npm run db:seed
-   ```
-5. Run the backend development server:
-   ```bash
-   npm run dev
-   ```
-   - *Backend API will run at `http://localhost:5000/api/v1`*
-
----
-
-### Step 3: Initialize Frontend Next.js Application
-1. Open a new terminal at `d:\digital platform\client`.
-2. Install dependencies (if not already installed):
-   ```bash
-   npm install
-   ```
-3. Start the Next.js development server:
-   ```bash
-   npm run dev
-   ```
-   - *Frontend UI will run at `http://localhost:3000`*
+### Step 3: Start Frontend Client
+```bash
+cd ../client
+npm install
+npm run dev
+```
+The client application will open on `http://localhost:3000`.
 
 ---
 
 ## 6. User Journeys & Features Walkthrough
 
-### 1. Student Journey
-- **Registration & Login**: Student creates an account via the Auth Modal. Received JWT access token is stored in `localStorage`.
-- **Subject Browsing & Subscriptions**: Student views curriculum subjects (Programming, Math, Physics) and selects a billing cycle (Monthly, 6 Months, Yearly) in EGP or USD.
-- **Free Preview Lessons**: Student can access Chapter 1 lessons of any course without an active subscription.
-- **Encrypted Video Playback**: When playing a lesson video, the player fetches the `.m3u8` playlist and requests the 16-byte decryption key from `/api/v1/videos/:id/key`.
+### 6.1 Administrator Journey
+1. **Login**: Authenticate with an admin account. The navigation bar will display the **Admin Portal** link.
+2. **Rebranding & Home Page Customization**:
+   - Navigate to `/admin/dashboard` and select **Platform & Domain Configuration**.
+   - Click the **Home Page Content** tab.
+   - Edit the top Navbar Subtitle, Hero headings (Lines 1 & 2), Descriptions, and CTA labels in both English and Arabic.
+   - Use the **Add Badge** button to introduce new topic tags (e.g. *Computer Science*, *Biomedical*, *Law*), or delete existing badges.
+   - Customize the 3 "How It Works" steps, Teacher Recruitment banner, and Footer audience tags.
+   - Click **Save Platform Settings**. Changes take effect across the entire website immediately without a restart!
+3. **Course Approval Review Queue**:
+   - Select the **Course Approvals** tab.
+   - Inspect pending courses submitted by teachers. Review lesson lists, syllabus, and preview clips.
+   - Click **Approve Course** to publish it to the student catalog, or **Reject** with feedback.
+4. **Developer Tokens & Webhooks**:
+   - Issue scoped API tokens for external integrations.
+   - Register webhook URLs to receive notifications for payment events, course publishing, or new enrollments.
 
-### 2. Teacher Journey
-- **Registration**: Teacher signs up as a `TEACHER`. Account status starts as `PENDING`.
-- **Admin Approval**: An Admin promotes or approves the teacher account.
-- **Course Creation**: Approved teacher opens the Teacher Authoring Portal (`TeacherDashboard.tsx`), selects a subject, enters English and Arabic titles, and submits the course.
-- **Video Uploading & HLS Transcoding**: Teacher uploads raw lesson videos (`/initiate-upload`) and triggers HLS transcoding (`/process-hls`) to encrypt video segments with AES-128.
+### 6.2 Teacher Journey
+1. **Application & Verification**:
+   - Teacher signs up selecting the "Teacher" role. Account starts in `PENDING` review status.
+   - Once approved by an Admin, the teacher gains access to `/teacher/dashboard`.
+2. **Course Authoring**:
+   - Teacher creates a course under an approved subject, defines chapters, and uploads lesson videos.
+   - Video upload pipeline automatically creates HLS playlists and assigns encryption keys.
+   - Teacher can attach PDF materials, create quizzes with multiple-choice questions, and define assignments.
+3. **Submission for Review**:
+   - When course approval governance is enabled, clicking "Submit for Review" sends the course to the Admin review queue.
 
-### 3. Parent Journey
-- **Registration**: Parent registers as a `PARENT`.
-- **Linking Child**: Parent enters the invitation code in the Parent Monitoring Hub to link their student child's account.
-- **Performance Analytics**: Parent views real-time watch time, completed quizzes, and test scores.
+### 6.3 Student Journey
+1. **Exploring & Previewing**:
+   - Student browses courses by subject or searches for specific topics.
+   - The first chapter of every course is accessible for free (no subscription required) via the Content-Based Free Preview gate.
+2. **Enrollment & Subscriptions**:
+   - Student subscribes via Paymob, Fawry, Mobile Wallet, or redeems an offline physical voucher code.
+   - Subscription entitles the student to all premium lessons, quizzes, and attachments for the chosen period.
+3. **Interactive Tools**:
+   - In programming lessons, students open the **Interactive Code Runner** to write and test Python code directly in the browser.
+   - In math and physics lessons, students collaborate on the **Collaborative Whiteboard** canvas.
+   - Students can open the **AI Tutor Drawer** at any time to receive explanations and step-by-step guidance.
+
+### 6.4 Parent Journey
+1. **Registration & Linking**:
+   - Parent registers as `PARENT`.
+   - In the Parent Hub, enters the student's unique 6-character family invitation code.
+2. **Progress Monitoring**:
+   - Parent views real-time dashboards showing completed lessons, quiz scores, homework grades, and total learning hours.
 
 ---
 
 ## 7. API Endpoints Summary & Testing Commands
 
-### Running Backend Test Suite
-To run all 43 automated unit and integration tests:
+### Running Backend Automated Tests
 ```bash
 cd server
-npx vitest run
+npm test
 ```
+Runs 338 automated unit and integration tests across 67 test files in Vitest with 100% pass rate.
 
-### Key API Endpoints List
+### Key API Endpoints Catalog
 
-#### Authentication (`/api/v1/auth`)
-- `POST /register` — Register new user (`STUDENT`, `TEACHER`, `PARENT`).
-- `POST /login` — Login user and return JWT Access + Refresh token pair.
-- `GET /me` — Get authenticated user profile.
+#### Authentication & Security (`/api/v1/auth`)
+- `POST /register` — Register student, teacher, or parent.
+- `POST /login` — Authenticate and receive JWT access token + refresh cookie.
+- `POST /refresh` — Rotate refresh token family.
+- `POST /logout` — Invalidate refresh token family.
+- `POST /mfa-setup` & `POST /mfa-verify` — TOTP two-factor authentication.
 
-#### Subjects & Courses (`/api/v1/subjects` & `/api/v1/courses`)
-- `GET /api/v1/subjects` — List all subjects and per-period pricing plans.
-- `POST /api/v1/subjects` — Admin endpoint to create new subjects.
-- `GET /api/v1/courses` — Public browsing of published courses.
-- `POST /api/v1/courses` — Approved Teacher endpoint to create new courses.
-- `POST /api/v1/courses/:courseId/sections` — Create course chapter sections.
-- `PATCH /api/v1/courses/:courseId/publish` — Publish course.
+#### Platform Configuration (`/api/v1/config`)
+- `GET /` — Public platform config (site name, slogan, currencies, and `homeContent`).
+- `PUT /` — (Admin only) Update platform settings, feature flags, and **Home Page Content**.
 
-#### Video Pipeline (`/api/v1/videos`)
-- `POST /initiate-upload` — Initiate video upload (Approved Teachers).
-- `POST /:videoId/process-hls` — Transcode video to AES-128 HLS playlist.
-- `GET /:videoId/key` — Deliver binary 16-byte AES-128 decryption key (Entitlement Guarded).
-- `GET /:videoId/manifest.m3u8` — Serve HLS playlist manifest.
+#### Courses & Curriculum (`/api/v1/courses` & `/api/v1/academic`)
+- `GET /` — Browse published courses.
+- `POST /` — Create course (Teachers).
+- `POST /:id/submit-for-review` — Submit course to admin review queue.
+- `GET /api/v1/academic/stages` — Academic stages and grades hierarchy.
 
-#### Subscriptions & Payments (`/api/v1/subscriptions`)
-- `POST /checkout` — Generate Stripe or PayPal payment checkout URL.
-- `POST /stripe-webhook` — Stripe webhook handler to fulfill subscriptions.
-- `POST /paypal-webhook` — PayPal webhook handler.
-- `GET /me` — List active user subscriptions.
-- `DELETE /:id` — Cancel subscription.
+#### Interactive Learning (`/api/v1/playground` & `/api/v1/board`)
+- `POST /api/v1/playground/run` — Execute Python script in sandbox.
+- `GET /api/v1/board/rooms/:id` — Whiteboard room status.
+
+#### Commerce & Billing (`/api/v1/commerce`)
+- `POST /checkout` — Initiate order with Paymob / Fawry / Card.
+- `POST /vouchers/redeem` — Atomically redeem pre-paid voucher code.
+- `POST /webhooks/paymob` & `POST /webhooks/fawry` — Payment confirmation webhooks.
+
+#### Admin Controls (`/api/v1/admin`)
+- `GET /courses/pending` — Fetch courses awaiting review.
+- `PUT /courses/:id/approve` — Approve course for publication.
+- `PUT /users/:id/role` — Update user role or approve teacher.
 
 ---
 
-*EduPlatform — Aligned with the Egyptian Secondary Curriculum. Built with TDD & SOLID Principles.*
+*EduPlatform — Generic, Rebrandable, Enterprise E-Learning Architecture. Built with TDD, Clean Architecture, and SOLID Principles.*

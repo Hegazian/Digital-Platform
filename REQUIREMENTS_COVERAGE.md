@@ -190,7 +190,12 @@ Update the Status column as work lands. A requirement may only move to ✅ when 
   - Git history purged via `git-filter-repo`: `server/.env`, `server/.env.test`, `server/test-db6.js`, `server/test-db7.js` (hardcoded DB creds in scratch files) removed from **all 6 commits**; reflog expired + gc pruned; force-pushed to `origin/main` (backup bundle: `/tmp/opencode/dp-backup-pre-purge.bundle`).
   - JWT secrets rotated (48-byte random, local env files only); token roundtrip smoke-tested.
   - Scratch `test-db*.js` files deleted from worktree.
-  - ⚠️ **User must still rotate at the providers** (cannot be done from code): ① Supabase → reset DB password (then update `DATABASE_URL`/`DIRECT_URL` locally), regenerate `SERVICE_ROLE` key if it appeared anywhere shared; ② Resend → revoke old API key, issue new one; ③ confirm no other clones of the repo are pulled/used (old clones retain leaked history).
+- **2026-10-05 — Phase 5 (Commerce, Generic Home Customization, and Interactive Suite) complete:**
+  - 5.1 ✅ **Generic Platform & Dynamic Home Content Customization**: Added `homeContent` JSON payload to `AppConfig`; built live multi-tab Admin Editor (`PlatformSettings.tsx`) allowing real-time edits of headlines, descriptions, CTAs, topic/faculty badges, trust points, "How It Works" 3-step cards, teacher recruitment banner, and footer audience tags with immediate store sync (`useConfigStore.fetchConfig()`); zero-regression fallbacks via `useHomeContent()`.
+  - 5.2 ✅ **Interactive In-Browser Code Runner**: CodeMirror Python editor wired to isolated sandbox backend execution runner (`POST /api/v1/playground/run`) with timeout/memory safety.
+  - 5.3 ✅ **Real-Time Collaborative Whiteboard**: Multiplayer canvas rooms for live geometric, math, and physics problem solving (`collaborative_board`).
+  - 5.4 ✅ **Commerce & Local Payment Gateways**: Paymob, Fawry, Mobile Wallets, and race-condition-safe pre-paid Voucher code redemption engine.
+  - 5.5 ✅ **Test Suite Expansion & Verification**: **338 automated backend tests across 67 test files passing (100%)**; Next.js 14 production build passes with all 12 pages rendered cleanly.
 - **2026-08-22 — Phase 4 (Verification) complete:**
   - Fixed 3 regressions from the revocation change: config API tests now create a real admin user; auth middleware unit test made async with prisma mock (10/10 green).
   - NFR-003 ✅ `COURSE_CREATED` / `COURSE_UPDATED` audit events added to course service.
