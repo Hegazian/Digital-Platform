@@ -9,13 +9,23 @@ interface AuditLog {
   userId: string;
   entityId: string | null;
   entityType: string | null;
-  details: string;
+  details: any;
   ipAddress: string | null;
   createdAt: string;
-  user: {
-    name: string;
-    email: string;
-  };
+  user?: {
+    name?: string;
+    email?: string;
+  } | null;
+}
+
+function formatDetails(details: unknown): string {
+  if (details === null || details === undefined) return '';
+  if (typeof details === 'string') return details;
+  try {
+    return JSON.stringify(details);
+  } catch {
+    return String(details);
+  }
 }
 
 export default function AuditLogsTable() {
@@ -29,7 +39,9 @@ export default function AuditLogsTable() {
       const res = await fetchApi('/audit', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.success) setLogs(res.data);
+      if (res.success && Array.isArray(res.data)) {
+        setLogs(res.data);
+      }
     } catch (error) {
       console.error('Failed to fetch audit logs', error);
     } finally {
@@ -41,11 +53,18 @@ export default function AuditLogsTable() {
     fetchLogs();
   }, [fetchLogs]);
 
-  const filteredLogs = logs.filter(log => 
-    log.action.toLowerCase().includes(search.toLowerCase()) ||
-    log.user.name.toLowerCase().includes(search.toLowerCase()) ||
-    log.user.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredLogs = logs.filter((log) => {
+    const q = search.toLowerCase();
+    const detailsStr = formatDetails(log.details).toLowerCase();
+    return (
+      (log.action || '').toLowerCase().includes(q) ||
+      (log.user?.name || '').toLowerCase().includes(q) ||
+      (log.user?.email || '').toLowerCase().includes(q) ||
+      (log.entityType || '').toLowerCase().includes(q) ||
+      (log.entityId || '').toLowerCase().includes(q) ||
+      detailsStr.includes(q)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -90,37 +109,46 @@ export default function AuditLogsTable() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-800/20 transition-colors text-slate-300">
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-400">
-                      {new Date(log.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-[10px] font-mono font-medium tracking-wider text-indigo-300">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-white">{log.user.name}</div>
-                      <div className="text-[10px] text-slate-500">{log.user.email}</div>
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      {log.entityType ? (
-                        <div>
-                          <span className="text-slate-400">{log.entityType}:</span> {log.entityId}
-                        </div>
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs max-w-xs truncate" title={log.details}>
-                      {log.details || <span className="text-slate-600">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-500">
-                      {log.ipAddress || 'unknown'}
-                    </td>
-                  </tr>
-                ))}
+                {filteredLogs.map((log) => {
+                  const detailsText = formatDetails(log.details);
+                  return (
+                    <tr key={log.id} className="hover:bg-slate-800/20 transition-colors text-slate-300">
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-400">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-[10px] font-mono font-medium tracking-wider text-indigo-300">
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-white">{log.user?.name || 'System / Anonymous'}</div>
+                        <div className="text-[10px] text-slate-500">{log.user?.email || '—'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {log.entityType ? (
+                          <div>
+                            <span className="text-slate-400">{log.entityType}:</span> {log.entityId}
+                          </div>
+                        ) : (
+                          <span className="text-slate-600">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs max-w-xs truncate" title={detailsText}>
+                        {detailsText ? (
+                          <span className={typeof log.details === 'object' ? 'font-mono text-[11px] text-slate-400' : ''}>
+                            {detailsText}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs font-mono text-slate-500">
+                        {log.ipAddress || 'unknown'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
