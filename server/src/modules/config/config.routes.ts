@@ -20,6 +20,7 @@ const updateAppConfigSchema = z.object({
   enableCodePlaygrounds: z.boolean().optional(),
   enableCollaborativeBoards: z.boolean().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).optional(),
+  homeContent: z.record(z.any()).optional(),
 });
 
 const router = Router();

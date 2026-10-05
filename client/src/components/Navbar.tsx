@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '../lib/store';
-import { useSiteName } from '../lib/configStore';
+import { useSiteName, useHomeContent } from '../lib/configStore';
 import { fetchApi } from '../lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -26,6 +26,7 @@ import { LogoMark } from './brand/Logo';
 export default function Navbar() {
   const { lang, setLang, user, setUser, t } = useAppStore();
   const siteName = useSiteName();
+  const homeContent = useHomeContent();
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -80,7 +81,7 @@ export default function Navbar() {
                 {siteName}
               </span>
               <span className="block text-xs text-slate-400 font-medium">
-                {lang === 'ar' ? 'ثانوية عامة · علمي رياضة' : 'Thanaweya Amma · Scientific Math'}
+                {lang === 'ar' ? homeContent.navbar.subtitleAr : homeContent.navbar.subtitleEn}
               </span>
             </div>
           </Link>

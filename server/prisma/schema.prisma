@@ -861,6 +861,7 @@ model AppConfig {
   enableCodePlaygrounds     Boolean  @default(true)
   enableCollaborativeBoards Boolean  @default(true)
   primaryColor              String   @default("#000000")
+  homeContent               Json?
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 

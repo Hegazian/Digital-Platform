@@ -53,6 +53,7 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       enableCodePlaygrounds,
       enableCollaborativeBoards,
       primaryColor,
+      homeContent,
     } = req.body;
 
     const data: any = {
@@ -79,6 +80,7 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       ...(enableCodePlaygrounds !== undefined && { enableCodePlaygrounds: Boolean(enableCodePlaygrounds) }),
       ...(enableCollaborativeBoards !== undefined && { enableCollaborativeBoards: Boolean(enableCollaborativeBoards) }),
       ...(primaryColor !== undefined && { primaryColor }),
+      ...(homeContent !== undefined && { homeContent }),
     };
 
     let config: any = null;
