@@ -9,8 +9,32 @@ export const registerWebhook = async (req: AuthRequest, res: Response) => {
   const { url, events } = req.body;
   const userId = req.user?.userId;
 
-  if (!url) {
+  if (!userId) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  if (!url || typeof url !== 'string') {
     return res.status(400).json({ success: false, message: 'Webhook URL is required' });
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return res.status(400).json({ success: false, message: 'Invalid URL protocol: must be http or https' });
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (
+      process.env.NODE_ENV === 'production' &&
+      (host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        host.startsWith('169.254.'))
+    ) {
+      return res.status(400).json({ success: false, message: 'Loopback and private network URLs are prohibited' });
+    }
+  } catch {
+    return res.status(400).json({ success: false, message: 'Invalid webhook URL format' });
   }
 
   const secret = `whsec_${crypto.randomBytes(24).toString('hex')}`;
@@ -18,7 +42,7 @@ export const registerWebhook = async (req: AuthRequest, res: Response) => {
   try {
     const webhook = await prisma.webhookEndpoint.create({
       data: {
-        userId: userId || 'anonymous',
+        userId,
         url,
         events: events || [],
         secret,
@@ -29,7 +53,7 @@ export const registerWebhook = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     const mockHook = {
       id: `mock-webhook-${Date.now()}`,
-      userId: userId || 'anonymous',
+      userId,
       url,
       events: events || [],
       secret,

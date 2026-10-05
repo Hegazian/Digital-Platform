@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { prisma } from './prisma';
 import { Logger } from './utils/logger';
 import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
+import { getUploadsRoot } from './utils/storage';
 
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
@@ -63,11 +64,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // 2. Standard Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 // Accept CLIENT_URL (documented) or FRONTEND_URL (used by existing .env files)
 const allowedOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
+app.use('/uploads', express.static(getUploadsRoot()));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));

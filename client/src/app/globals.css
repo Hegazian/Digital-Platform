@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --font-tajawal: 'Tajawal', sans-serif;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-indigo-500 selection:text-white;
+  font-family: var(--font-inter);
+}
+
+[dir="rtl"] body {
+  font-family: var(--font-tajawal);
+}
+
+/* Glassmorphism & Custom Effects */
+.glass-panel {
+  @apply bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-2xl;
+}
+
+.glass-card {
+  @apply bg-slate-900/40 backdrop-blur-lg border border-slate-800/60 hover:border-indigo-500/50 transition-all duration-300 shadow-lg;
+}
+
+.glass-button {
+  @apply bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-200 active:scale-95;
+}
+
+.glass-input {
+  @apply bg-slate-900/80 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-emerald-400 to-indigo-300;
+}
+
+.glow-indigo {
+  box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.3);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

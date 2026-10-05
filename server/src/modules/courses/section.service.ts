@@ -30,7 +30,7 @@ export class SectionService {
       data: {
         courseId: data.courseId,
         titleEn: data.titleEn,
-        titleAr: data.titleAr,
+        titleAr: data.titleAr || data.titleEn,
         orderIndex: data.orderIndex || 1,
         isFreePreview: data.isFreePreview || false,
       },
