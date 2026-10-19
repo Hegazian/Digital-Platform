@@ -63,9 +63,9 @@ Verify that creating a Course Product in `CoursePricingManager` immediately make
 
 ## 4. Code Review Checklist
 
-- [ ] Is `CoursePricingManager.tsx` mounted and accessible from `AdminDashboard.tsx`?
-- [ ] Can an Admin create a `COURSE` product price and update `SUBJECT` period prices from the UI without errors?
-- [ ] Does `CheckoutModal.tsx` default to `MANUAL` wallet transfer and require a transaction reference so students never get stuck on an uninitiated gateway spinner?
+- [x] Is `CoursePricingManager.tsx` mounted and accessible from `AdminDashboard.tsx`?
+- [x] Can an Admin create a `COURSE` product price and update `SUBJECT` period prices from the UI without errors?
+- [x] Does `CheckoutModal.tsx` default to `MANUAL` wallet transfer and require a transaction reference so students never get stuck on an uninitiated gateway spinner?
 
 ---
 

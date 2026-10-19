@@ -22,7 +22,7 @@ This document records all **verified security vulnerabilities (P0)**, **function
 Five complete frontend components exist in `client/src/components/` and are wired to backend endpoints, but are **not imported by any page**:
 
 1. [`MfaSetupModal.tsx`](../client/src/components/settings/MfaSetupModal.tsx) — TOTP QR setup modal (never mounted in `/profile/page.tsx`).
-2. [`CoursePricingManager.tsx`](../client/src/components/admin/CoursePricingManager.tsx) — Admin course product pricing UI (never mounted in `AdminDashboard.tsx`).
+2. **CoursePricingManager.tsx** — ✅ Resolved in TASK-09 (mounted in `AdminDashboard.tsx` under dedicated 'Pricing & Products' tab).
 3. **AssessmentRunner.tsx** — ✅ Resolved in TASK-07 (retired alongside `assessment` module).
 4. **PodcastPlayer.tsx & CollectionCard.tsx** — ✅ Resolved in TASK-05 (pruned alongside `podcasts` and `collections`).
 5. **Student Notification Inbox**: `GET /api/v1/notifications/me` and `PATCH /api/v1/notifications/:id/read` exist on the server, and teachers can broadcast announcements via `AnnouncementManager.tsx`, but students have no notification bell or inbox UI.
@@ -45,7 +45,7 @@ Five complete frontend components exist in `client/src/components/` and are wire
 | **Dual Curriculum (`CourseModule` vs `Section`)** | ✅ Resolved in TASK-06 | Consolidated onto `Section` → `Lesson`; retired `CourseModule` and `Lesson.moduleId`. |
 | **Dual Testing Engines (`Quiz` vs `Assessment`)** | ✅ Resolved in TASK-07 | Consolidated onto auto-graded `Quiz` + teacher-graded `Assignment`; retired `assessment` module. |
 | **Live Sessions (`live.service.ts`)** | ✅ Resolved in TASK-08 | Added teacher `joinUrl` support (`Zoom`, `Google Meet`, `Teams`) in `LiveService`, `createLiveSessionSchema`, and `LiveSessionManager.tsx`. |
-| **Payment Checkout (`commerce.service.ts`)** | `createOrder` creates a `PENDING` DB row; no outbound Paymob/Fawry API call is made to get a payment redirect URL. | Focus on Manual Wallet (Vodafone Cash / InstaPay) + Voucher redemption as primary reliable flows, or wire Paymob Intention API. |
+| **Payment Checkout (`commerce.service.ts`)** | ✅ Resolved in TASK-09 | Added instant Voucher redemption in `CheckoutModal.tsx` and manual wallet guidance (Vodafone Cash / InstaPay); mounted `CoursePricingManager` in `AdminDashboard.tsx`. |
 | **Developer API Tokens & Outbound Webhooks** | ✅ Resolved in TASK-05 | Pruned 8 tables and modules (`developer`, `podcasts`, `collections`, `careers`) in TASK-05. |
 | **Collaborative Board & Host Playground** | ✅ Resolved in TASK-04 | Removed alongside host Python playground in TASK-04. |
 
