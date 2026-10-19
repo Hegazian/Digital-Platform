@@ -8,19 +8,18 @@ import { validateBody } from "../../utils/validate";
 const updateAppConfigSchema = z.object({
   siteNameEn: z.string().min(1).max(60).optional(),
   siteNameAr: z.string().min(1).max(60).optional(),
-  siteDescriptionEn: z.string().max(300).optional(),
-  siteDescriptionAr: z.string().max(300).optional(),
-  sloganEn: z.string().max(160).optional(),
-  sloganAr: z.string().max(160).optional(),
+  siteDescriptionEn: z.string().max(300).nullable().optional(),
+  siteDescriptionAr: z.string().max(300).nullable().optional(),
+  sloganEn: z.string().max(160).nullable().optional(),
+  sloganAr: z.string().max(160).nullable().optional(),
   hostDomain: z.string().max(200).optional(),
   supportEmail: z.string().email().optional(),
   currency: z.string().min(1).max(8).optional(),
+  exchangeRateUsdToEgp: z.coerce.number().positive().optional(),
   requireCourseApproval: z.boolean().optional(),
   allowTeacherRegistration: z.boolean().optional(),
-  enableCodePlaygrounds: z.boolean().optional(),
-  enableCollaborativeBoards: z.boolean().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).optional(),
-  homeContent: z.record(z.any()).optional(),
+  homeContent: z.record(z.string(), z.any()).nullable().optional(),
 });
 
 const router = Router();

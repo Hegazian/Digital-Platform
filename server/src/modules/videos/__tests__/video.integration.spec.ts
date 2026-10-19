@@ -4,6 +4,9 @@ import { Role, TeacherStatus } from '@prisma/client';
 import app from '../../../app';
 import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
+import fs from 'fs';
+import path from 'path';
+import { getUploadsRoot } from '../../../utils/storage';
 
 describe('Video Pipeline Integration Tests', () => {
   let teacherToken: string;
@@ -77,6 +80,57 @@ describe('Video Pipeline Integration Tests', () => {
         .attach('file', Buffer.from('fake video data'), 'test.mp4');
 
       expect(res.status).toBe(403);
+    });
+
+    it('should successfully upload video to disk and leave no temporary files in .tmp', async () => {
+      const res = await request(app)
+        .post('/api/v1/videos/upload')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .attach('file', Buffer.from('fake mp4 video bytes for testing disk stream'), 'sample_lecture.mp4');
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBeDefined();
+      expect(res.body.data.status).toBe('READY');
+
+      const uploadedVideoId = res.body.data.id;
+      const videoRecord = await prisma.video.findUnique({ where: { id: uploadedVideoId } });
+      expect(videoRecord).not.toBeNull();
+      expect(videoRecord?.videoUrl).toMatch(/^\/uploads\/lesson-videos\//);
+
+      // Verify that the file actually exists on disk in uploads/lesson-videos
+      const localFilePath = path.join(getUploadsRoot(), 'lesson-videos', path.basename(videoRecord!.videoUrl));
+      expect(fs.existsSync(localFilePath)).toBe(true);
+
+      // Verify that no orphaned temporary files remain in .tmp
+      const tempDir = path.join(getUploadsRoot(), '.tmp');
+      if (fs.existsSync(tempDir)) {
+        const tempFiles = fs.readdirSync(tempDir);
+        expect(tempFiles.length).toBe(0);
+      }
+
+      // Cleanup
+      await prisma.video.delete({ where: { id: uploadedVideoId } });
+      if (fs.existsSync(localFilePath)) {
+        try { fs.unlinkSync(localFilePath); } catch {}
+      }
+    });
+
+    it('should reject unsupported video file types and leave no temporary files in .tmp', async () => {
+      const res = await request(app)
+        .post('/api/v1/videos/upload')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .attach('file', Buffer.from('malicious binary content'), 'malware.exe');
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/unsupported video type/i);
+
+      // Verify that no orphaned temporary files remain in .tmp
+      const tempDir = path.join(getUploadsRoot(), '.tmp');
+      if (fs.existsSync(tempDir)) {
+        const tempFiles = fs.readdirSync(tempDir);
+        expect(tempFiles.length).toBe(0);
+      }
     });
   });
 

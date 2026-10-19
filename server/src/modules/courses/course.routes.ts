@@ -10,9 +10,7 @@ import {
   createSubjectSchema,
   updateSubjectSchema,
   updateSubjectPricingSchema,
-  reorderModulesSchema,
   reorderLessonsSchema,
-  updateModuleSchema,
   updateLessonSchema,
 } from '../../utils/schemas';
 
@@ -62,19 +60,8 @@ courseRouter.post(
   requireApprovedTeacher,
   CourseController.reorderSections
 );
-courseRouter.post('/:courseId/modules', authenticate, requireApprovedTeacher, CourseController.createModule);
-courseRouter.patch('/modules/:moduleId', authenticate, requireApprovedTeacher, validateBody(updateModuleSchema), CourseController.updateModule);
-courseRouter.delete('/modules/:moduleId', authenticate, requireApprovedTeacher, CourseController.deleteModule);
-courseRouter.post(
-  '/:courseId/modules/reorder',
-  authenticate,
-  requireApprovedTeacher,
-  validateBody(reorderModulesSchema),
-  CourseController.reorderModules
-);
 
-// Module Lessons & Resources Routes
-courseRouter.post('/modules/:moduleId/lessons', authenticate, requireApprovedTeacher, CourseController.createLesson);
+// Lesson & Resource Routes
 courseRouter.patch('/lessons/:lessonId', authenticate, requireApprovedTeacher, validateBody(updateLessonSchema), CourseController.updateLesson);
 courseRouter.post(
   '/lessons/reorder',

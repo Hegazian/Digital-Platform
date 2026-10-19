@@ -8,7 +8,6 @@ import Modal from '@/components/ui/Modal';
 interface CreateModuleModalProps {
   open: boolean;
   courseId: string;
-  /** 'module' (rich unit) or 'section' (light unit) — endpoint switches accordingly. */
   kind?: 'module' | 'section';
   onClose: () => void;
   onCreated: () => void;
@@ -17,11 +16,9 @@ interface CreateModuleModalProps {
 export default function CreateModuleModal({
   open,
   courseId,
-  kind = 'module',
   onClose,
   onCreated,
 }: CreateModuleModalProps) {
-  const isSection = kind === 'section';
   const [titleEn, setTitleEn] = useState('');
   const [titleAr, setTitleAr] = useState('');
   const [description, setDescription] = useState('');
@@ -38,17 +35,14 @@ export default function CreateModuleModal({
     setError('');
 
     try {
-      await fetchApi(
-        isSection ? `/courses/${courseId}/sections` : `/courses/${courseId}/modules`,
-        {
-          method: 'POST',
-          body: JSON.stringify(
-            isSection
-              ? { titleEn, titleAr }
-              : { titleEn, titleAr, description }
-          ),
-        }
-      );
+      await fetchApi(`/courses/${courseId}/sections`, {
+        method: 'POST',
+        body: JSON.stringify({
+          titleEn,
+          titleAr,
+          description: description || undefined,
+        }),
+      });
 
       setTitleEn('');
       setTitleAr('');
@@ -56,7 +50,7 @@ export default function CreateModuleModal({
       onClose();
       onCreated();
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to create module'));
+      setError(errorMessage(err, 'Failed to create section'));
     } finally {
       setLoading(false);
     }
@@ -66,14 +60,14 @@ export default function CreateModuleModal({
     <Modal
       open
       onClose={onClose}
-      label="Add Module"
+      label="Add Section"
       panelClassName="w-full max-w-md glass-panel p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-4"
     >
       <>
-        <h3 className="text-lg font-bold text-white">Add Curriculum Chapter/Module</h3>
+        <h3 className="text-lg font-bold text-white">Add Curriculum Section</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Module Title (English)</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Section Title (English)</label>
             <input
               type="text"
               required
@@ -85,7 +79,7 @@ export default function CreateModuleModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Module Title (Arabic)</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Section Title (Arabic)</label>
             <input
               type="text"
               required
@@ -124,7 +118,7 @@ export default function CreateModuleModal({
               disabled={loading}
               className="glass-button py-2 px-5 rounded-xl text-xs font-bold"
             >
-              {loading ? 'Adding...' : 'Add Module'}
+              {loading ? 'Adding...' : 'Add Section'}
             </button>
           </div>
         </form>

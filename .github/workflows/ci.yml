@@ -68,8 +68,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Tests
-        run: npm test
+      - name: Tests & Coverage Gate
+        run: npm run test:coverage
 
   client:
     name: Web - typecheck, lint & build
@@ -96,6 +96,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Unit & Component Tests
+        run: npm test
 
       # Gates are enforced by next.config.mjs (eslint/typescript errors fail)
       - name: Build

@@ -18,7 +18,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
 
   let testSubject: any;
   let createdCourse: any;
-  let createdModule: any;
+  let createdSection: any;
   let createdLesson: any;
   let generatedVoucherCode: string;
 
@@ -130,15 +130,15 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
     expect(createdCourse.teacherId).toBe(teacherUser.id);
     expect(createdCourse.status).toBe('DRAFT');
 
-    // 1.2 Verification: Another teacher CANNOT edit or add modules to this course (403 Forbidden)
-    const unauthorizedModuleRes = await request(app)
-      .post(`/api/v1/courses/${createdCourse.id}/modules`)
+    // 1.2 Verification: Another teacher CANNOT edit or add sections to this course (403 Forbidden)
+    const unauthorizedSectionRes = await request(app)
+      .post(`/api/v1/courses/${createdCourse.id}/sections`)
       .set('Authorization', `Bearer ${otherTeacherToken}`)
       .send({
-        titleEn: 'Malicious Injected Module',
-        titleAr: 'وحدة غير مصرح بها',
+        titleEn: 'Malicious Injected Section',
+        titleAr: 'قسم غير مصرح به',
       });
-    expect(unauthorizedModuleRes.status).toBe(403);
+    expect(unauthorizedSectionRes.status).toBe(403);
 
     const unauthorizedEditRes = await request(app)
       .patch(`/api/v1/courses/${createdCourse.id}`)
@@ -146,9 +146,9 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       .send({ titleEn: 'Hacked Title' });
     expect(unauthorizedEditRes.status).toBe(403);
 
-    // 1.3 Course Owner creates Chapter/Module
-    const moduleRes = await request(app)
-      .post(`/api/v1/courses/${createdCourse.id}/modules`)
+    // 1.3 Course Owner creates Chapter/Section
+    const sectionRes = await request(app)
+      .post(`/api/v1/courses/${createdCourse.id}/sections`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Unit 1: Linear Motion and Acceleration',
@@ -156,12 +156,12 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         description: 'Scalars, vectors, displacement-time graphs, and uniform acceleration equations.',
       });
 
-    expect(moduleRes.status).toBe(201);
-    createdModule = moduleRes.body.data;
+    expect(sectionRes.status).toBe(201);
+    createdSection = sectionRes.body.data;
 
     // 1.4 Course Owner creates Lesson with Video, PDFs, and Quiz
     const lessonRes = await request(app)
-      .post(`/api/v1/courses/modules/${createdModule.id}/lessons`)
+      .post(`/api/v1/courses/sections/${createdSection.id}/lessons`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Lesson 1.1: Uniform Accelerated Motion & Vectors',
@@ -309,8 +309,8 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
     expect(courseData.isPublished).toBe(true);
     expect(courseData.priceEgp).toBeDefined();
     expect(courseData.teacher.id).toBe(teacherUser.id);
-    expect(courseData.modules.length).toBeGreaterThan(0);
-    expect(courseData.modules[0].lessons[0].video.videoUrl).toBe('https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4');
+    expect(courseData.sections.length).toBeGreaterThan(0);
+    expect(courseData.sections[0].lessons[0].video.videoUrl).toBe('https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4');
   });
 
   // STEP 4: Admin Edit & Delete Powers

@@ -6,8 +6,6 @@ import { useAppStore } from '../lib/store';
 import {
   FileText,
   AlertCircle,
-  Code,
-  Pencil,
   Video as VideoIcon,
   MessageSquare,
   HelpCircle,
@@ -16,8 +14,6 @@ import {
 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { errorMessage } from '../lib/apiTypes';
-import CodePlaygroundBlock from './editor/CodePlaygroundBlock';
-import CollaborativeBoardBlock from './editor/CollaborativeBoardBlock';
 import DiscussionForum from './discussions/DiscussionForum';
 import AITutorDrawer from './ai/AITutorDrawer';
 import LMSPlayerHeader from './player/LMSPlayerHeader';
@@ -66,7 +62,7 @@ export default function VideoPlayerSection() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<
-    'video' | 'materials' | 'quiz' | 'assignments' | 'playground' | 'board' | 'discussions'
+    'video' | 'materials' | 'quiz' | 'assignments' | 'discussions'
   >('video');
 
   // Video Player Controls
@@ -110,30 +106,10 @@ export default function VideoPlayerSection() {
       const courseData = res.data || res;
       setCourse(courseData);
 
-      // Extract modules & lessons
+      // Extract sections & lessons
       const extractedModules: CurriculumModule[] = [];
 
-      if (courseData.modules && courseData.modules.length > 0) {
-        courseData.modules.forEach((mod: any) => {
-          extractedModules.push({
-            id: mod.id,
-            titleEn: mod.titleEn,
-            titleAr: mod.titleAr,
-            lessons: (mod.lessons || []).map((l: any) => ({
-              id: l.id,
-              titleEn: l.titleEn,
-              titleAr: l.titleAr,
-              duration: l.estimatedDuration || 15,
-              isFreePreview: l.isFreePreview || false,
-              videoId: l.videoId,
-              video: l.video,
-              materials: l.materials || [],
-              quiz: l.quiz,
-              blocks: l.blocks || [],
-            })),
-          });
-        });
-      } else if (courseData.sections && courseData.sections.length > 0) {
+      if (courseData.sections && courseData.sections.length > 0) {
         courseData.sections.forEach((sec: any) => {
           extractedModules.push({
             id: sec.id,
@@ -143,7 +119,7 @@ export default function VideoPlayerSection() {
               id: l.id,
               titleEn: l.titleEn,
               titleAr: l.titleAr,
-              duration: 15,
+              duration: l.estimatedDuration || 15,
               isFreePreview: sec.isFreePreview,
               videoId: l.videoId,
               video: l.video,
@@ -412,8 +388,6 @@ export default function VideoPlayerSection() {
                 icon: HelpCircle,
               },
               { id: 'assignments', label: 'Assignments', icon: FileText },
-              { id: 'playground', label: 'Code Playground', icon: Code },
-              { id: 'board', label: 'Whiteboard', icon: Pencil },
               { id: 'discussions', label: 'Q&A Discussions', icon: MessageSquare },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -533,18 +507,6 @@ export default function VideoPlayerSection() {
 
           {activeTab === 'assignments' && activeLesson && (
             <AssignmentRunner lessonId={activeLesson.id} />
-          )}
-
-          {activeTab === 'playground' && (
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-              <CodePlaygroundBlock />
-            </div>
-          )}
-
-          {activeTab === 'board' && (
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-              <CollaborativeBoardBlock />
-            </div>
           )}
 
           {activeTab === 'discussions' && selectedCourseId && (

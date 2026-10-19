@@ -161,9 +161,9 @@ describe('Course & Subject Integration Tests', () => {
     });
 
     it('PATCH /api/v1/courses/:courseId/publish - admin can publish a complete course', async () => {
-      // Make the course complete: module -> lesson -> attached video resource.
-      const mod = await prisma.courseModule.create({
-        data: { courseId, titleEn: 'Pub Mod', titleAr: 'وحدة' },
+      // Make the course complete: section -> lesson -> attached video resource.
+      const sec = await prisma.section.create({
+        data: { courseId, titleEn: 'Pub Sec', titleAr: 'قسم' },
       });
       const video = await prisma.video.create({
         data: {
@@ -174,7 +174,7 @@ describe('Course & Subject Integration Tests', () => {
         },
       });
       await prisma.lesson.create({
-        data: { moduleId: mod.id, titleEn: 'Pub Lesson', titleAr: 'درس', videoId: video.id },
+        data: { sectionId: sec.id, titleEn: 'Pub Lesson', titleAr: 'درس', videoId: video.id },
       });
 
       const res = await request(app)

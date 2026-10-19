@@ -24,8 +24,8 @@ describe('Course Read Visibility & Answer Sanitization', () => {
   let publishedCourseId: string;
 
   const seedCurriculum = async (courseId: string, marker: string) => {
-    const mod = await prisma.courseModule.create({
-      data: { courseId, titleEn: `Module ${marker}`, titleAr: `وحدة ${marker}` },
+    const sec = await prisma.section.create({
+      data: { courseId, titleEn: `Section ${marker}`, titleAr: `قسم ${marker}` },
     });
     const quiz = await prisma.quiz.create({
       data: {
@@ -49,7 +49,7 @@ describe('Course Read Visibility & Answer Sanitization', () => {
       },
     });
     await prisma.lesson.create({
-      data: { moduleId: mod.id, titleEn: `Lesson ${marker}`, titleAr: `درس ${marker}`, quizId: quiz.id },
+      data: { sectionId: sec.id, titleEn: `Lesson ${marker}`, titleAr: `درس ${marker}`, quizId: quiz.id },
     });
   };
 
@@ -168,9 +168,9 @@ describe('Course Read Visibility & Answer Sanitization', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.status).toBe('PUBLISHED');
-    expect(res.body.data.modules[0].lessons[0].quiz.questions[0].options.some((o: any) => o.text === 'Right')).toBe(true);
+    expect(res.body.data.sections[0].lessons[0].quiz.questions[0].options.some((o: any) => o.text === 'Right')).toBe(true);
     expect(collectAnswerFlags(res.body)).toBe(false);
-    expect(res.body.data.modules[0].lessons[0].quiz.questions[0].explanation).toBeNull();
+    expect(res.body.data.sections[0].lessons[0].quiz.questions[0].explanation).toBeNull();
   });
 
   it('teacher portal (my-courses) lists the owning teacher DRAFT courses', async () => {
@@ -246,5 +246,156 @@ describe('Course Read Visibility & Answer Sanitization', () => {
     } finally {
       await prisma.section.delete({ where: { id: section.id } }).catch(() => undefined);
     }
+  });
+
+  describe('Media URL Sanitization (P0-1)', () => {
+    let mediaCourseId: string;
+    let previewSecLessonId: string;
+    let paidSecLessonId: string;
+
+    beforeAll(async () => {
+      const ts = Date.now();
+      const mediaCourse = await prisma.course.create({
+        data: {
+          titleEn: `MEDIA-P01-${ts}`,
+          titleAr: 'دورة وسائط',
+          description: 'Testing media url sanitization',
+          teacherId: teacherAId,
+          subjectId,
+          status: 'PUBLISHED',
+          isPublished: true,
+          isFree: false,
+        },
+      });
+      mediaCourseId = mediaCourse.id;
+
+      // Section 1: Non-preview (Paid)
+      const paidSec = await prisma.section.create({
+        data: {
+          courseId: mediaCourseId,
+          titleEn: 'Paid Section',
+          titleAr: 'قسم مدفوع',
+          orderIndex: 1,
+          isFreePreview: false,
+        },
+      });
+
+      const video1 = await prisma.video.create({
+        data: {
+          teacherId: teacherAId,
+          videoUrl: '/uploads/lesson-videos/secret-paid-video.mp4',
+          durationSec: 120,
+          status: 'READY',
+        },
+      });
+
+      const paidLesson = await prisma.lesson.create({
+        data: {
+          sectionId: paidSec.id,
+          titleEn: 'Paid Lesson',
+          titleAr: 'درس مدفوع',
+          orderIndex: 1,
+          videoId: video1.id,
+        },
+      });
+      paidSecLessonId = paidLesson.id;
+
+      await prisma.material.create({
+        data: {
+          lessonId: paidLesson.id,
+          title: 'Secret Paid Material',
+          fileUrl: '/uploads/lesson-materials/secret-paid-doc.pdf',
+          fileType: 'application/pdf',
+          sizeBytes: 1024,
+        },
+      });
+
+      // Section 2: Free preview
+      const previewSec = await prisma.section.create({
+        data: {
+          courseId: mediaCourseId,
+          titleEn: 'Preview Section',
+          titleAr: 'قسم معاينة',
+          orderIndex: 2,
+          isFreePreview: true,
+        },
+      });
+
+      const video2 = await prisma.video.create({
+        data: {
+          teacherId: teacherAId,
+          videoUrl: '/uploads/lesson-videos/public-preview-video.mp4',
+          durationSec: 60,
+          status: 'READY',
+        },
+      });
+
+      const previewLesson = await prisma.lesson.create({
+        data: {
+          sectionId: previewSec.id,
+          titleEn: 'Preview Lesson',
+          titleAr: 'درس معاينة',
+          orderIndex: 1,
+          videoId: video2.id,
+        },
+      });
+      previewSecLessonId = previewLesson.id;
+
+      await prisma.material.create({
+        data: {
+          lessonId: previewLesson.id,
+          title: 'Free Preview Material',
+          fileUrl: '/uploads/lesson-materials/public-preview-doc.pdf',
+          fileType: 'application/pdf',
+          sizeBytes: 512,
+        },
+      });
+    });
+
+    it('anonymous GET /api/v1/courses strips media URLs from paid non-preview lessons', async () => {
+      const res = await request(app).get('/api/v1/courses');
+      expect(res.status).toBe(200);
+
+      const targetCourse = res.body.data.courses.find((c: any) => c.id === mediaCourseId);
+      if (targetCourse?.sections) {
+        const paidLesson = targetCourse.sections
+          .find((s: any) => !s.isFreePreview)
+          ?.lessons.find((l: any) => l.id === paidSecLessonId);
+        if (paidLesson) {
+          expect(paidLesson.video?.videoUrl).toBeFalsy();
+          expect(paidLesson.materials?.[0]?.fileUrl).toBeFalsy();
+        }
+      }
+    });
+
+    it('anonymous and un-enrolled student GET /api/v1/courses/:id strips media URLs from paid non-preview lessons but allows preview lessons', async () => {
+      const resAnon = await request(app).get(`/api/v1/courses/${mediaCourseId}`);
+      expect(resAnon.status).toBe(200);
+
+      const paidSec = resAnon.body.data.sections.find((s: any) => !s.isFreePreview);
+      const paidLesson = paidSec.lessons.find((l: any) => l.id === paidSecLessonId);
+      // Video ID exists so UI knows there's a video, but raw URL must be stripped
+      expect(paidLesson.video?.id).toBeDefined();
+      expect(paidLesson.video?.videoUrl).toBeFalsy();
+      expect(paidLesson.materials?.[0]?.fileUrl).toBeFalsy();
+
+      // Free preview lesson keeps its URLs
+      const previewSec = resAnon.body.data.sections.find((s: any) => s.isFreePreview);
+      const previewLesson = previewSec.lessons.find((l: any) => l.id === previewSecLessonId);
+      expect(previewLesson.video?.videoUrl).toBe('/uploads/lesson-videos/public-preview-video.mp4');
+      expect(previewLesson.materials?.[0]?.fileUrl).toBe('/uploads/lesson-materials/public-preview-doc.pdf');
+    });
+
+    it('owning teacher GET /api/v1/courses/:id receives full media URLs for authoring', async () => {
+      const res = await request(app)
+        .get(`/api/v1/courses/${mediaCourseId}`)
+        .set('Authorization', `Bearer ${teacherAToken}`);
+
+      expect(res.status).toBe(200);
+      const paidSec = res.body.data.sections.find((s: any) => !s.isFreePreview);
+      const paidLesson = paidSec.lessons.find((l: any) => l.id === paidSecLessonId);
+      expect(paidLesson.video?.videoUrl).toBe('/uploads/lesson-videos/secret-paid-video.mp4');
+      expect(paidLesson.materials?.[0]?.fileUrl).toBe('/uploads/lesson-materials/secret-paid-doc.pdf');
+    });
   });
 });

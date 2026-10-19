@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Role } from '@prisma/client';
 import { CourseService } from '../course.service';
+import { SectionService } from '../section.service';
 import { AssignmentService } from '../../assignments/assignment.service';
 import { prisma } from '../../../prisma';
 
@@ -17,9 +18,9 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
         titleAr: 'فيزياء',
         teacherId: 'teacher-1',
         status: 'DRAFT',
-        modules: [
+        sections: [
           {
-            id: 'module-1',
+            id: 'section-1',
             lessons: [{ id: 'lesson-1', blocks: [{ id: 'block-1' }] }],
           },
         ],
@@ -45,14 +46,14 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
         id: 'course-empty',
         teacherId: 'teacher-1',
         status: 'DRAFT',
-        modules: [],
+        sections: [],
       };
 
       vi.spyOn(prisma.course, 'findUnique').mockResolvedValue(emptyCourse as any);
 
       await expect(
         CourseService.submitCourseForReview('course-empty', 'teacher-1')
-      ).rejects.toThrow('Course must contain at least one module and lesson before submitting for review');
+      ).rejects.toThrow('Course must contain at least one section and lesson before submitting for review');
     });
 
     it('should allow admin/authorized review to approve and publish a course', async () => {
@@ -75,31 +76,32 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
     });
   });
 
-  describe('Module & Lesson Block Architecture', () => {
-    it('should create a CourseModule for a course', async () => {
-      const mockModule = {
-        id: 'mod-1',
+  describe('Section & Lesson Block Architecture', () => {
+    it('should create a Section for a course', async () => {
+      const mockSection = {
+        id: 'sec-1',
         courseId: 'course-1',
         titleEn: 'Mechanics',
         titleAr: 'الميكانيكا',
-        sortOrder: 1,
+        orderIndex: 0,
       };
 
-      vi.spyOn(prisma.courseModule, 'create').mockResolvedValue(mockModule as any);
+      vi.spyOn(prisma.course, 'findUnique').mockResolvedValue({ id: 'course-1', teacherId: 'teacher-1' } as any);
+      vi.spyOn(prisma.section, 'create').mockResolvedValue(mockSection as any);
 
-      const result = await CourseService.createModule('course-1', {
-        titleEn: 'Mechanics',
-        titleAr: 'الميكانيكا',
-        sortOrder: 1,
-      });
+      const result = await SectionService.createSection(
+        { courseId: 'course-1', titleEn: 'Mechanics', titleAr: 'الميكانيكا' },
+        { userId: 'teacher-1', role: 'TEACHER' as any }
+      );
 
-      expect(result.id).toBe('mod-1');
-      expect(prisma.courseModule.create).toHaveBeenCalledWith({
+      expect(result.id).toBe('sec-1');
+      expect(prisma.section.create).toHaveBeenCalledWith({
         data: {
           courseId: 'course-1',
           titleEn: 'Mechanics',
           titleAr: 'الميكانيكا',
-          sortOrder: 1,
+          isFreePreview: false,
+          orderIndex: 1,
         },
       });
     });
@@ -110,14 +112,13 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
         lessonId: 'lesson-1',
         blockType: 'VIDEO',
         configurationJson: JSON.stringify({ mediaId: 'vid-100' }),
-        sortOrder: 1,
+        orderIndex: 1,
       };
 
       // Ownership guard resolves the lesson's parent course first.
       vi.spyOn(prisma.lesson, 'findUnique').mockResolvedValue({
         id: 'lesson-1',
-        module: { course: { teacherId: 'teacher-1' } },
-        section: null,
+        section: { course: { teacherId: 'teacher-1' } },
       } as any);
       vi.spyOn(prisma.lessonBlock, 'create').mockResolvedValue(mockBlock as any);
 
@@ -131,20 +132,24 @@ describe('Teacher Architecture & Course Lifecycle (teacher.md)', () => {
       expect(JSON.parse(result.configurationJson).mediaId).toBe('vid-100');
     });
 
-    it('should reorder modules transactionally', async () => {
+    it('should reorder sections transactionally', async () => {
       vi.spyOn(prisma.course, 'findUnique').mockResolvedValue({ id: 'course-1', teacherId: 'teacher-1' } as any);
-      vi.spyOn(prisma.courseModule, 'findMany').mockResolvedValue([
-        { id: 'mod-2', courseId: 'course-1' },
-        { id: 'mod-1', courseId: 'course-1' },
+      vi.spyOn(prisma.section, 'findMany').mockResolvedValue([
+        { id: 'sec-2', courseId: 'course-1' },
+        { id: 'sec-1', courseId: 'course-1' },
       ] as any);
       vi.spyOn(prisma, '$transaction').mockResolvedValue([{}, {}] as any);
 
-      const reordered = await CourseService.reorderModules('course-1', [
-        { id: 'mod-2', sortOrder: 1 },
-        { id: 'mod-1', sortOrder: 2 },
-      ]);
+      const reordered = await SectionService.reorderSections(
+        'course-1',
+        [
+          { id: 'sec-2', orderIndex: 1 },
+          { id: 'sec-1', orderIndex: 2 },
+        ],
+        { userId: 'teacher-1', role: 'TEACHER' as any }
+      );
 
-      expect(reordered).toBe(true);
+      expect(reordered).toEqual({ reordered: 2 });
     });
   });
 

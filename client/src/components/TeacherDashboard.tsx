@@ -3,15 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
 import { fetchApi } from '../lib/api';
-import { Layers, Video, Megaphone, Award, BarChart3, Webhook, FileQuestion, Mic } from 'lucide-react';
+import { Layers, Video, Megaphone, Award, BarChart3 } from 'lucide-react';
 import CourseManager from './teacher/CourseManager';
 import LiveSessionManager from './teacher/LiveSessionManager';
 import AnnouncementManager from './teacher/AnnouncementManager';
 import AssignmentStudio from './teacher/AssignmentStudio';
-import AssessmentBuilder from './teacher/AssessmentBuilder';
-import PodcastStudio from './teacher/PodcastStudio';
 import TeacherAnalytics from './teacher/TeacherAnalytics';
-import DeveloperTabs from './admin/DeveloperTabs';
 
 interface Subject {
   id: string;
@@ -21,8 +18,7 @@ interface Subject {
 
 export default function TeacherDashboard() {
   const { user, lang } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'courses' | 'live' | 'exams' | 'podcasts' | 'announcements' | 'grading' | 'analytics'>('courses');
-  const [showDeveloperModal, setShowDeveloperModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'courses' | 'live' | 'announcements' | 'grading' | 'analytics'>('courses');
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -94,30 +90,13 @@ export default function TeacherDashboard() {
             Manage your secondary school curriculums, live classes, student evaluations, and earnings.
           </p>
         </div>
-
-        <button
-          onClick={() => setShowDeveloperModal(!showDeveloperModal)}
-          className="py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold flex items-center gap-2 transition"
-        >
-          <Webhook className="w-4 h-4" />
-          <span>API & Docs</span>
-        </button>
       </div>
-
-      {/* Developer API Docs Modal */}
-      {showDeveloperModal && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-          <DeveloperTabs />
-        </div>
-      )}
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-4">
         {[
           { id: 'courses', label: 'Courses & Curriculum', icon: Layers },
           { id: 'live', label: 'Live Zoom Classes', icon: Video },
-          { id: 'exams', label: 'Exam Builder', icon: FileQuestion },
-          { id: 'podcasts', label: 'Podcast Studio', icon: Mic },
           { id: 'announcements', label: 'Announcements', icon: Megaphone },
           { id: 'grading', label: 'Grading Center', icon: Award },
           { id: 'analytics', label: 'Analytics & Students', icon: BarChart3 },
@@ -153,18 +132,6 @@ export default function TeacherDashboard() {
 
       {activeTab === 'live' && (
         <LiveSessionManager subjects={subjects} lang={lang} />
-      )}
-
-      {activeTab === 'exams' && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-          <AssessmentBuilder />
-        </div>
-      )}
-
-      {activeTab === 'podcasts' && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-          <PodcastStudio />
-        </div>
       )}
 
       {activeTab === 'announcements' && (

@@ -9,9 +9,15 @@ export class VideoService {
   /**
    * Upload a video to Supabase Storage (or local fallback) and create a record.
    */
-  static async uploadVideo(teacherId: string, fileBuffer: Buffer, fileName: string, mimeType: string, sizeBytes: number) {
+  static async uploadVideo(
+    teacherId: string,
+    fileBufferOrPath: Buffer | string,
+    fileName: string,
+    mimeType: string,
+    sizeBytes: number
+  ) {
     // 1. Upload to storage bucket "lesson-videos"
-    const videoUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-videos');
+    const videoUrl = await StorageService.uploadFile(fileBufferOrPath, fileName, mimeType, 'lesson-videos');
 
     // 2. Create database record
     return await prisma.video.create({
@@ -43,11 +49,6 @@ export class VideoService {
                 course: true,
               },
             },
-            module: {
-              include: {
-                course: true,
-              },
-            },
           },
         },
       },
@@ -69,8 +70,8 @@ export class VideoService {
     }
 
     // Check active entitlement or subscription via EntitlementResolver
-    const courseId = video.lesson?.module?.courseId || video.lesson?.section?.courseId;
-    const subjectId = video.lesson?.module?.course?.subjectId || video.lesson?.section?.course?.subjectId;
+    const courseId = video.lesson?.section?.courseId;
+    const subjectId = video.lesson?.section?.course?.subjectId;
 
     if (courseId || subjectId) {
       const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');

@@ -27,8 +27,6 @@ export const getAppConfig = async (req: Request, res: Response) => {
         exchangeRateUsdToEgp: 48,
         requireCourseApproval: true,
         allowTeacherRegistration: true,
-        enableCodePlaygrounds: true,
-        enableCollaborativeBoards: true,
         primaryColor: "#4f46e5",
       },
     });
@@ -50,8 +48,6 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       exchangeRateUsdToEgp,
       requireCourseApproval,
       allowTeacherRegistration,
-      enableCodePlaygrounds,
-      enableCollaborativeBoards,
       primaryColor,
       homeContent,
     } = req.body;
@@ -77,8 +73,6 @@ export const updateAppConfig = async (req: Request, res: Response) => {
         requireCourseApproval: Boolean(requireCourseApproval),
       }),
       ...(allowTeacherRegistration !== undefined && { allowTeacherRegistration: Boolean(allowTeacherRegistration) }),
-      ...(enableCodePlaygrounds !== undefined && { enableCodePlaygrounds: Boolean(enableCodePlaygrounds) }),
-      ...(enableCollaborativeBoards !== undefined && { enableCollaborativeBoards: Boolean(enableCollaborativeBoards) }),
       ...(primaryColor !== undefined && { primaryColor }),
       ...(homeContent !== undefined && { homeContent }),
     };

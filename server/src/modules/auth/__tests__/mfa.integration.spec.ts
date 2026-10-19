@@ -36,6 +36,17 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
     } catch (e) {}
   });
 
+  it('GET /api/v1/auth/profile - initially returns mfaEnabled: false and strips mfaSecret', async () => {
+    const res = await request(app)
+      .get('/api/v1/auth/profile')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.mfaEnabled).toBe(false);
+    expect(res.body.data.mfaSecret).toBeUndefined();
+  });
+
   it('POST /api/v1/mfa/setup - should generate MFA secret and QR code', async () => {
     const res = await request(app)
       .post('/api/v1/mfa/setup')
@@ -63,6 +74,17 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
     expect(user?.mfaEnabled).toBe(true);
   });
 
+  it('GET /api/v1/auth/profile - returns mfaEnabled: true after verification and no secret', async () => {
+    const res = await request(app)
+      .get('/api/v1/auth/profile')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.mfaEnabled).toBe(true);
+    expect(res.body.data.mfaSecret).toBeUndefined();
+  });
+
   it('POST /api/v1/mfa/verify - should reject invalid TOTP token', async () => {
     const res = await request(app)
       .post('/api/v1/mfa/verify')
@@ -71,5 +93,48 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
+  });
+
+  it('POST /api/v1/mfa/setup - re-enrollment demands currentPassword and currentToken', async () => {
+    // Reset consumed time step so current time window is accepted as a new code
+    await prisma.user.update({
+      where: { id: adminId },
+      data: { mfaLastTimeStep: null },
+    });
+
+    // 1. Without credentials
+    const resNoCreds = await request(app)
+      .post('/api/v1/mfa/setup')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({});
+    expect(resNoCreds.status).toBe(400);
+    expect(resNoCreds.body.message).toContain('MFA is already enabled');
+
+    // 2. With wrong password
+    const currentTotp = generateSync({ secret: mfaSecret });
+    const resWrongPass = await request(app)
+      .post('/api/v1/mfa/setup')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ currentPassword: 'WrongPassword!', currentToken: currentTotp });
+    expect(resWrongPass.status).toBe(401);
+    expect(resWrongPass.body.message).toContain('Incorrect password');
+
+    // 3. With wrong TOTP code
+    const resWrongTotp = await request(app)
+      .post('/api/v1/mfa/setup')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ currentPassword: 'password123', currentToken: '000000' });
+    expect(resWrongTotp.status).toBe(401);
+    expect(resWrongTotp.body.message).toContain('Invalid MFA token');
+
+    // 4. With valid current password and valid current TOTP code
+    const resSuccess = await request(app)
+      .post('/api/v1/mfa/setup')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ currentPassword: 'password123', currentToken: currentTotp });
+    expect(resSuccess.status).toBe(200);
+    expect(resSuccess.body.success).toBe(true);
+    expect(resSuccess.body.data.secret).toBeDefined();
+    expect(resSuccess.body.data.qrCode).toBeDefined();
   });
 });

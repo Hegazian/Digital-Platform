@@ -3,6 +3,7 @@ import { prisma } from '../../../prisma';
 import { AssignmentService } from '../assignment.service';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../../utils/errors';
 import { Role, AssignmentSubmissionStatus } from '@prisma/client';
+import { submitAssignmentSchema } from '../../../utils/schemas';
 
 vi.mock('../../../prisma', () => ({
   prisma: {
@@ -38,7 +39,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should create an assignment when user is course owner', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'teacher-1' } },
+        section: { course: { teacherId: 'teacher-1' } },
       };
       const mockCreated = {
         id: 'assign-1',
@@ -72,7 +73,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should throw ForbiddenError if teacher does not own the course', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'other-teacher' } },
+        section: { course: { teacherId: 'other-teacher' } },
       };
       (prisma.lesson.findUnique as any).mockResolvedValue(mockLesson);
 
@@ -86,7 +87,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should throw BadRequestError if maxScore is 0 or negative', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'teacher-1' } },
+        section: { course: { teacherId: 'teacher-1' } },
       };
       (prisma.lesson.findUnique as any).mockResolvedValue(mockLesson);
 
@@ -257,6 +258,36 @@ describe('AssignmentService Unit Tests', () => {
           score: 80,
         })
       ).rejects.toThrow(ForbiddenError);
+    });
+  });
+
+  describe('submitAssignmentSchema validation', () => {
+    it('should accept local /uploads/... relative path as fileUrl', () => {
+      const parsed = submitAssignmentSchema.parse({
+        submissionText: 'Done',
+        files: [
+          {
+            fileUrl: '/uploads/submission-files/123-hw.pdf',
+            fileName: 'hw.pdf',
+            sizeBytes: 1024,
+          },
+        ],
+      });
+      expect(parsed.files?.[0].fileUrl).toBe('/uploads/submission-files/123-hw.pdf');
+    });
+
+    it('should accept standard http/https URL as fileUrl', () => {
+      const parsed = submitAssignmentSchema.parse({
+        submissionText: 'Done',
+        files: [
+          {
+            fileUrl: 'https://example.com/files/hw.pdf',
+            fileName: 'hw.pdf',
+            sizeBytes: 1024,
+          },
+        ],
+      });
+      expect(parsed.files?.[0].fileUrl).toBe('https://example.com/files/hw.pdf');
     });
   });
 });

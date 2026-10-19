@@ -191,7 +191,12 @@ export class CourseController {
   static async reviewCourseStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { decision, rejectionReason } = req.body;
-      const course = await CourseService.reviewCourseStatus(req.params.id as string, decision, rejectionReason);
+      const course = await CourseService.reviewCourseStatus(
+        req.params.id as string,
+        decision,
+        rejectionReason,
+        req.user?.userId
+      );
       res.status(200).json({ success: true, data: course });
     } catch (error) {
       next(error);
@@ -219,61 +224,12 @@ export class CourseController {
     }
   }
 
-  static async createModule(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const courseId = req.params.courseId as string;
-      const teacherId = req.user?.userId;
-      const role = req.user?.role;
-      const module = await CourseService.createModule(courseId, req.body, teacherId, role);
-      res.status(201).json({ success: true, data: module });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async deleteModule(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const moduleId = req.params.moduleId as string;
-      const teacherId = req.user?.userId;
-      const role = req.user?.role;
-      await CourseService.deleteModule(moduleId, teacherId, role);
-      res.status(200).json({ success: true, message: 'Module deleted successfully' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async updateModule(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const moduleId = req.params.moduleId as string;
-      const teacherId = req.user?.userId;
-      const role = req.user?.role;
-      const module = await CourseService.updateModule(moduleId, req.body, teacherId, role);
-      res.status(200).json({ success: true, data: module });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async createLesson(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const teacherId = req.user!.userId;
-      const role = req.user?.role;
-      const moduleId = req.params.moduleId as string;
-      const lesson = await CourseService.createLesson(moduleId, req.body, teacherId, role);
-      res.status(201).json({ success: true, data: lesson });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /** Lessons can also hang directly off a section (dual curriculum layout). */
   static async createSectionLesson(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const teacherId = req.user!.userId;
       const role = req.user?.role;
       const sectionId = req.params.sectionId as string;
-      const lesson = await CourseService.createLesson(null, req.body, teacherId, role, sectionId);
+      const lesson = await CourseService.createLesson(sectionId, req.body, teacherId, role);
       res.status(201).json({ success: true, data: lesson });
     } catch (error) {
       next(error);
@@ -424,18 +380,6 @@ export class CourseController {
     }
   }
 
-  static async reorderModules(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const courseId = req.params.courseId as string;
-      const teacherId = req.user?.userId;
-      const role = req.user?.role;
-      const { modules } = req.body;
-      await CourseService.reorderModules(courseId, modules, teacherId, role);
-      res.status(200).json({ success: true, message: 'Modules reordered successfully' });
-    } catch (error) {
-      next(error);
-    }
-  }
 
   static async getTeacherDashboard(req: AuthRequest, res: Response, next: NextFunction) {
     try {

@@ -11,22 +11,20 @@ export class EntitlementResolver {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       select: {
-        moduleId: true,
         sectionId: true,
-        module: { select: { courseId: true, course: { select: { teacherId: true } } } },
         section: { select: { courseId: true, course: { select: { teacherId: true } } } },
       },
     });
     if (!lesson) return null;
 
-    const courseId = lesson.module?.courseId || lesson.section?.courseId;
-    const teacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
+    const courseId = lesson.section?.courseId;
+    const teacherId = lesson.section?.course?.teacherId;
     return courseId && teacherId ? { courseId, teacherId } : null;
   }
 
   /**
-   * Resolves the course that owns a collaborative board's lesson block
-   * (LessonBlock -> Lesson -> Module|Section -> Course).
+   * Resolves the course that owns a lesson block
+   * (LessonBlock -> Lesson -> Section -> Course).
    */
   static async resolveLessonBlockCourse(blockId: string): Promise<{ courseId: string; teacherId: string } | null> {
     const block = await prisma.lessonBlock.findUnique({
@@ -34,9 +32,7 @@ export class EntitlementResolver {
       select: {
         lesson: {
           select: {
-            moduleId: true,
             sectionId: true,
-            module: { select: { courseId: true, course: { select: { teacherId: true } } } },
             section: { select: { courseId: true, course: { select: { teacherId: true } } } },
           },
         },
@@ -45,8 +41,8 @@ export class EntitlementResolver {
     const lesson = block?.lesson;
     if (!lesson) return null;
 
-    const courseId = lesson.module?.courseId || lesson.section?.courseId;
-    const teacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
+    const courseId = lesson.section?.courseId;
+    const teacherId = lesson.section?.course?.teacherId;
     return courseId && teacherId ? { courseId, teacherId } : null;
   }
 
@@ -60,16 +56,58 @@ export class EntitlementResolver {
       select: {
         lesson: {
           select: {
-            module: { select: { courseId: true, course: { select: { teacherId: true } } } },
             section: { select: { courseId: true, course: { select: { teacherId: true } } } },
           },
         },
       },
     });
     const lesson = quiz?.lesson;
-    const courseId = lesson?.module?.courseId || lesson?.section?.courseId;
-    const teacherId = lesson?.module?.course?.teacherId || lesson?.section?.course?.teacherId;
+    const courseId = lesson?.section?.courseId;
+    const teacherId = lesson?.section?.course?.teacherId;
     return courseId && teacherId ? { courseId, teacherId } : null;
+  }
+
+  /**
+   * Resolves the owning teacher of a quiz through its lesson -> course chain.
+   */
+  static async getQuizOwnerTeacherId(quizId: string): Promise<string | null> {
+    const info = await this.resolveQuizCourse(quizId);
+    return info?.teacherId || null;
+  }
+
+  /**
+   * Checks whether a student has active access to a specific lesson.
+   * Access is confirmed if:
+   * 1. The parent section is marked `isFreePreview: true`.
+   * 2. OR the course is marked `isFree: true`.
+   * 3. OR the student holds an active entitlement for the course / parent subject / grade bundle.
+   */
+  static async hasLessonAccess(studentId: string, lessonId: string): Promise<boolean> {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        section: {
+          select: {
+            isFreePreview: true,
+            courseId: true,
+            course: { select: { isFree: true, subjectId: true, gradeId: true } },
+          },
+        },
+      },
+    });
+
+    if (!lesson) return false;
+
+    if (lesson.section?.isFreePreview) return true;
+
+    const course = lesson.section?.course;
+    const courseId = lesson.section?.courseId;
+
+    if (!course || !courseId) return false;
+
+    if (course.isFree) return true;
+
+    return this.hasCourseAccess(studentId, courseId);
   }
 
   /**

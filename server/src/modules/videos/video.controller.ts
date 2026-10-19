@@ -13,15 +13,17 @@ export class VideoController {
    * Handles video upload from teacher.
    */
   static async uploadVideo(req: AuthRequest, res: Response, next: NextFunction) {
+    const tempFilePath = req.file?.path;
     try {
       if (!req.file) {
         throw new BadRequestError('No video file provided');
       }
 
       const userId = req.user!.userId;
+      const fileSource = req.file.path || req.file.buffer;
       const video = await VideoService.uploadVideo(
         userId,
-        req.file.buffer,
+        fileSource,
         req.file.originalname,
         req.file.mimetype,
         req.file.size
@@ -33,6 +35,12 @@ export class VideoController {
       });
     } catch (error) {
       next(error);
+    } finally {
+      if (tempFilePath && fs.existsSync(tempFilePath)) {
+        try {
+          fs.unlinkSync(tempFilePath);
+        } catch {}
+      }
     }
   }
 

@@ -20,23 +20,15 @@ import progressRoutes from './modules/progress/progress.routes';
 
 import academicRouter from './modules/academic/academic.routes';
 import commerceRouter from './modules/commerce/commerce.routes';
-import assessmentRouter from './modules/assessment/assessment.routes';
 import notificationRouter from './modules/notifications/notification.routes';
 import teacherRouter from './modules/teacher/teacher.routes';
 import liveRouter from './modules/live/live.routes';
 import configRoutes from './modules/config/config.routes';
-import playgroundRoutes from './modules/courses/playground.routes';
-import boardRoutes from './modules/courses/board.routes';
 import discussionRoutes from './modules/discussions/discussion.routes';
-import podcastRoutes from './modules/podcasts/podcast.routes';
-import collectionRoutes from './modules/collections/collection.routes';
 import aiRoutes from './modules/ai/ai.routes';
-import apiTokenRoutes from './modules/developer/api-token.routes';
-import webhookRoutes from './modules/developer/webhook.routes';
 import mfaRoutes from './modules/auth/mfa.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import assignmentRoutes from './modules/assignments/assignment.routes';
-import careersRoutes from './modules/careers/careers.routes';
 
 const app: Express = express();
 
@@ -69,6 +61,18 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 const allowedOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
+// Block direct unauthenticated access to lesson media files in /uploads.
+// Videos must be streamed via /api/v1/videos/:id/stream and materials downloaded via /api/v1/materials/:id/download.
+app.use('/uploads', (req, res, next) => {
+  const urlPath = req.path;
+  if (urlPath.startsWith('/lesson-videos') || urlPath.startsWith('/lesson-materials')) {
+    return res.status(403).json({
+      success: false,
+      message: 'Direct access to lesson media is forbidden. Use authorized streaming or download endpoints.',
+    });
+  }
+  next();
+});
 app.use('/uploads', express.static(getUploadsRoot()));
 
 if (process.env.NODE_ENV !== 'test') {
@@ -169,23 +173,15 @@ app.use('/api/v1/progress', progressRoutes);
 
 app.use('/api/v1/academic', academicRouter);
 app.use('/api/v1/commerce', commerceRouter);
-app.use('/api/v1/assessment', assessmentRouter);
 app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/teacher', teacherRouter);
 app.use('/api/v1/live', liveRouter);
 app.use('/api/v1/config', configRoutes);
-app.use('/api/v1/playgrounds', playgroundRoutes);
-app.use('/api/v1/boards', boardRoutes);
 app.use('/api/v1/discussions', discussionRoutes);
-app.use('/api/v1/podcasts', podcastRoutes);
-app.use('/api/v1/collections', collectionRoutes);
 app.use('/api/v1/ai', aiRoutes);
-app.use('/api/v1/developer', apiTokenRoutes);
-app.use('/api/v1/developer', webhookRoutes);
 app.use('/api/v1/mfa', mfaRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
-app.use('/api/v1/careers', careersRoutes);
 
 // 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -208,9 +204,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     err = new BadRequestError('Referenced record does not exist');
   }
 
-  Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
-
   const statusCode = err.statusCode || 500;
+  if (statusCode >= 500) {
+    Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
+  } else {
+    Logger.warn(err.message || 'Client Request Error', requestId, { statusCode, path: req.originalUrl });
+  }
+
   res.status(statusCode).json({
     success: false,
     message: statusCode >= 500 ? 'Internal Server Error' : err.message,

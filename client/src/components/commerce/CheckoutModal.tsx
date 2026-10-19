@@ -6,7 +6,7 @@ import { errorMessage } from '@/lib/apiTypes';
 import { useAppStore } from '@/lib/store';
 import Modal from '@/components/ui/Modal';
 import { useT } from '@/lib/useT';
-import { X, Smartphone, Wallet, Loader2, CheckCircle2, Clock } from 'lucide-react';
+import { X, Smartphone, Wallet, Tag, Loader2, CheckCircle2, Clock } from 'lucide-react';
 
 interface CheckoutModalProps {
   course: {
@@ -25,6 +25,7 @@ type Phase = 'details' | 'submitting' | 'pending' | 'granted';
 const PAYMENT_METHODS = [
   { id: 'VODAFONE_CASH', label: 'Vodafone Cash', icon: Smartphone },
   { id: 'INSTAPAY', label: 'InstaPay', icon: Wallet },
+  { id: 'VOUCHER', label: 'Voucher Code', icon: Tag },
 ] as const;
 
 /**
@@ -82,6 +83,16 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
     setError('');
     setPhase('submitting');
     try {
+      if (method === 'VOUCHER') {
+        await fetchApi('/commerce/vouchers/redeem', {
+          method: 'POST',
+          body: JSON.stringify({ code: transactionRef.trim().toUpperCase() }),
+        });
+        setPhase('granted');
+        setTimeout(onAccessGranted, 1500);
+        return;
+      }
+
       // Find this course's active product
       const productsRes = await fetchApi('/commerce/products');
       const products = productsRes.data || [];
@@ -143,7 +154,7 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
               <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
                 {t('Payment method', 'طريقة الدفع')}
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {PAYMENT_METHODS.map((pm) => {
                   const Icon = pm.icon;
                   return (
@@ -172,9 +183,14 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
                     'Send the exact amount by Vodafone Cash, then enter the transaction number below. Access unlocks after admin verification.',
                     'أرسل المبلغ عبر فودافون كاش ثم أدخل رقم العملية. يتم تفعيل الوصول بعد مراجعة الإدارة.'
                   )
-                : t(
+                : method === 'INSTAPAY'
+                ? t(
                     'Transfer via InstaPay to the platform account, then enter the reference below. Access unlocks after admin verification.',
                     'حوّل عبر انستاباي لحساب المنصة ثم أدخل رقم المرجع. يتم التفعيل بعد مراجعة الإدارة.'
+                  )
+                : t(
+                    'Enter your prepaid voucher or campaign code below for immediate course access.',
+                    'أدخل رمز القسيمة أو كود الخصم لتفعيل الدورة فوراً.'
                   )}
             </div>
 
@@ -182,8 +198,12 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
               type="text"
               value={transactionRef}
               onChange={(e) => setTransactionRef(e.target.value)}
-              placeholder={t('Transaction number / reference', 'رقم العملية / المرجع')}
-              className="glass-input w-full text-xs"
+              placeholder={
+                method === 'VOUCHER'
+                  ? t('Enter promo code (e.g. SCHOLAR2026)', 'أدخل كود القسيمة (مثال: SCHOLAR2026)')
+                  : t('Transaction number / reference', 'رقم العملية / المرجع')
+              }
+              className={`glass-input w-full text-xs ${method === 'VOUCHER' ? 'font-mono uppercase tracking-wider' : ''}`}
               required
             />
 
@@ -197,7 +217,9 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
               onClick={handleSubmit}
               className="glass-button w-full py-3 rounded-2xl text-sm font-bold disabled:opacity-50"
             >
-              {t('Submit payment proof', 'إرسال إثبات الدفع')}
+              {method === 'VOUCHER'
+                ? t('Activate with Voucher', 'تفعيل بواسطة القسيمة')
+                : t('Submit payment proof', 'إرسال إثبات الدفع')}
             </button>
           </>
         )}

@@ -117,14 +117,12 @@ interface AppStore {
   token: string | null;
   selectedCourseId: string | null;
   selectedSubjectId: string | null;
-  careerTrackSlug: string | null;
 
   setLang: (lang: Language) => void;
   setActiveTab: (tab: ActiveTab) => void;
   setUser: (user: User | null, token: string | null, refreshToken?: string | null) => void;
   setSelectedCourse: (courseId: string | null) => void;
   setSelectedSubject: (subjectId: string | null) => void;
-  setCareerTrack: (slug: string | null) => void;
   t: (key: keyof typeof translations.en) => string;
 }
 
@@ -138,7 +136,6 @@ export const useAppStore = create<AppStore>()(
       token: null,
       selectedCourseId: null,
       selectedSubjectId: null,
-      careerTrackSlug: null,
 
       setLang: (lang: Language) => {
         const dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -168,8 +165,6 @@ export const useAppStore = create<AppStore>()(
 
       setSelectedSubject: (selectedSubjectId) => set({ selectedSubjectId }),
 
-      setCareerTrack: (careerTrackSlug) => set({ careerTrackSlug }),
-
       t: (key) => {
         const lang = get().lang;
         return translations[lang][key] || translations['en'][key] || key;
@@ -185,7 +180,6 @@ export const useAppStore = create<AppStore>()(
         token: state.token,
         selectedCourseId: state.selectedCourseId,
         selectedSubjectId: state.selectedSubjectId,
-        careerTrackSlug: state.careerTrackSlug,
       }),
     }
   )

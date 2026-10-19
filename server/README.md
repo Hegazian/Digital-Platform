@@ -1,63 +1,63 @@
 # 🚀 EduPlatform Server — Express 5 & TypeScript Backend API
 
-The core RESTful backend API powering the EduPlatform ecosystem. Engineered with Node.js 22, Express 5, TypeScript 5, Prisma ORM, and PostgreSQL 15, providing a robust, modular, and enterprise-grade e-learning service.
+The RESTful backend API powering EduPlatform, built with **Node.js 22**, **Express 5**, **TypeScript 5**, **Prisma ORM 5.11**, and **PostgreSQL 15**.
+
+For deep-dive documentation, see [`../docs/README.md`](../docs/README.md).
 
 ---
 
 ## 📋 Architectural Overview
 
-- **Architecture Style**: Modular Monolith, API-first design with domain module boundaries.
-- **Runtime & Language**: Node.js 22+ with strict TypeScript 5.
-- **Framework**: Express 5 with async route handlers and centralized error interception.
-- **ORM & Data Layer**: Prisma ORM v5.11 with PostgreSQL 15.
-- **Caching & Sessions**: Redis 7 for high-throughput rate-limiting and live state caching.
-- **Authentication**: JWT with Refresh Token Rotation (Token Families, reuse detection), Bcrypt/Argon2 password hashing, and RFC 6238 TOTP Two-Factor Authentication.
-- **Validation**: Strict runtime request validation using Zod schemas.
-- **Security**: Helmet HTTP headers, CORS whitelisting, IP and user-keyed rate limiters, timing-safe webhook verification, and sanitized logs.
+- **Architecture Style**: Modular monolith (`routes` → `controller` → `service`) with 19 domain modules mounted under `/api/v1`.
+- **Runtime & Framework**: Node.js 22+ with Express 5.2.1 and strict TypeScript.
+- **Database & ORM**: PostgreSQL 15 managed via Prisma 5.11 with versioned SQL migrations (`prisma/migrations/0001_init`) and `prisma db push`.
+- **Caching & Rate Limiting**: In-memory TTL cache (`src/utils/cache.ts`) and `express-rate-limit` middleware.
+- **Authentication**: Bearer Access JWT (`15m`), `httpOnly` Refresh JWT cookie (`eduplat_rt`, `7d`) with SHA-256 database rotation and reuse detection, plus RFC 6238 TOTP MFA (`otplib`).
+- **Validation**: Request body and query validation via Zod (`src/utils/schemas.ts`, `src/utils/validate.ts`).
 
 ---
 
 ## 📁 Directory Structure
 
-```
+```text
 server/
 ├── prisma/
-│   ├── schema.prisma          # Database schema definition (Models, Relations, Indexes)
-│   └── seed.ts                # Initial curriculum & system user seeding script
-├── scripts/                   # Database & operational utility scripts
+│   ├── migrations/            # Versioned baseline SQL migrations (0001_init/migration.sql)
+│   ├── schema.prisma          # 32 models, 17 enums
+│   └── seed.ts                # Initial curriculum & admin seed script
+├── scripts/
+│   ├── db-env.js              # Helper to run Prisma CLI against .env.test
+│   └── run-demo.ts            # Demo seed/execution script
 ├── src/
-│   ├── modules/               # Domain-driven feature modules
-│   │   ├── academic/          # Stages, Grades, Terms, and Educational Board management
-│   │   ├── admin/             # System admin controls, approvals, and audit trails
-│   │   ├── ai/                # AI Tutor conversational assistant integration
-│   │   ├── assessment/        # Question banks, exams, and auto-grading
-│   │   ├── assignments/       # Student homework submissions & teacher reviews
-│   │   ├── audit/             # Immutable audit logging for administrative actions
-│   │   ├── auth/              # Auth, MFA, JWT rotation, and password resets
-│   │   ├── careers/           # Career paths & university faculty alignment
-│   │   ├── collections/       # Course bundles and learning pathways
-│   │   ├── commerce/          # Orders, Paymob/Fawry payments, vouchers, entitlements
-│   │   ├── config/            # Public platform settings & dynamic home content editor
-│   │   ├── courses/           # Courses, sections, lessons, and approval lifecycle
-│   │   ├── developer/         # Scoped API tokens & webhook notification dispatch
-│   │   ├── discussions/       # Lesson Q&A forums and student comments
-│   │   ├── live/              # Live class sessions and webinar scheduling
-│   │   ├── materials/         # Downloadable PDF notes, worksheets, and resources
-│   │   ├── notifications/     # Real-time and in-app notification center
-│   │   ├── playground/        # Secure Python code sandbox execution runner
-│   │   ├── podcasts/          # Audio lectures and learning podcasts
-│   │   ├── progress/          # Student lesson progress & video watch-time tracking
-│   │   ├── quizzes/           # Timed quizzes, multiple-choice questions, and scorecards
-│   │   ├── subscriptions/     # Subject & course subscription period management
-│   │   ├── teacher/           # Teacher studio, course authoring, and student analytics
-│   │   └── videos/            # AES-128 encrypted HLS streaming and key delivery
-│   ├── middleware/            # Auth, RBAC, Zod validation, rate limiting, error handlers
-│   ├── utils/                 # Storage abstraction, JWT helpers, crypto, currency, logger
-│   ├── app.ts                 # Express application assembly, middleware, and route mounting
-│   └── server.ts              # Server startup, port listening, and graceful shutdown
-├── tests/                     # Automated Vitest integration and unit test suites
-├── create-admin.js            # Standalone utility script to promote or create admin accounts
-├── vitest.config.ts           # Vitest configuration for the backend test runner
+│   ├── modules/               # 19 domain modules (co-located with __tests__/)
+│   │   ├── academic/          # Stages, Grades, AcademicYears, GradeSubjects
+│   │   ├── admin/             # User management, teacher approval, platform stats
+│   │   ├── ai/                # Google Gemini AI tutor endpoint
+│   │   ├── assignments/       # Lesson assignments, file uploads, and grading
+│   │   ├── audit/             # Admin audit log reader
+│   │   ├── auth/              # Register, login, refresh, logout, profile, TOTP MFA
+│   │   ├── commerce/          # Products, orders, vouchers, webhooks, entitlement resolver
+│   │   ├── config/            # Public/admin AppConfig and homeContent JSON
+│   │   ├── courses/           # Courses, sections, lessons, blocks, subjects
+│   │   ├── discussions/       # Course discussion threads and replies
+│   │   ├── health/            # DB ping, uptime, and memory health check
+│   │   ├── live/              # Live session scheduling (Zoom / Google Meet / Teams join URLs)
+│   │   ├── materials/         # Lesson material uploads (50MB limit) & entitled download
+│   │   ├── notifications/     # User notifications
+│   │   ├── progress/          # Lesson watch time and completion tracking
+│   │   ├── quizzes/           # Deterministic auto-graded lesson quizzes & attempts
+│   │   ├── subscriptions/     # Manual subject subscriptions and admin approval queue
+│   │   ├── teacher/           # Teacher students list, announcements, revenue stats
+│   │   └── videos/            # Disk-streamed video uploads (500MB limit) & signed range streaming
+│   ├── middleware/            # authenticate, optionalAuth, requireRole, requireApprovedTeacher
+│   ├── utils/                 # env, jwt, totp, storage, currency, schemas, webhook-security, logger
+│   ├── app.ts                 # Express middleware pipeline and route mounts
+│   ├── prisma.ts              # PrismaClient singleton
+│   └── server.ts              # Entry point
+├── tests/
+│   └── setup.ts               # Vitest global test setup
+├── create-admin.js            # CLI script to create/promote an ADMIN user
+├── vitest.config.ts           # Vitest configuration (serial file execution + v8 coverage thresholds)
 └── package.json
 ```
 
@@ -65,105 +65,79 @@ server/
 
 ## ⚙️ Environment Configuration
 
-Copy `.env.example` to `.env` in the `server` root:
+Copy `.env.example` to `.env` in `server/`:
 
 ```ini
-# Server Port & Host Environment
 PORT=5000
 NODE_ENV=development
-CLIENT_URL=http://localhost:3000
+FRONTEND_URL="http://localhost:3000"
 
-# Database Connections (Dual-Database Topology)
-DATABASE_URL="postgresql://postgres:postgres@localhost:5434/eduplatform?schema=public"
-TEST_DATABASE_URL="postgresql://postgres:postgres@localhost:5433/eduplatform_test?schema=public"
+# Matches docker-compose.yml (postgres-dev on port 5434)
+DATABASE_URL="postgresql://devuser:devpassword@localhost:5434/eduplatform_dev"
+DIRECT_URL="postgresql://devuser:devpassword@localhost:5434/eduplatform_dev"
 
-# Redis Cache & Sessions
-REDIS_URL="redis://localhost:6379"
+# Cryptographic Secrets (Required >= 32 chars in production; auto-generated in dev if omitted)
+JWT_SECRET="replace-with-at-least-32-characters-in-production"
+JWT_EXPIRES_IN="15m"
+JWT_REFRESH_SECRET="replace-with-at-least-32-characters-in-production"
+JWT_REFRESH_EXPIRES_IN="7d"
+VIDEO_STREAM_SECRET="replace-with-at-least-32-characters-in-production"
 
-# Cryptographic & Authentication Secrets (Must be ≥32 characters in production)
-JWT_SECRET=super_secret_jwt_key_at_least_32_characters_long_for_security
-JWT_REFRESH_SECRET=super_secret_refresh_jwt_key_at_least_32_characters_long_for_security
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
+# Payment Webhook Secrets
+PAYMOB_HMAC_SECRET="replace-with-paymob-hmac-secret-32-chars"
+FAWRY_SECRET_KEY="replace-with-fawry-secret-key-32-chars"
 
-# Video Security & Encryption
-VIDEO_KEY_SECRET=super_secret_video_encryption_key_at_least_32_chars
-
-# Payment Gateways (Optional for local testing / sandbox mode)
-PAYMOB_API_KEY=
-PAYMOB_INTEGRATION_ID=
-PAYMOB_HMAC_SECRET=
-FAWRY_MERCHANT_CODE=
-FAWRY_SECRET_KEY=
-
-# Storage (Local Fallback or Cloudflare R2 / AWS S3)
-STORAGE_DRIVER=local
-UPLOAD_DIR=./uploads
+# Optional Integrations
+RESEND_API_KEY=""
+GEMINI_API_KEY=""
+SUPABASE_URL=""
+SUPABASE_SERVICE_ROLE_KEY=""
+UPLOADS_DIR=""
+TRUST_PROXY="false"
 ```
 
 ---
 
-## 🗄️ Database Management & Commands
-
-The project uses Docker Compose to run isolated PostgreSQL instances:
-- **Port 5434**: Development database (`eduplatform`).
-- **Port 5433**: Isolated automated test database (`eduplatform_test`).
+## 🗄️ Database & Operational Commands
 
 ```bash
-# Push schema changes to development database
-npx prisma db push
+# Deploy versioned SQL migrations to target DB
+npm run db:migrate:deploy
 
-# Push schema changes to test database
+# Push schema to development DB (localhost:5434 / eduplatform_dev)
+npm run db:push
+
+# Push schema to test DB (localhost:5433 / eduplatform_test)
 npm run db:push:test
 
-# Generate updated Prisma Client types
-npx prisma generate
+# Force-reset test DB
+npm run db:reset:test
 
-# Open Prisma Studio visual database browser
-npx prisma studio --port 5555
-
-# Seed initial curriculum and test accounts
+# Seed initial subjects, curriculum, and admin user
 npm run db:seed
 
-# Create or promote a Super Admin account
-node create-admin.js admin@eduplatform.com P@ssword123 "System Administrator"
+# Create or promote an admin user interactively / via CLI
+npm run create:admin
 ```
 
 ---
 
-## 📡 API Modules & Key Endpoints
+## 🧪 Testing, Coverage & Typechecking
 
-All primary routes are versioned under `/api/v1/`:
-
-| Module | Route Prefix | Key Endpoints | Description |
-| :--- | :--- | :--- | :--- |
-| **Auth** | `/api/v1/auth` | `POST /register`, `POST /login`, `POST /refresh`, `POST /logout`, `POST /mfa-setup`, `POST /mfa-verify` | Authentication, token rotation, TOTP 2FA |
-| **Config** | `/api/v1/config` | `GET /`, `PUT /` (Admin) | Platform settings, slogans, currencies, and **Home Page Content Editor** |
-| **Courses** | `/api/v1/courses` | `GET /`, `POST /`, `GET /:id`, `PUT /:id`, `POST /:id/submit-for-review` | Course authoring, catalog browsing, and review submission |
-| **Academic** | `/api/v1/academic` | `GET /stages`, `GET /grades`, `GET /terms`, `POST /stages` | Educational hierarchy stages and grades |
-| **Videos** | `/api/v1/videos` | `POST /upload-url`, `GET /:id/key`, `GET /:id/manifest` | Secure HLS AES-128 stream manifest and key gating |
-| **Playground** | `/api/v1/playground` | `POST /run` | Isolated Python code sandbox execution |
-| **Whiteboard** | `/api/v1/board` | `GET /rooms/:id`, `POST /rooms` | Collaborative whiteboard room lifecycle |
-| **Commerce** | `/api/v1/commerce` | `POST /checkout`, `POST /vouchers/redeem`, `POST /webhooks/paymob`, `POST /webhooks/fawry` | Orders, voucher redemption, payment gateway webhooks |
-| **Quizzes** | `/api/v1/quizzes` | `GET /course/:id`, `POST /:id/attempt`, `POST /:id/submit` | Timed quizzes and automated grading |
-| **Developer** | `/api/v1/developer` | `GET /tokens`, `POST /tokens`, `GET /webhooks`, `POST /webhooks` | Scoped API tokens and webhook event subscriptions |
-| **Admin** | `/api/v1/admin` | `GET /users`, `PUT /users/:id/role`, `GET /courses/pending`, `PUT /courses/:id/approve` | Course approval queue, teacher verification, audit logs |
-
----
-
-## 🧪 Testing Suite
-
-Tests are executed with **Vitest** in an isolated environment against `localhost:5433`:
+Tests run serially against `eduplatform_test` (`localhost:5433`) using **Vitest** and **Supertest**:
 
 ```bash
-# Run all automated tests (338 tests across 67 suites)
+# Run all 56 test suites (324 tests)
 npm test
 
-# Run a specific module test suite
-npx vitest run src/modules/config
-npx vitest run src/modules/commerce
-npx vitest run src/modules/auth
+# Run full suite with enforced v8 coverage thresholds (70% stmts, 60% branch, 80% funcs, 70% lines)
+npm run test:coverage
 
-# Run in watch mode for active development
-npm run test:watch
+# Run a single module's test suite
+npx vitest run src/modules/commerce
+
+# Run TypeScript compiler check
+npm run typecheck
 ```
+
+See [`../docs/06-API-CATALOG.md`](../docs/06-API-CATALOG.md) for the complete list of REST endpoints.

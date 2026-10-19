@@ -11,13 +11,22 @@ export class TeacherService {
     });
 
     const subjectIds = Array.from(new Set(courses.map((c) => c.subjectId)));
+    const courseIds = courses.map((c) => c.id);
 
-    // 2. Find students with active entitlements for these subjects
+    // 2. Find students with active entitlements for these subjects or individual courses
     const entitlements = await prisma.entitlement.findMany({
       where: {
-        resourceType: 'SUBJECT',
-        resourceId: { in: subjectIds },
         status: 'ACTIVE',
+        OR: [
+          {
+            resourceType: 'SUBJECT',
+            resourceId: { in: subjectIds },
+          },
+          {
+            resourceType: 'COURSE',
+            resourceId: { in: courseIds },
+          },
+        ],
       },
       include: {
         student: {
@@ -82,10 +91,7 @@ export class TeacherService {
     // Scope counts to lessons inside THIS teacher's courses only.
     const myLessons = await prisma.lesson.findMany({
       where: {
-        OR: [
-          { module: { course: { teacherId } } },
-          { section: { course: { teacherId } } },
-        ],
+        section: { course: { teacherId } },
       },
       select: { id: true },
     });
@@ -98,11 +104,9 @@ export class TeacherService {
           })
         : 0;
 
-    // Assessments tied to this student. (Assessment has no lesson relation in
-    // the current schema; cross-teacher exposure is bounded by the enrollment
-    // gate above — only students enrolled in THIS teacher's subjects pass.)
-    const attempts = await prisma.assessmentAttempt.findMany({
-      where: { studentId },
+    // Quizzes attempted by this student
+    const attempts = await prisma.quizAttempt.findMany({
+      where: { userId: studentId },
       select: { score: true, isPassed: true },
     });
 
@@ -119,38 +123,61 @@ export class TeacherService {
 
   static async broadcastAnnouncement(data: {
     teacherId: string;
-    courseId: string;
+    courseId?: string;
     titleEn: string;
     titleAr: string;
     messageEn: string;
     messageAr: string;
   }) {
-    const course = await prisma.course.findUnique({
-      where: { id: data.courseId },
-    });
+    let courseIds: string[] = [];
+    let subjectIds: string[] = [];
 
-    if (!course) {
-      throw new NotFoundError('Course not found');
+    if (data.courseId) {
+      const course = await prisma.course.findUnique({
+        where: { id: data.courseId },
+      });
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      if (course.teacherId !== data.teacherId) {
+        throw new ForbiddenError('You do not own this course');
+      }
+
+      courseIds = [course.id];
+      subjectIds = [course.subjectId];
+    } else {
+      const teacherCourses = await prisma.course.findMany({
+        where: { teacherId: data.teacherId },
+        select: { id: true, subjectId: true },
+      });
+      courseIds = teacherCourses.map((c) => c.id);
+      subjectIds = Array.from(new Set(teacherCourses.map((c) => c.subjectId)));
     }
 
-    if (course.teacherId !== data.teacherId) {
-      throw new ForbiddenError('You do not own this course');
+    if (courseIds.length === 0 && subjectIds.length === 0) {
+      return { notificationsSent: 0 };
     }
 
-    // Find all entitled students for course subject
+    // Find all entitled students for course subject or course
     const entitlements = await prisma.entitlement.findMany({
       where: {
-        resourceType: 'SUBJECT',
-        resourceId: course.subjectId,
         status: 'ACTIVE',
+        OR: [
+          { resourceType: 'SUBJECT', resourceId: { in: subjectIds } },
+          { resourceType: 'COURSE', resourceId: { in: courseIds } },
+        ],
       },
       select: { studentId: true },
     });
 
+    const uniqueStudentIds = Array.from(new Set(entitlements.map((e) => e.studentId)));
+
     let notificationsSent = 0;
-    for (const ent of entitlements) {
+    for (const studentId of uniqueStudentIds) {
       await NotificationService.createNotification({
-        userId: ent.studentId,
+        userId: studentId,
         titleEn: data.titleEn,
         titleAr: data.titleAr,
         messageEn: data.messageEn,
@@ -164,12 +191,38 @@ export class TeacherService {
 
   static async getRevenueSummary(teacherId: string) {
     const students = await this.getEnrolledStudents(teacherId);
-    const coursesCount = await prisma.course.count({ where: { teacherId } });
+    const courses = await prisma.course.findMany({
+      where: { teacherId },
+      select: { id: true, subjectId: true },
+    });
+
+    const courseIds = courses.map((c) => c.id);
+    const subjectIds = Array.from(new Set(courses.map((c) => c.subjectId)));
+
+    const paidOrders = await prisma.order.findMany({
+      where: {
+        status: 'PAID',
+        product: {
+          OR: [
+            { productType: 'COURSE', resourceId: { in: courseIds } },
+            { productType: 'SUBJECT', resourceId: { in: subjectIds } },
+          ],
+        },
+      },
+      select: {
+        totalAmountEgp: true,
+        totalAmountUsd: true,
+      },
+    });
+
+    const revenueEgp = paidOrders.reduce((sum, order) => sum + Number(order.totalAmountEgp), 0);
+    const revenueUsd = paidOrders.reduce((sum, order) => sum + Number(order.totalAmountUsd), 0);
 
     return {
       totalStudentsEnrolled: students.length,
-      totalCoursesCreated: coursesCount,
-      revenueEgp: students.length * 1500, // Estimated subject enrollment revenue
+      totalCoursesCreated: courses.length,
+      revenueEgp,
+      revenueUsd,
     };
   }
 }

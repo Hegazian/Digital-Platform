@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import MfaSetupModal from './settings/MfaSetupModal';
+import NotificationBell from './NotificationBell';
 import { LogoMark } from './brand/Logo';
 
 export default function Navbar() {
@@ -125,6 +126,7 @@ export default function Navbar() {
             {/* Auth / User */}
             {user ? (
               <div className="flex items-center gap-3">
+                <NotificationBell />
                 <div
                   onClick={() => router.push('/profile')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition-all"
@@ -186,12 +188,14 @@ export default function Navbar() {
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showMfaModal && (
         <MfaSetupModal
+          isOpen={showMfaModal}
           onClose={() => setShowMfaModal(false)}
           onEnabled={() => {
             if (user) {
               setUser({ ...user, mfaEnabled: true }, useAppStore.getState().token);
             }
           }}
+          isAlreadyEnabled={Boolean(user?.mfaEnabled)}
         />
       )}
     </>

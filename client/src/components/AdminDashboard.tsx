@@ -2,22 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Users, TrendingUp, Webhook, ShieldAlert, CheckCircle, BookOpen, Tag, Settings, ShoppingBag, Library } from 'lucide-react';
+import { Shield, Users, TrendingUp, ShieldAlert, CheckCircle, BookOpen, Tag, Settings, ShoppingBag } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 import { errorMessage } from '@/lib/apiTypes';
 import PlatformMetrics from './admin/PlatformMetrics';
 import TeacherApprovalQueue from './admin/TeacherApprovalQueue';
 import OfflinePaymentQueue from './admin/OfflinePaymentQueue';
 import UserDirectory from './admin/UserDirectory';
-import DeveloperTabs from './admin/DeveloperTabs';
 import AuditLogsTable from './admin/AuditLogsTable';
 import CourseApprovalQueue from './admin/CourseApprovalQueue';
 import PendingOrdersManager from './admin/PendingOrdersManager';
-import CollectionsManager from './admin/CollectionsManager';
 import VoucherManager from './admin/VoucherManager';
 import PlatformSettings from './admin/PlatformSettings';
 import AcademicStructureManager from './admin/AcademicStructureManager';
-import { GraduationCap } from 'lucide-react';
+import CoursePricingManager from './admin/CoursePricingManager';
+import { GraduationCap, DollarSign } from 'lucide-react';
 
 /** Delays a rapidly-changing value so query keys stay stable while typing. */
 function useDebouncedValue<T>(value: T, delay = 350): T {
@@ -32,7 +31,7 @@ function useDebouncedValue<T>(value: T, delay = 350): T {
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'academic' | 'courses' | 'collections' | 'orders' | 'vouchers' | 'teachers' | 'payments' | 'users' | 'settings' | 'developers' | 'audit'
+    'overview' | 'academic' | 'courses' | 'pricing' | 'orders' | 'vouchers' | 'teachers' | 'payments' | 'users' | 'settings' | 'audit'
   >('overview');
 
   // User directory controls (search is debounced -> no refetch per keystroke)
@@ -156,14 +155,13 @@ export default function AdminDashboard() {
           { id: 'overview', label: 'Platform Metrics', icon: TrendingUp },
           { id: 'academic', label: 'Academic Structure', icon: GraduationCap },
           { id: 'courses', label: `Course Management (${totalCoursesCount})`, icon: BookOpen },
-          { id: 'collections', label: 'Collections', icon: Library },
+          { id: 'pricing', label: 'Pricing & Products', icon: DollarSign },
           { id: 'orders', label: 'Course Orders', icon: ShoppingBag },
           { id: 'vouchers', label: 'Promo Codes', icon: Tag },
           { id: 'teachers', label: `Teacher Approvals (${pendingTeachers.length})`, icon: Shield },
           { id: 'payments', label: `Offline Payments (${pendingSubscriptions.length})`, icon: CheckCircle },
           { id: 'users', label: 'User Directory', icon: Users },
           { id: 'settings', label: 'Platform & Domain', icon: Settings },
-          { id: 'developers', label: 'API & Webhooks', icon: Webhook },
           { id: 'audit', label: 'Audit Logs', icon: ShieldAlert },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -200,10 +198,8 @@ export default function AdminDashboard() {
         />
       )}
 
-      {activeTab === 'collections' && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-          <CollectionsManager />
-        </div>
+      {activeTab === 'pricing' && (
+        <CoursePricingManager />
       )}
 
       {activeTab === 'orders' && (
@@ -252,12 +248,6 @@ export default function AdminDashboard() {
 
       {activeTab === 'settings' && (
         <PlatformSettings />
-      )}
-
-      {activeTab === 'developers' && (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800">
-          <DeveloperTabs />
-        </div>
       )}
 
       {activeTab === 'audit' && (

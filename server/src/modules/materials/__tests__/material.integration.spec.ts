@@ -167,4 +167,70 @@ describe('Material API Integration Tests', () => {
       expect(res.body.success).toBe(true);
     });
   });
+
+  describe('Direct /uploads Security & GET /api/v1/materials/:id/download', () => {
+    let testMaterialId: string;
+
+    beforeAll(async () => {
+      // Create a test material for download tests
+      const mat = await prisma.material.create({
+        data: {
+          lessonId,
+          title: 'Direct Download Test',
+          fileUrl: '/uploads/lesson-materials/test-secure-doc.pdf',
+          fileType: 'application/pdf',
+          sizeBytes: 2048,
+        },
+      });
+      testMaterialId = mat.id;
+    });
+
+    it('should block direct unauthenticated access to /uploads/lesson-materials and /uploads/lesson-videos', async () => {
+      const resMat = await request(app).get('/uploads/lesson-materials/test-secure-doc.pdf');
+      expect(resMat.status).toBe(403);
+
+      const resVid = await request(app).get('/uploads/lesson-videos/any-video.mp4');
+      expect(resVid.status).toBe(403);
+    });
+
+    it('should deny GET /api/v1/materials/:id/download to un-entitled student', async () => {
+      // Create an unsubscribed student
+      const unSub = await prisma.user.create({
+        data: {
+          email: `unsub-${Date.now()}@test.com`,
+          password: 'pass',
+          name: 'Unsub Student',
+          role: 'STUDENT',
+          isActive: true,
+        },
+      });
+      const unSubToken = generateAccessToken({ userId: unSub.id, role: 'STUDENT', teacherStatus: null });
+
+      const res = await request(app)
+        .get(`/api/v1/materials/${testMaterialId}/download`)
+        .set('Authorization', `Bearer ${unSubToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should allow GET /api/v1/materials/:id/download to course teacher owner', async () => {
+      const res = await request(app)
+        .get(`/api/v1/materials/${testMaterialId}/download`)
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.downloadUrl).toBeDefined();
+    });
+
+    it('should allow GET /api/v1/materials/:id/download to entitled student', async () => {
+      const res = await request(app)
+        .get(`/api/v1/materials/${testMaterialId}/download`)
+        .set('Authorization', `Bearer ${studentToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.downloadUrl).toBeDefined();
+    });
+  });
 });

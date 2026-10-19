@@ -19,7 +19,6 @@ interface CourseLite {
   id: string;
   titleEn: string;
   titleAr?: string | null;
-  modules?: Array<{ id: string; titleEn: string; lessons?: Array<{ id: string; titleEn: string; assignments?: any[] }> }>;
   sections?: Array<{ id: string; titleEn: string; lessons?: Array<{ id: string; titleEn: string }> }>;
 }
 
@@ -75,10 +74,9 @@ export default function AssignmentStudio() {
   const [error, setError] = useState('');
 
   const course = courses.find((c) => c.id === courseId);
-  const lessons = [
-    ...(course?.modules || []).flatMap((m) => (m.lessons || []).map((l) => ({ ...l, moduleName: m.titleEn }))),
-    ...(course?.sections || []).flatMap((s) => (s.lessons || []).map((l) => ({ ...l, moduleName: s.titleEn }))),
-  ];
+  const lessons = (course?.sections || []).flatMap((s) =>
+    (s.lessons || []).map((l) => ({ ...l, moduleName: s.titleEn }))
+  );
 
   const loadCourses = useCallback(async () => {
     setLoading(true);

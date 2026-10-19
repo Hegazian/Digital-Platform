@@ -19,7 +19,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
 
   let testSubject: any;
   let testCourse: any;
-  let testModule: any;
+  let testSection: any;
   let testLesson: any;
 
   async function retryPrisma<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
@@ -164,34 +164,34 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       expect(res.status).toBe(403);
     });
 
-    it('1.3 Non-owner teacher is blocked (403) from adding modules to another teacher course', async () => {
+    it('1.3 Non-owner teacher is blocked (403) from adding sections to another teacher course', async () => {
       const res = await request(app)
-        .post(`/api/v1/courses/${testCourse.id}/modules`)
+        .post(`/api/v1/courses/${testCourse.id}/sections`)
         .set('Authorization', `Bearer ${otherTeacherToken}`)
         .send({
-          titleEn: 'Injected Module',
-          titleAr: 'وحدة غير مصرح بها',
+          titleEn: 'Injected Section',
+          titleAr: 'قسم غير مصرح به',
         });
 
       expect(res.status).toBe(403);
     });
 
-    it('1.4 Course Owner can add modules and lessons with video, PDF, and quiz', async () => {
-      // Add Module
-      const modRes = await request(app)
-        .post(`/api/v1/courses/${testCourse.id}/modules`)
+    it('1.4 Course Owner can add sections and lessons with video, PDF, and quiz', async () => {
+      // Add Section
+      const secRes = await request(app)
+        .post(`/api/v1/courses/${testCourse.id}/sections`)
         .set('Authorization', `Bearer ${teacherOwnerToken}`)
         .send({
           titleEn: 'Unit 1: Circular Motion & Gravitational Fields',
           titleAr: 'الوحدة الأولى: الحركة الدائرية ومجال الجاذبية',
         });
 
-      expect(modRes.status).toBe(201);
-      testModule = modRes.body.data;
+      expect(secRes.status).toBe(201);
+      testSection = secRes.body.data;
 
       // Add Lesson
       const lessonRes = await request(app)
-        .post(`/api/v1/courses/modules/${testModule.id}/lessons`)
+        .post(`/api/v1/courses/sections/${testSection.id}/lessons`)
         .set('Authorization', `Bearer ${teacherOwnerToken}`)
         .send({
           titleEn: 'Lesson 1: Universal Gravitation Constant',
@@ -232,16 +232,16 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       testLesson = lessonRes.body.data;
     });
 
-    it('1.5 Non-owner teacher is blocked (403) from deleting lessons or modules', async () => {
+    it('1.5 Non-owner teacher is blocked (403) from deleting lessons or sections', async () => {
       const deleteLessonRes = await request(app)
         .delete(`/api/v1/courses/lessons/${testLesson.id}`)
         .set('Authorization', `Bearer ${otherTeacherToken}`);
       expect(deleteLessonRes.status).toBe(403);
 
-      const deleteModRes = await request(app)
-        .delete(`/api/v1/courses/modules/${testModule.id}`)
+      const deleteSecRes = await request(app)
+        .delete(`/api/v1/courses/sections/${testSection.id}`)
         .set('Authorization', `Bearer ${otherTeacherToken}`);
-      expect(deleteModRes.status).toBe(403);
+      expect(deleteSecRes.status).toBe(403);
     });
   });
 
@@ -370,10 +370,10 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       // USD must be the exact EGP amount converted at the configured rate.
       const { egpToUsd } = await import('../../utils/currency');
       expect(data.priceUsd).toBe(await egpToUsd(220));
-      expect(data.modules.length).toBeGreaterThan(0);
-      expect(data.modules[0].lessons[0].video.videoUrl).toBe('https://stream.eduplatform.com/vod/gravitation1.mp4');
-      expect(data.modules[0].lessons[0].materials.length).toBe(1);
-      expect(data.modules[0].lessons[0].quiz.questions.length).toBe(1);
+      expect(data.sections.length).toBeGreaterThan(0);
+      expect(data.sections[0].lessons[0].video.videoUrl).toBe('https://stream.eduplatform.com/vod/gravitation1.mp4');
+      expect(data.sections[0].lessons[0].materials.length).toBe(1);
+      expect(data.sections[0].lessons[0].quiz.questions.length).toBe(1);
     });
   });
 });
