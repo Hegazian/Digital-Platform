@@ -105,11 +105,11 @@ To make the repository a **100% Test-Driven Software** across the entire stack, 
 
 ## 4. Code Review Checklist
 
-- [ ] Does `cd client && npm test` execute Vitest unit and component specs and pass 100%?
-- [ ] Does `api.spec.ts` verify single-flight token refresh and session-expired event dispatch?
-- [ ] Are there zero `test.skip` calls remaining in `client/e2e/video.spec.ts`?
-- [ ] Does `client/e2e/auth.spec.ts` strictly assert `expect(toggledDir).not.toBe(initialDir)`?
-- [ ] Does `.github/workflows/ci.yml` run backend `test:coverage` and frontend `npm test` + `npm run build`?
+- [x] Does `cd client && npm test` execute Vitest unit and component specs and pass 100%?
+- [x] Does `api.spec.ts` verify single-flight token refresh and session-expired event dispatch?
+- [x] Are there zero `test.skip` calls remaining in `client/e2e/video.spec.ts`?
+- [x] Does `client/e2e/auth.spec.ts` strictly assert `expect(toggledDir).not.toBe(initialDir)`?
+- [x] Does `.github/workflows/ci.yml` run backend `test:coverage` and frontend `npm test` + `npm run build`?
 
 ---
 

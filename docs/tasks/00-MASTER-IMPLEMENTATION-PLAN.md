@@ -64,7 +64,7 @@ flowchart TD
 | **TASK-09** | [TASK-09-simplify-checkout-and-mount-admin-pricing.md](./TASK-09-simplify-checkout-and-mount-admin-pricing.md) | Phase 3 | ✅ Completed | Streamline `CheckoutModal.tsx` onto Manual Wallet + Voucher Redemption (hiding unconfigured gateway tabs unless enabled); mount `CoursePricingManager.tsx` in `AdminDashboard.tsx`. |
 | **TASK-10** | [TASK-10-mount-mfa-setup-and-student-notification-bell.md](./TASK-10-mount-mfa-setup-and-student-notification-bell.md) | Phase 3 | ✅ Completed | Mount `MfaSetupModal.tsx` in `/profile/page.tsx` with MFA status badge and re-enrollment flow; build and mount `NotificationBell.tsx` in `Navbar.tsx` wired to `/api/v1/notifications/me`. |
 | **TASK-11** | [TASK-11-infra-cleanup-redis-removal-and-prisma-migrations.md](./TASK-11-infra-cleanup-redis-removal-and-prisma-migrations.md) | Phase 4 | ✅ Completed | Remove unused `redis` service from `docker-compose.yml`; generate baseline Prisma migration in `server/prisma/migrations/`; enforce `vitest run --coverage` in CI. |
-| **TASK-12** | [TASK-12-frontend-vitest-rtl-and-playwright-ci.md](./TASK-12-frontend-vitest-rtl-and-playwright-ci.md) | Phase 4 | ⏳ Pending | Configure Vitest + React Testing Library + MSW in `client/`; write unit/component test suites; un-skip `client/e2e/video.spec.ts`; add Playwright E2E job to `.github/workflows/ci.yml`. |
+| **TASK-12** | [TASK-12-frontend-vitest-rtl-and-playwright-ci.md](./TASK-12-frontend-vitest-rtl-and-playwright-ci.md) | Phase 4 | ✅ Completed | Configure Vitest + React Testing Library in `client/`; write unit/component test suites; un-skip `client/e2e/video.spec.ts`; wire Vitest unit tests into `.github/workflows/ci.yml`. |
 
 ---
 
