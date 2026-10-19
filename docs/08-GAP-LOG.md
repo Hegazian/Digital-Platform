@@ -53,7 +53,7 @@ Five complete frontend components exist in `client/src/components/` and are wire
 
 ## C. P2 — Infrastructure, Database & Testing Gaps
 
-1. **No Prisma Migrations Directory**: Schema changes rely on `prisma db push`. Before production deployment, initialize `prisma/migrations/` via `npx prisma migrate dev --name init`.
-2. **Unused Redis Container**: `docker-compose.yml` runs `redis:7-alpine`, but `server/package.json` has no Redis client (`ioredis`/`redis`). Remove Redis from `docker-compose.yml` to simplify local/prod ops, or wire it only when multi-instance scaling is required.
+1. **Prisma Migrations Baseline** — ✅ Resolved in TASK-11: Generated `0001_init/migration.sql` for the simplified 21-model schema with `migration_lock.toml` and `"db:migrate:deploy"` script.
+2. **Unused Redis Container** — ✅ Resolved in TASK-11: Removed `redis` service and `redis_data` volume from `docker-compose.yml`.
 3. **Test Setup Secret Override (✅ Resolved in TASK-01)**: [`server/tests/setup.ts`](../server/tests/setup.ts) now uses `||=` fallback assignment, preserving the 32+ char secrets from `.env.test`.
 4. **Zero Frontend Unit/Component Tests**: `client/` has no Vitest or React Testing Library setup, and Playwright E2E specs (`client/e2e/`) are not executed in `.github/workflows/ci.yml` (`video.spec.ts` is 100% `test.skip`).

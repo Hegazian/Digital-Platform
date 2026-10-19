@@ -57,9 +57,9 @@ Verify that `npx prisma migrate status` and `npm run db:push:test` succeed clean
 
 ## 4. Code Review Checklist
 
-- [ ] Is `redis` removed from `docker-compose.yml`?
-- [ ] Does `server/prisma/migrations/0001_init/migration.sql` exist and accurately represent the 21 core Prisma models and enums?
-- [ ] Does `npm run test:coverage` in `server/` pass all suites and meet the Vitest coverage thresholds?
+- [x] Is `redis` removed from `docker-compose.yml`?
+- [x] Does `server/prisma/migrations/0001_init/migration.sql` exist and accurately represent the 21 core Prisma models and enums?
+- [x] Does `npm run test:coverage` in `server/` pass all suites and meet the Vitest coverage thresholds?
 
 ---
 
