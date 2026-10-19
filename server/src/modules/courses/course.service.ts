@@ -698,7 +698,8 @@ export class CourseService {
   static async reviewCourseStatus(
     courseId: string,
     decision: 'APPROVED' | 'REJECTED',
-    rejectionReason?: string
+    rejectionReason?: string,
+    reviewerUserId?: string
   ) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) {
@@ -717,13 +718,15 @@ export class CourseService {
       },
     });
 
-    await logAuditAction(
-      'ADMIN',
-      decision === 'APPROVED' ? 'COURSE_APPROVED' : 'COURSE_REJECTED',
-      courseId,
-      'Course',
-      { decision, rejectionReason }
-    );
+    if (reviewerUserId) {
+      await logAuditAction(
+        reviewerUserId,
+        decision === 'APPROVED' ? 'COURSE_APPROVED' : 'COURSE_REJECTED',
+        courseId,
+        'Course',
+        { decision, rejectionReason }
+      );
+    }
 
     return updated;
   }

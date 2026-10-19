@@ -103,6 +103,28 @@ describe('Zoom Live Classes Integration Tests', () => {
 
       expect(res.status).toBe(403);
     });
+
+    it('should store custom meeting join URL when provided by teacher', async () => {
+      const customMeetingUrl = 'https://meet.google.com/abc-defg-hij';
+      const res = await request(app)
+        .post('/api/v1/live/sessions')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({
+          subjectId,
+          titleEn: 'Interactive Google Meet Class',
+          titleAr: 'حصة تفاعلية عبر جوجل ميت',
+          startTime: new Date(Date.now() + 7200 * 1000).toISOString(),
+          durationMinutes: 45,
+          joinUrl: customMeetingUrl,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.zoomJoinUrl).toBe(customMeetingUrl);
+
+      // Cleanup
+      await prisma.liveSession.deleteMany({ where: { id: res.body.data.id } });
+    });
   });
 
   describe('GET /api/v1/live/sessions/subject/:subjectId', () => {

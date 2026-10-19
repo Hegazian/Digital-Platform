@@ -75,6 +75,33 @@ describe('Course Governance & Lifecycle Unit Tests', () => {
         })
       );
     });
+
+    it('should pass reviewerUserId to audit log instead of literal ADMIN', async () => {
+      const mockCourse = { id: 'c1', titleEn: 'Biology 1', status: 'UNDER_REVIEW' };
+      (prisma.course.findUnique as any).mockResolvedValue(mockCourse);
+      (prisma.course.update as any).mockResolvedValue({
+        ...mockCourse,
+        status: 'PUBLISHED',
+        isPublished: true,
+      });
+
+      await CourseService.reviewCourseStatus(
+        'c1',
+        'APPROVED',
+        undefined,
+        'admin-uuid-123'
+      );
+
+      expect(prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: 'admin-uuid-123',
+            action: 'COURSE_APPROVED',
+            entityId: 'c1',
+          }),
+        })
+      );
+    });
   });
 
   describe('deleteCourse vs archiveCourse', () => {

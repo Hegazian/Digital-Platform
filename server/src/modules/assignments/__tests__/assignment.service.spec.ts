@@ -3,6 +3,7 @@ import { prisma } from '../../../prisma';
 import { AssignmentService } from '../assignment.service';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../../utils/errors';
 import { Role, AssignmentSubmissionStatus } from '@prisma/client';
+import { submitAssignmentSchema } from '../../../utils/schemas';
 
 vi.mock('../../../prisma', () => ({
   prisma: {
@@ -257,6 +258,36 @@ describe('AssignmentService Unit Tests', () => {
           score: 80,
         })
       ).rejects.toThrow(ForbiddenError);
+    });
+  });
+
+  describe('submitAssignmentSchema validation', () => {
+    it('should accept local /uploads/... relative path as fileUrl', () => {
+      const parsed = submitAssignmentSchema.parse({
+        submissionText: 'Done',
+        files: [
+          {
+            fileUrl: '/uploads/submission-files/123-hw.pdf',
+            fileName: 'hw.pdf',
+            sizeBytes: 1024,
+          },
+        ],
+      });
+      expect(parsed.files?.[0].fileUrl).toBe('/uploads/submission-files/123-hw.pdf');
+    });
+
+    it('should accept standard http/https URL as fileUrl', () => {
+      const parsed = submitAssignmentSchema.parse({
+        submissionText: 'Done',
+        files: [
+          {
+            fileUrl: 'https://example.com/files/hw.pdf',
+            fileName: 'hw.pdf',
+            sizeBytes: 1024,
+          },
+        ],
+      });
+      expect(parsed.files?.[0].fileUrl).toBe('https://example.com/files/hw.pdf');
     });
   });
 });

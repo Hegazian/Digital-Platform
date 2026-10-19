@@ -204,15 +204,31 @@ export const createAssignmentSchema = z.object({
   maxAttempts: z.number().int().min(1).optional(),
 });
 
+const fileUrlSchema = z.string().refine(
+  (val) => val.startsWith('/uploads/') || /^https?:\/\/.+/.test(val),
+  { message: 'Must be a valid HTTP(S) URL or local /uploads/ path' }
+);
+
 export const submitAssignmentSchema = z.object({
   submissionText: z.string().optional(),
   files: z.array(
     z.object({
-      fileUrl: z.string().url('Invalid file URL'),
+      fileUrl: fileUrlSchema,
       fileName: z.string().min(1, 'File name is required'),
       sizeBytes: z.number().optional(),
     })
   ).optional(),
+});
+
+// Live Sessions Schema
+export const createLiveSessionSchema = z.object({
+  subjectId: z.string().min(1, 'subjectId is required'),
+  titleEn: z.string().min(2, 'titleEn is required'),
+  titleAr: z.string().min(2, 'titleAr is required'),
+  startTime: z.string().datetime({ message: 'Invalid ISO date' }),
+  durationMinutes: z.number().int().min(15).max(360),
+  joinUrl: z.string().url('Invalid meeting join URL').optional(),
+  zoomStartUrl: z.string().url('Invalid host start URL').optional(),
 });
 
 // Progress Schema

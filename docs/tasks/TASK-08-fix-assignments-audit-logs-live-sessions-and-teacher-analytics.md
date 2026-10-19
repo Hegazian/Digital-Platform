@@ -115,10 +115,10 @@ Run all backend and frontend tests and verify no regressions in `live`, `teacher
 
 ## 4. Code Review Checklist
 
-- [ ] Can a student upload a local file via `POST /api/v1/assignments/uploads` and submit the returned `/uploads/submission-files/...` URL to `POST /api/v1/assignments/:id/submit` without a Zod error?
-- [ ] Does `POST /api/v1/courses/:id/review` create a valid `AuditLog` row linked to the reviewing Admin's `userId`?
-- [ ] Can a teacher enter a real Zoom / Google Meet / Teams URL in `LiveSessionManager.tsx`?
-- [ ] Does `TeacherService` include students with `COURSE`-level entitlements and compute revenue from actual `PAID` orders?
+- [x] Can a student upload a local file via `POST /api/v1/assignments/uploads` and submit the returned `/uploads/submission-files/...` URL to `POST /api/v1/assignments/:id/submit` without a Zod error?
+- [x] Does `POST /api/v1/courses/:id/review` create a valid `AuditLog` row linked to the reviewing Admin's `userId`?
+- [x] Can a teacher enter a real Zoom / Google Meet / Teams URL in `LiveSessionManager.tsx`?
+- [x] Does `TeacherService` include students with `COURSE`-level entitlements and compute revenue from actual `PAID` orders?
 
 ---
 

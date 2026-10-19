@@ -191,7 +191,12 @@ export class CourseController {
   static async reviewCourseStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { decision, rejectionReason } = req.body;
-      const course = await CourseService.reviewCourseStatus(req.params.id as string, decision, rejectionReason);
+      const course = await CourseService.reviewCourseStatus(
+        req.params.id as string,
+        decision,
+        rejectionReason,
+        req.user?.userId
+      );
       res.status(200).json({ success: true, data: course });
     } catch (error) {
       next(error);
