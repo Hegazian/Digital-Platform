@@ -88,7 +88,6 @@ describe('Config-driven branding & settings round-trip', () => {
       currency: 'EGP',
       requireCourseApproval: false,
       allowTeacherRegistration: false,
-      enableCodePlaygrounds: true,
       primaryColor: '#7c3aed',
     };
 

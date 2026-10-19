@@ -26,7 +26,6 @@ import CourseCreateModal from './modals/CourseCreateModal';
 import CourseEditModal from './modals/CourseEditModal';
 import CreateModuleModal from './modals/CreateModuleModal';
 import CreateLessonModal from './modals/CreateLessonModal';
-import EditModuleModal, { EditableModule } from './modals/EditModuleModal';
 import EditLessonModal, { EditableLesson } from './modals/EditLessonModal';
 import EditSectionModal, { EditableSection } from './modals/EditSectionModal';
 
@@ -35,7 +34,6 @@ interface Subject {
   nameEn: string;
   nameAr: string;
 }
-
 
 interface CourseManagerProps {
   courses: any[];
@@ -57,13 +55,11 @@ export default function CourseManager({
 
   // Inline edit targets (FR-TEACHER-005/006): the row being edited opens the
   // matching modal; key={id} at render time keeps form state in sync.
-  const [editingModule, setEditingModule] = useState<EditableModule | null>(null);
   const [editingLesson, setEditingLesson] = useState<EditableLesson | null>(null);
   const [editingSection, setEditingSection] = useState<EditableSection | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState('');
 
   const [selectedCourseId, setSelectedCourseId] = useState(courses[0]?.id || '');
-  const [selectedModuleId, setSelectedModuleId] = useState('');
   const [selectedLessonId, setSelectedLessonId] = useState('');
 
   // Keep selectedCourseId in sync with courses array
@@ -98,23 +94,6 @@ export default function CourseManager({
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleDeleteModule = async (moduleId: string) => {
-    if (!confirm('Are you sure you want to delete this module and all its lessons?')) return;
-
-    setLoading(true);
-    setError('');
-    setMessage('');
-
-    try {
-      await fetchApi(`/courses/modules/${moduleId}`, { method: 'DELETE' });
-      setMessage('Module deleted successfully!');
-      onRefreshCourses();
-    } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to delete module'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteLesson = async (lessonId: string) => {
     if (!confirm('Are you sure you want to delete this lesson?')) return;
@@ -135,17 +114,6 @@ export default function CourseManager({
   };
 
   // --- Reorder & Edit (FR-TEACHER-005/006) ---
-  // Full editing lives in EditModuleModal / EditLessonModal; these openers
-  // replace the old single-field browser prompt() rename.
-  const openEditModule = (mod: any) => {
-    setEditingModule({
-      id: mod.id,
-      titleEn: mod.titleEn,
-      titleAr: mod.titleAr,
-      description: mod.description,
-    });
-  };
-
   const openEditLesson = (les: any) => {
     setEditingLesson({
       id: les.id,
@@ -159,29 +127,6 @@ export default function CourseManager({
     });
   };
 
-  const handleReorderModule = async (index: number, direction: -1 | 1) => {
-    if (!selectedCourse?.modules?.length) return;
-    const modules = [...selectedCourse.modules];
-    const targetIdx = index + direction;
-    if (targetIdx < 0 || targetIdx >= modules.length) return;
-
-    [modules[index], modules[targetIdx]] = [modules[targetIdx], modules[index]];
-    setLoading(true);
-    setError('');
-    try {
-      await fetchApi(`/courses/${selectedCourse.id}/modules/reorder`, {
-        method: 'POST',
-        body: JSON.stringify({
-          modules: modules.map((m: any, i: number) => ({ id: m.id, sortOrder: i })),
-        }),
-      });
-      onRefreshCourses();
-    } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to reorder modules'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleReorderLesson = async (moduleLessons: any[], index: number, direction: -1 | 1) => {
     const lessons = [...moduleLessons];
@@ -364,11 +309,8 @@ export default function CourseManager({
 
   // Quiz Form Helpers
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) || courses[0];
-  // Curriculum units are EITHER modules (rich) OR sections (light) — never both.
-  const unitsAreSections = !(selectedCourse?.modules && selectedCourse.modules.length > 0);
-  const curriculumUnits = unitsAreSections
-    ? selectedCourse?.sections || []
-    : selectedCourse?.modules || [];
+  // Curriculum units are sections
+  const curriculumUnits = selectedCourse?.sections || [];
 
   return (
     <div className="space-y-6">
@@ -451,7 +393,7 @@ export default function CourseManager({
                 <p className="text-xs text-slate-400 line-clamp-2 mb-3">{c.description}</p>
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-800/60">
                   <span>{c.subject?.nameEn || 'General'}</span>
-                  <span>{(c.modules?.length || c.sections?.length || 0)} Modules</span>
+                  <span>{(c.sections?.length || 0)} Sections</span>
                 </div>
               </div>
             ))}
@@ -495,7 +437,7 @@ export default function CourseManager({
                     className="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-md flex items-center gap-1.5 transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>{unitsAreSections ? 'Add Section' : 'Add Module'}</span>
+                    <span>Add Section</span>
                   </button>
 
                   {selectedCourse.status === 'PUBLISHED' ? (
@@ -550,69 +492,65 @@ export default function CourseManager({
                 </div>
               )}
 
-              {/* Modules & Lessons List */}
+              {/* Sections & Lessons List */}
               {curriculumUnits.length === 0 ? (
                 <div className="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 space-y-3">
                   <BookOpen className="w-8 h-8 text-slate-600 mx-auto" />
-                  <p className="text-sm font-semibold text-white">No Modules Added Yet</p>
-                  <p className="text-xs text-slate-400">Click &quot;Add Module&quot; above to add your first chapter.</p>
+                  <p className="text-sm font-semibold text-white">No Sections Added Yet</p>
+                  <p className="text-xs text-slate-400">Click &quot;Add Section&quot; above to add your first chapter.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {curriculumUnits.map((mod: any, idx: number) => (
-                    <div key={mod.id || idx} className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                  {curriculumUnits.map((section: any, idx: number) => (
+                    <div key={section.id || idx} className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <span className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 text-xs font-bold flex items-center justify-center border border-indigo-500/20">
                             {idx + 1}
                           </span>
                           <h4 className="font-bold text-white text-sm">
-                            {lang === 'ar' ? mod.titleAr || mod.titleEn : mod.titleEn}
+                            {lang === 'ar' ? section.titleAr || section.titleEn : section.titleEn}
                           </h4>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => (unitsAreSections ? handleReorderSection(idx, -1) : handleReorderModule(idx, -1))}
+                            onClick={() => handleReorderSection(idx, -1)}
                             disabled={idx === 0 || loading}
                             className="p-1 rounded-lg text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10 transition disabled:opacity-30"
-                            title={unitsAreSections ? 'Move section up' : 'Move module up'}
+                            title="Move section up"
                           >
                             <ChevronUp className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => (unitsAreSections ? handleReorderSection(idx, 1) : handleReorderModule(idx, 1))}
+                            onClick={() => handleReorderSection(idx, 1)}
                             disabled={idx === curriculumUnits.length - 1 || loading}
                             className="p-1 rounded-lg text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10 transition disabled:opacity-30"
-                            title={unitsAreSections ? 'Move section down' : 'Move module down'}
+                            title="Move section down"
                           >
                             <ChevronDown className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => (unitsAreSections
-                              ? setEditingSection({
-                                  id: mod.id,
-                                  titleEn: mod.titleEn,
-                                  titleAr: mod.titleAr,
-                                  isFreePreview: !!mod.isFreePreview,
-                                })
-                              : openEditModule(mod))}
+                            onClick={() =>
+                              setEditingSection({
+                                id: section.id,
+                                titleEn: section.titleEn,
+                                titleAr: section.titleAr,
+                                isFreePreview: !!section.isFreePreview,
+                              })
+                            }
                             className="p-1 rounded-lg text-slate-500 hover:text-white transition"
-                            title={unitsAreSections ? 'Edit Section' : 'Edit Module'}
+                            title="Edit Section"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                          {unitsAreSections && mod.isFreePreview && (
+                          {section.isFreePreview && (
                             <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
                               Free Preview
                             </span>
                           )}
                           <button
                             onClick={() => {
-                              if (unitsAreSections) {
-                                setSelectedSectionId(mod.id);
-                              } else {
-                                setSelectedModuleId(mod.id);
-                              }
+                              setSelectedSectionId(section.id);
                               setShowCreateLessonModal(true);
                             }}
                             className="py-1 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-xs font-semibold flex items-center gap-1 transition"
@@ -621,21 +559,21 @@ export default function CourseManager({
                             <span>Add Lesson</span>
                           </button>
                           <button
-                            onClick={() => (unitsAreSections ? handleDeleteSection(mod.id) : handleDeleteModule(mod.id))}
+                            onClick={() => handleDeleteSection(section.id)}
                             className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition"
-                            title={unitsAreSections ? 'Delete Section' : 'Delete Module'}
+                            title="Delete Section"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Lessons in this Module */}
+                      {/* Lessons in this Section */}
                       <div className="pl-6 space-y-2">
-                        {(mod.lessons || []).length === 0 ? (
-                          <p className="text-[11px] text-slate-500 italic">No lessons in this module. Add one above.</p>
+                        {(section.lessons || []).length === 0 ? (
+                          <p className="text-[11px] text-slate-500 italic">No lessons in this section. Add one above.</p>
                         ) : (
-                          (mod.lessons || []).map((les: any, lIdx: number) => (
+                          (section.lessons || []).map((les: any, lIdx: number) => (
                             <div
                               key={les.id || lIdx}
                               className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
@@ -696,7 +634,7 @@ export default function CourseManager({
 
                               <div className="flex items-center gap-2 self-end sm:self-auto">
                                 <button
-                                  onClick={() => handleReorderLesson(mod.lessons, lIdx, -1)}
+                                  onClick={() => handleReorderLesson(section.lessons, lIdx, -1)}
                                   disabled={lIdx === 0 || loading}
                                   className="p-1 rounded text-slate-500 hover:text-indigo-300 transition disabled:opacity-30"
                                   title="Move lesson up"
@@ -704,8 +642,8 @@ export default function CourseManager({
                                   <ChevronUp className="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                  onClick={() => handleReorderLesson(mod.lessons, lIdx, 1)}
-                                  disabled={lIdx === (mod.lessons || []).length - 1 || loading}
+                                  onClick={() => handleReorderLesson(section.lessons, lIdx, 1)}
+                                  disabled={lIdx === (section.lessons || []).length - 1 || loading}
                                   className="p-1 rounded text-slate-500 hover:text-indigo-300 transition disabled:opacity-30"
                                   title="Move lesson down"
                                 >
@@ -769,16 +707,14 @@ export default function CourseManager({
       <CreateModuleModal
         open={showCreateModuleModal}
         courseId={selectedCourseId}
-        kind={unitsAreSections ? 'section' : 'module'}
         onClose={() => setShowCreateModuleModal(false)}
         onCreated={onRefreshCourses}
       />
 
       <CreateLessonModal
-        key={selectedModuleId || selectedSectionId || 'new-lesson'}
+        key={selectedSectionId || 'new-lesson'}
         open={showCreateLessonModal}
-        moduleId={unitsAreSections ? undefined : selectedModuleId}
-        sectionId={unitsAreSections ? selectedSectionId : undefined}
+        sectionId={selectedSectionId}
         onClose={() => setShowCreateLessonModal(false)}
         onCreated={onRefreshCourses}
       />
@@ -792,21 +728,6 @@ export default function CourseManager({
           onUpdated={() => {
             setEditingSection(null);
             setMessage('Section updated successfully!');
-            onRefreshCourses();
-          }}
-        />
-      )}
-
-      {/* Edit Module / Lesson — key forces fresh form state per target row */}
-      {editingModule && (
-        <EditModuleModal
-          key={editingModule.id}
-          open
-          module={editingModule}
-          onClose={() => setEditingModule(null)}
-          onUpdated={() => {
-            setEditingModule(null);
-            setMessage('Module updated successfully!');
             onRefreshCourses();
           }}
         />
@@ -842,7 +763,6 @@ export default function CourseManager({
                   <option value="VIDEO">Video Stream</option>
                   <option value="TEXT">Rich Text Notes</option>
                   <option value="DOCUMENT">PDF Document</option>
-                  <option value="BOARD">Whiteboard</option>
                 </select>
               </div>
 

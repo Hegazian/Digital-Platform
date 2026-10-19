@@ -176,14 +176,14 @@ describe('End-to-End Journeys', () => {
         .send({ isFree: true });
       expect(pricing.status).toBe(200);
 
-      const mod = await request(app)
-        .post(`/api/v1/courses/${cleanupIds.courseId}/modules`)
+      const section = await request(app)
+        .post(`/api/v1/courses/${cleanupIds.courseId}/sections`)
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({ titleEn: 'Mechanics', titleAr: 'ميكانيكا' });
-      expect(mod.status).toBe(201);
+      expect(section.status).toBe(201);
 
       const lesson = await request(app)
-        .post(`/api/v1/courses/modules/${mod.body.data.id}/lessons`)
+        .post(`/api/v1/courses/sections/${section.body.data.id}/lessons`)
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({
           titleEn: 'Newton Laws',
@@ -242,7 +242,7 @@ describe('End-to-End Journeys', () => {
       expect(anon.status).toBe(200);
       expect(anon.body.data.status).toBe('PUBLISHED');
       // Answer keys must not leak to anonymous viewers
-      const q = anon.body.data.modules[0].lessons[0].quiz.questions[0];
+      const q = anon.body.data.sections[0].lessons[0].quiz.questions[0];
       expect(q.options.some((o: any) => o.isCorrect === true)).toBe(false);
     });
   });

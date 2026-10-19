@@ -30,13 +30,32 @@ export function getUploadsRoot(): string {
 }
 
 /**
+ * Returns the path to the temporary uploads directory (.tmp inside uploads root).
+ * Ensures the directory exists.
+ */
+export function getTempUploadsDir(): string {
+  const tempDir = path.join(getUploadsRoot(), '.tmp');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  return tempDir;
+}
+
+/**
  * Storage Utility for handling file uploads (Supabase Storage with local fallback).
  */
 export class StorageService {
   /**
-   * Upload a file buffer to Supabase Storage or local fallback.
+   * Upload a file buffer or disk path to Supabase Storage or local fallback.
+   * If a disk path is provided, moves/copies the file and cleans up the temp file.
    */
-  static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials'): Promise<string> {
+  static async uploadFile(
+    fileBufferOrPath: Buffer | string,
+    fileName: string,
+    mimeType: string,
+    bucketName: string = 'lesson-materials'
+  ): Promise<string> {
+    const isDiskPath = typeof fileBufferOrPath === 'string';
     const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
@@ -45,6 +64,7 @@ export class StorageService {
     if (supabaseUrl && supabaseKey) {
       try {
         const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${uniqueFileName}`;
+        const body = isDiskPath ? fs.readFileSync(fileBufferOrPath) : fileBufferOrPath;
         const response = await fetch(uploadUrl, {
           method: 'POST',
           headers: {
@@ -53,10 +73,13 @@ export class StorageService {
             'Content-Type': mimeType,
             'x-upsert': 'true',
           },
-          body: fileBuffer as any,
+          body: body as any,
         });
 
         if (response.ok) {
+          if (isDiskPath && fs.existsSync(fileBufferOrPath)) {
+            try { fs.unlinkSync(fileBufferOrPath); } catch {}
+          }
           // For materials we return public URL, for videos we return the raw object path to be signed later
           if (bucketName === 'lesson-materials') {
             return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${uniqueFileName}`;
@@ -76,7 +99,18 @@ export class StorageService {
     }
 
     const localFilePath = path.join(uploadDir, uniqueFileName);
-    fs.writeFileSync(localFilePath, fileBuffer);
+
+    if (isDiskPath) {
+      try {
+        fs.renameSync(fileBufferOrPath, localFilePath);
+      } catch (err: any) {
+        // Fallback for cross-device moves
+        fs.copyFileSync(fileBufferOrPath, localFilePath);
+        try { fs.unlinkSync(fileBufferOrPath); } catch {}
+      }
+    } else {
+      fs.writeFileSync(localFilePath, fileBufferOrPath);
+    }
 
     return `/uploads/${bucketName}/${uniqueFileName}`;
   }

@@ -19,7 +19,7 @@ export interface EditableQuizOption {
 
 export interface EditableQuizQuestion {
   questionText: string;
-  type: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER' | 'ESSAY';
+  type: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER';
   points: number;
   correctAnswer?: string;
   options: EditableQuizOption[];
@@ -798,7 +798,6 @@ export default function EditLessonModal({ open, lesson, onClose, onUpdated }: Ed
                           <option value="TRUE_FALSE">True / False</option>
                           <option value="MULTIPLE_SELECT">Multiple Select</option>
                           <option value="SHORT_ANSWER">Short Answer</option>
-                          <option value="ESSAY">Essay</option>
                         </select>
                         <button
                           type="button"
@@ -892,12 +891,6 @@ export default function EditLessonModal({ open, lesson, onClose, onUpdated }: Ed
                           onChange={(e) => updateQuestion(qIdx, { correctAnswer: e.target.value })}
                           className={`${inputCls} ml-4`}
                         />
-                      )}
-
-                      {q.type === 'ESSAY' && (
-                        <p className="text-[10px] text-slate-500 ml-4 italic">
-                          Essay answers are flagged for manual review after submission.
-                        </p>
                       )}
                     </div>
                   );

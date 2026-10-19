@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { VideoController } from './video.controller';
 import { authenticate, requireApprovedTeacher } from '../auth/auth.middleware';
 import multer from 'multer';
+import path from 'path';
 import { BadRequestError } from '../../utils/errors';
+import { getTempUploadsDir } from '../../utils/storage';
 
 const router = Router();
 
-// Configure multer for memory storage (we upload to Supabase or handle local storage inside the service)
+// Configure multer for disk storage streaming (prevents V8 heap OOM on large 500MB uploads)
 const ALLOWED_VIDEO_MIME = new Set([
   'video/mp4',
   'video/webm',
@@ -16,13 +18,24 @@ const ALLOWED_VIDEO_MIME = new Set([
   'video/mpeg',
 ]);
 
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, getTempUploadsDir());
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, unique);
+  },
+});
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: {
     fileSize: 500 * 1024 * 1024, // 500 MB limit
   },
   fileFilter: (_req, file, cb) => {
-    // NFR-001 / TC-TEACHER-063: reject unsupported uploads with a clear error.
+    // NFR-001 / TC-TEACHER-063: reject unsupported uploads before streaming to disk.
     if (ALLOWED_VIDEO_MIME.has(file.mimetype)) {
       return cb(null, true);
     }

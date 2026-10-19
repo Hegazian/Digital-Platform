@@ -1,7 +1,6 @@
-# 🎓 EduPlatform — Enterprise Next-Gen Educational & E-Learning Platform
+# 🎓 EduPlatform — Bilingual Educational & E-Learning Platform
 
 [![CI Pipeline](https://github.com/Hegazian/Digital-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Hegazian/Digital-Platform/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg?logo=next.js)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg?logo=node.js)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express-5.x-lightgrey.svg?logo=express)](https://expressjs.com/)
@@ -10,38 +9,34 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 
-An enterprise-grade, paid, bilingual (**Arabic RTL / English LTR**) educational platform designed for modern digital learning. Originally architected for the Egyptian secondary school curriculum (Thanaweya Amma), **EduPlatform is fully generic and customizable for any curriculum, topic, or educational institution** via the comprehensive administrative content governance engine.
+A paid, bilingual (**English LTR / Arabic RTL**) educational platform built with an **Express 5 + TypeScript + Prisma** modular monolith backend and a **Next.js 14 App Router** frontend. Originally scoped for the Egyptian secondary curriculum (Thanaweya Amma), the platform's academic hierarchy, branding, and landing page copy are dynamically configurable from the Admin Dashboard.
+
+👉 **Full Technical Documentation**: See [`docs/README.md`](./docs/README.md) for the complete architecture, data model, API catalog, security guide, and engineering gap log.
 
 ---
 
-## 🌟 Key Highlights & Capabilities
+## 🌟 Core Capabilities (As-Built)
 
-### 🎨 Fully Configurable & Rebrandable (Generic for Any Topic)
-- **Live Landing Page Content Editor**: Administrators can customize all homepage words, headlines, value propositions, CTAs, "How It Works" steps, teacher recruitment banners, and footer copy in real time.
-- **Dynamic Topic & Specialty Badges**: Add, edit, reorder, or remove topic/curriculum badges (e.g. *Engineering*, *Computer Science & AI*, *Medical Sciences*, *Languages*, *Business*) directly from the Admin Dashboard.
-- **Dynamic Bilingual Identity**: Full RTL/LTR internationalization (Arabic *Tajawal* & English *Inter*) with customizable platform slogans, marketing descriptions, accent themes, and SEO meta tags.
-- **Multi-Currency Pricing**: Native support for **EGP**, **USD**, and **SAR** with automated exchange rate conversion and single source-of-truth pricing.
+### 🎨 Dynamic Branding & Platform Configuration
+- **Live Landing Page Content Editor**: Administrators can customize homepage headlines, value propositions, CTAs, "How It Works" steps, teacher recruitment banners, and footer copy via `AppConfig.homeContent`.
+- **Bilingual Identity (EN / AR)**: Full LTR/RTL support (`Inter` and `Tajawal` fonts) with runtime language switching, customizable slogans, and dynamic `--brand-primary` CSS theme injection.
+- **Dual-Currency Pricing (EGP & USD)**: Admin-configured EGP base pricing with automated USD conversion via `AppConfig.exchangeRateUsdToEgp`.
 
-### 🛡️ Enterprise Security & Auth Architecture
-- **JWT Refresh Token Rotation**: Secure token families with reuse detection and instant family revocation.
-- **Two-Factor Authentication (MFA / 2FA)**: Time-based One-Time Password (TOTP) setup with QR code generation, backup codes, and strict route gating.
-- **Role-Based Access Control (RBAC)**: Fine-grained permissions across 4 distinct roles: `STUDENT`, `TEACHER`, `PARENT`, and `ADMIN`.
-- **Developer API & Webhooks**: Scoped API token management with SHA-256 hash storage and HMAC-signed webhook event delivery.
+### 🛡️ Authentication, RBAC & Security
+- **JWT Access + Rotating Refresh Tokens**: Short-lived Bearer access tokens (`15m`) paired with `httpOnly` refresh cookies (`eduplat_rt`, `7d`) backed by a server-side SHA-256 `RefreshToken` registry and token-family reuse revocation.
+- **Two-Factor Authentication (TOTP MFA)**: RFC 6238 TOTP enrollment with QR code generation and replay protection (`mfaLastTimeStep`).
+- **Role-Based Access Control (RBAC)**: Three distinct roles (`STUDENT`, `TEACHER`, `ADMIN`) plus secondary teacher approval gating (`TeacherStatus`: `PENDING`, `APPROVED`, `REJECTED`).
 
-### 📚 Learning & Course Delivery Engine
-- **Hierarchical Curriculum Model**: Multi-level hierarchy supporting Stages, Grades, Terms, Subjects, Courses, Sections, and Lessons.
-- **Content-Based Free Preview**: Automatic free preview access for initial course sections to drive conversions without subscription requirements.
-- **AES-128 HLS Encrypted Video Streaming**: Self-hosted video delivery with on-the-fly binary decryption key distribution exclusively to authorized subscribers.
-- **Interactive In-Browser Code Playground**: Isolated Python execution sandbox for programming lessons with memory and timeout enforcement.
-- **Real-Time Collaborative Whiteboards**: Multiplayer drawing canvas for live problem-solving and teacher demonstrations.
-- **AI Tutor Drawer**: In-context conversational AI assistant to answer student questions and explain complex lessons.
-- **Assessments, Quizzes & Assignments**: Comprehensive testing suite with auto-grading, student submission workflows, teacher feedback, and deadline enforcement.
-- **Parent Portal & Progress Tracking**: Family invitation linking allowing parents to monitor student watch time, attendance, quiz scores, and course progress.
+### 📚 Course Delivery & Learning Tools
+- **Academic Hierarchy**: `EducationalStage` → `Grade` → `AcademicYear` → `GradeSubject` → `Subject` → `Course` → `Section` → `Lesson` → `LessonBlock`.
+- **Course Governance Workflow**: `DRAFT` → `UNDER_REVIEW` → `APPROVED` → `PUBLISHED` / `REJECTED` / `ARCHIVED`, with soft-delete protection (`deletedAt`).
+- **Gated Video & Material Delivery**: Video upload (local disk or Supabase Storage) with entitlement-checked playback URLs and HMAC-SHA256 signed local range streaming (`/api/v1/videos/:videoId/stream`).
+- **Quizzes & Assignments**: Timed auto-graded lesson quizzes (MCQ, True/False, Multi-Select, Short Answer) and file/text homework assignments with teacher grading and feedback.
+- **Interactive Lesson Blocks**: Support for `VIDEO`, `TEXT`, `DOCUMENT`, `QUIZ`, `ASSIGNMENT`, `LIVE_SESSION`, and `LINK` blocks, plus an authenticated Google Gemini AI Tutor drawer (`POST /api/v1/ai/tutor`).
 
-### 💳 Commerce & Subscription Engine
-- **Egyptian & International Payment Gateways**: Integration-ready endpoints for **Paymob**, **Fawry**, Credit/Debit Cards, and Mobile Wallets (Vodafone Cash, Orange, Etisalat, InstaPay).
-- **Voucher Redemption System**: Atomic redemption of pre-paid physical or digital voucher codes with race-condition prevention.
-- **Granular Entitlements**: Automatic subscription resolution per subject or course bundle with expiration scheduling.
+### 💳 Commerce, Subscriptions & Entitlements
+- **Hierarchical Entitlement Resolver**: Access granted via direct `COURSE` purchase, parent `SUBJECT` subscription/purchase, or `GRADE_BUNDLE` entitlement, plus `Section.isFreePreview` and `Course.isFree` support.
+- **Payment Channels**: Manual wallet subscriptions/orders (Vodafone Cash, InstaPay) with Admin reconciliation queues, atomic `Voucher` code redemption, and HMAC-verified inbound webhooks for **Paymob** and **Fawry**.
 
 ---
 
@@ -50,68 +45,63 @@ An enterprise-grade, paid, bilingual (**Arabic RTL / English LTR**) educational 
 ```mermaid
 graph TB
     subgraph Client["Frontend Client (Next.js 14 App Router - Port 3000)"]
-        UI["Tailwind CSS Glassmorphism + Lucide React"]
-        Zustand["Zustand State (Auth, Lang, Navigation)"]
-        ConfigHook["useConfigStore & useHomeContent()"]
-        Monaco["CodeMirror Python Sandbox & Collaborative Canvas"]
+        UI["Tailwind CSS + Bilingual LTR/RTL UI"]
+        Zustand["Zustand Stores (useAppStore, useConfigStore)"]
+        RQ["TanStack React Query + fetchApi Auto-Refresh"]
     end
 
     subgraph Server["Backend API (Express 5 + TypeScript - Port 5000)"]
-        Router["Express REST Router + Zod Validators"]
-        AuthM["Auth & MFA Middleware (JWT Family Rotation)"]
-        Modules["Commerce, Courses, Quizzes, Videos, Config, Whiteboard, AI"]
-        PrismaClient["Prisma ORM Client"]
+        Router["Express REST Router (/api/v1/*) + Zod Validation"]
+        AuthM["Auth, TOTP MFA & RBAC Middleware"]
+        Modules["19 Domain Modules (Courses, Commerce, Quizzes, Videos, etc.)"]
+        PrismaClient["Prisma ORM Client + In-Memory TTL Cache"]
     end
 
-    subgraph DataTier["Data & Infrastructure Tier"]
-        PG_Dev["PostgreSQL Dev Database (Port 5434)"]
-        PG_Test["PostgreSQL Test Database (Port 5433)"]
-        Redis["Redis 7 (Port 6379 - Caching & Realtime Sessions)"]
-        Storage["Storage (Local / Cloudflare R2 / S3 Encrypted Segments)"]
+    subgraph DataTier["Data & Storage Tier"]
+        PG_Dev["PostgreSQL 15 Dev DB (eduplatform_dev - Port 5434)"]
+        PG_Test["PostgreSQL 15 Test DB (eduplatform_test - Port 5433)"]
+        Storage["Storage (Local server/uploads/ or Supabase Storage)"]
     end
 
-    Client -->|HTTPS REST & Dynamic Config| Server
-    Client -->|WebSocket| Server
-    Server -->|ORM Queries| PrismaClient
+    Client -->|Same-Origin /api/v1 Rewrite + httpOnly Cookie| Router
+    Router --> AuthM
+    AuthM --> Modules
+    Modules --> PrismaClient
     PrismaClient --> PG_Dev
-    Server --> Redis
-    Server --> Storage
+    PrismaClient -.->|Vitest Suite| PG_Test
+    Modules --> Storage
 ```
 
 ---
 
 ## 📁 Repository Structure
 
-```
+```text
 digital-platform/
-├── client/                     # Next.js 14 Frontend Application
+├── client/                     # Next.js 14.2.35 App Router Frontend
+│   ├── e2e/                    # Playwright E2E test specifications
 │   ├── src/
-│   │   ├── app/                # App Router (Pages, Layouts, Providers)
-│   │   ├── components/         # Reusable UI, Admin Panels, Modals, Player
-│   │   │   ├── admin/          # Admin Dashboard (PlatformSettings, Queue, Tokens)
-│   │   │   ├── editor/         # Code Playground & Collaborative Whiteboard
-│   │   │   ├── teacher/        # Teacher Studio & Course Manager
-│   │   │   └── ...
-│   │   ├── lib/                # API client, Zustand stores, Config store
-│   │   └── ...
+│   │   ├── app/                # App Router pages (/, /courses, /student, /teacher, /admin, /profile)
+│   │   ├── components/         # Role dashboards, course player, editors, modals
+│   │   ├── lib/                # fetchApi client, Zustand stores, i18n helper
+│   │   └── middleware.ts       # Edge UX route guard
 │   └── package.json
 │
-├── server/                     # Express 5 + TypeScript REST API
-│   ├── prisma/                 # Prisma schema, migrations, seed script
+├── server/                     # Express 5 + TypeScript Backend API
+│   ├── prisma/                 # schema.prisma (32 models, 16 enums) & seed.ts
+│   ├── scripts/                # Test database environment helper (db-env.js)
 │   ├── src/
-│   │   ├── modules/            # Domain modules (auth, courses, config, commerce, etc.)
-│   │   ├── middleware/         # Auth, validation, rate limiting, error handling
-│   │   ├── utils/              # Storage, JWT, currency, logging, webhooks
-│   │   ├── app.ts              # Express application setup
-│   │   └── server.ts           # Server entry point
-│   ├── tests/                  # Vitest test suites (Unit, Integration, E2E)
+│   │   ├── modules/            # 19 domain modules (routes, controllers, services, __tests__)
+│   │   ├── middleware/         # JWT auth, RBAC, entitlement checks
+│   │   ├── utils/              # Env validation, JWT, TOTP, storage, currency, Zod schemas
+│   │   ├── app.ts              # Express app pipeline & route mounts
+│   │   └── server.ts           # HTTP server entry point
+│   ├── tests/setup.ts          # Vitest global setup
 │   └── package.json
 │
-├── docker-compose.yml          # Container configuration (Dev & Test Postgres, Redis)
-├── Educational_Platform_System_Design_Document.md  # Complete 3000+ line system design
-├── project_overview_and_usage_guide.md             # In-depth operator & usage manual
-├── manual_testing_guide.md                         # Manual testing & QA verification
-└── DEEP_DIVE_ANALYSIS_AND_ENHANCEMENTS.md          # Technical audit & enhancement plan
+├── docs/                       # Canonical codebase documentation (00-OVERVIEW to 09-ROADMAP)
+├── .github/workflows/ci.yml    # GitHub Actions CI (Server Vitest + Client Typecheck & Build)
+└── docker-compose.yml          # Local PostgreSQL (Dev :5434, Test :5433) containers
 ```
 
 ---
@@ -119,102 +109,89 @@ digital-platform/
 ## ⚡ Quick Start Guide
 
 ### Prerequisites
-- **Node.js**: v20+ LTS or Node.js v22
+- **Node.js**: v22+ LTS
 - **npm**: v10+
-- **Docker & Docker Compose**: For local PostgreSQL and Redis containers
+- **Docker & Docker Compose**: For local PostgreSQL containers
 
-### 1. Clone & Set Up Containers
+### 1. Start Database Containers
 ```bash
-# Clone the repository
-git clone https://github.com/Hegazian/Digital-Platform.git
-cd Digital-Platform
-
-# Start the database and caching infrastructure
-docker-compose up -d
+docker compose up -d
 ```
-The Docker Compose topology exposes:
-- **Dev PostgreSQL**: `localhost:5434` (Database: `eduplatform`)
-- **Test PostgreSQL**: `localhost:5433` (Database: `eduplatform_test`)
-- **Redis Cache**: `localhost:6379`
+| Container | Host Port | Database | User / Password |
+| :--- | :--- | :--- | :--- |
+| `postgres-dev` | `5434` | `eduplatform_dev` | `devuser` / `devpassword` |
+| `postgres-test` | `5433` | `eduplatform_test` | `testuser` / `testpassword` |
 
-### 2. Configure & Start Backend Server
+### 2. Configure & Start Backend Server (`http://localhost:5000`)
 ```bash
 cd server
+npm ci
 
-# Install dependencies
-npm install
-
-# Initialize environment configuration
+# Copy environment template and set DATABASE_URL to match docker-compose:
+# DATABASE_URL="postgresql://devuser:devpassword@localhost:5434/eduplatform_dev"
 cp .env.example .env
 
-# Push schema to development database
-npx prisma db push
-
-# (Optional) Seed initial curriculum and admin account
+# Push Prisma schema to development database & seed initial data
+npm run db:push
 npm run db:seed
 
-# Start the development server
+# Start development server
 npm run dev
 ```
-The backend API will start on **`http://localhost:5000`**.
 
-### 3. Configure & Start Frontend Client
+### 3. Configure & Start Frontend Client (`http://localhost:3000`)
 ```bash
 cd ../client
-
-# Install dependencies
-npm install
-
-# Initialize environment configuration
-cp .env.example .env.local
-
-# Start the Next.js development server
+npm ci
 npm run dev
 ```
-The web application will open on **`http://localhost:3000`**.
+> Note: Next.js automatically proxies `/api/v1/*` and `/uploads/*` to `http://localhost:5000` via [`client/next.config.mjs`](./client/next.config.mjs).
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## 🧪 Testing & Verification
 
-The codebase maintains strict automated test coverage across all domain modules:
-
-### Running Backend Tests
+### Backend Tests (Vitest + Supertest)
 ```bash
 cd server
 
-# Run complete Vitest suite (338+ tests across 67 test suites)
+# Sync schema to the isolated test database (Port 5433)
+npm run db:push:test
+
+# Run all 55 backend test suites serially (313 tests)
 npm test
 
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage reporting
-npm run test:coverage
+# Type-check backend code
+npm run typecheck
 ```
 
-### Running Frontend Typechecks & Production Build
+### Frontend Typecheck, Lint & Build
 ```bash
 cd client
-
-# Check TypeScript types and build all pages
-npm run build
-
-# Run ESLint validation
+npm run typecheck
 npm run lint
+npm run build
+```
+
+### End-to-End Tests (Playwright)
+```bash
+cd client
+npx playwright test
 ```
 
 ---
 
-## 🛠️ Administrative & Operational Guides
+## 📚 Documentation Index
 
-- **Admin Account Setup**: See [How to Set & Manage Admins](project_overview_and_usage_guide.md#4-how-to-set--manage-admins).
-- **Home Page Content Customization**: Navigate to `/admin/dashboard` ➔ **Platform & Domain** ➔ **Home Page Content** tab to customize landing page copy, topic badges, and value propositions.
-- **Course Review Queue**: Navigate to `/admin/dashboard` ➔ **Course Approvals** to inspect, approve, or reject teacher course submissions.
-- **Manual QA Testing**: Refer to [Manual Testing Guide](manual_testing_guide.md).
+All architectural and operational documentation lives in [`docs/`](./docs/README.md):
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+- [**00 — Overview**](./docs/00-OVERVIEW.md): Product scope, 3-role matrix, and feature status.
+- [**01 — Architecture**](./docs/01-ARCHITECTURE.md): Request pipeline, module pattern, and client-server integration.
+- [**02 — Local Setup**](./docs/02-SETUP.md): Detailed environment variables, database sync, and troubleshooting.
+- [**03 — Data Model**](./docs/03-DATA-MODEL.md): Complete reference for all 35 Prisma models and 20 enums.
+- [**04 — Auth & Security**](./docs/04-AUTH-AND-SECURITY.md): JWT rotation, TOTP MFA, RBAC, entitlement resolver, and known security gaps.
+- [**05 — Features**](./docs/05-FEATURES.md): Feature-by-feature breakdown across all domains.
+- [**06 — API Catalog**](./docs/06-API-CATALOG.md): Complete REST endpoint catalog under `/api/v1`.
+- [**07 — Operations & CI**](./docs/07-OPERATIONS.md): Testing, CI pipeline, storage, and production checklist.
+- [**08 — Gap Log**](./docs/08-GAP-LOG.md): Known bugs, unmounted UI components, stubs, and technical risks.
+- [**09 — Roadmap & Simplification Plan**](./docs/09-ROADMAP.md): Prioritized engineering roadmap and simplification strategy.

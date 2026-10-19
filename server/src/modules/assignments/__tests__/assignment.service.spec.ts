@@ -38,7 +38,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should create an assignment when user is course owner', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'teacher-1' } },
+        section: { course: { teacherId: 'teacher-1' } },
       };
       const mockCreated = {
         id: 'assign-1',
@@ -72,7 +72,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should throw ForbiddenError if teacher does not own the course', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'other-teacher' } },
+        section: { course: { teacherId: 'other-teacher' } },
       };
       (prisma.lesson.findUnique as any).mockResolvedValue(mockLesson);
 
@@ -86,7 +86,7 @@ describe('AssignmentService Unit Tests', () => {
     it('should throw BadRequestError if maxScore is 0 or negative', async () => {
       const mockLesson = {
         id: 'lesson-1',
-        module: { course: { teacherId: 'teacher-1' } },
+        section: { course: { teacherId: 'teacher-1' } },
       };
       (prisma.lesson.findUnique as any).mockResolvedValue(mockLesson);
 

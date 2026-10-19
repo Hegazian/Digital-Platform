@@ -25,7 +25,6 @@ export class AssignmentService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
-        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -34,7 +33,7 @@ export class AssignmentService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.section?.course?.teacherId;
     if (userRole !== Role.ADMIN && courseTeacherId !== teacherId) {
       throw new ForbiddenError('Only the course owner or Admin can create assignments for this lesson');
     }

@@ -17,10 +17,8 @@ const updateAppConfigSchema = z.object({
   currency: z.string().min(1).max(8).optional(),
   requireCourseApproval: z.boolean().optional(),
   allowTeacherRegistration: z.boolean().optional(),
-  enableCodePlaygrounds: z.boolean().optional(),
-  enableCollaborativeBoards: z.boolean().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).optional(),
-  homeContent: z.record(z.any()).optional(),
+  homeContent: z.record(z.string(), z.any()).optional(),
 });
 
 const router = Router();

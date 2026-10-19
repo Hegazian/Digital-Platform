@@ -46,5 +46,6 @@ materialRouter.delete('/:id', authenticate, requireApprovedTeacher, MaterialCont
 
 // Student / Access route
 materialRouter.get('/lesson/:lessonId', authenticate, MaterialController.getMaterialsByLesson);
+materialRouter.get('/:id/download', authenticate, MaterialController.downloadMaterial);
 
 export default materialRouter;

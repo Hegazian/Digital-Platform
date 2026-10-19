@@ -53,4 +53,16 @@ export class MaterialController {
       next(error);
     }
   }
+
+  static async downloadMaterial(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { userId, role } = req.user!;
+
+      const downloadInfo = await MaterialService.getMaterialDownload(id as string, userId, role);
+      res.status(200).json({ success: true, data: downloadInfo });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

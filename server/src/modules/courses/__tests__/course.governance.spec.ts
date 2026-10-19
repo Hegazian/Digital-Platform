@@ -39,7 +39,6 @@ vi.mock('../../../prisma', () => ({
       deleteMany: vi.fn(),
     },
     discussionThread: { deleteMany: vi.fn() },
-    collectionCourse: { deleteMany: vi.fn() },
   },
 }));
 

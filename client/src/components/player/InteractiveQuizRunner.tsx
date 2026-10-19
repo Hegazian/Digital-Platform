@@ -24,7 +24,7 @@ interface QuizOption {
 interface QuizQuestion {
   id?: string;
   questionText: string;
-  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER' | 'ESSAY';
+  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER';
   points: number;
   options: QuizOption[];
 }
@@ -161,7 +161,7 @@ export default function InteractiveQuizRunner({
         const base: Record<string, unknown> = { questionId: q.id };
         if (q.type === 'MULTIPLE_SELECT') {
           base.selectedOptionIds = Array.from(multiAnswers[q.id!] || []);
-        } else if (q.type === 'SHORT_ANSWER' || q.type === 'ESSAY') {
+        } else if (q.type === 'SHORT_ANSWER') {
           base.textAnswer = textAnswers[q.id!] || '';
         } else {
           base.selectedOptionId = singleAnswers[q.id!];
@@ -210,7 +210,7 @@ export default function InteractiveQuizRunner({
 
   const answeredCount = questions.filter((q) => {
     if (q.type === 'MULTIPLE_SELECT') return (multiAnswers[q.id!]?.size || 0) > 0;
-    if (q.type === 'SHORT_ANSWER' || q.type === 'ESSAY') return !!textAnswers[q.id!];
+    if (q.type === 'SHORT_ANSWER') return !!textAnswers[q.id!];
     return !!singleAnswers[q.id!];
   }).length;
 
@@ -402,16 +402,12 @@ export default function InteractiveQuizRunner({
           )}
 
           {/* Free-text questions */}
-          {(currentType === 'SHORT_ANSWER' || currentType === 'ESSAY') && (
+          {currentType === 'SHORT_ANSWER' && (
             <textarea
-              rows={currentType === 'ESSAY' ? 8 : 3}
+              rows={3}
               value={textAnswers[currentQ.id!] || ''}
               onChange={(e) => setTextAnswers((prev) => ({ ...prev, [currentQ.id!]: e.target.value }))}
-              placeholder={
-                currentType === 'ESSAY'
-                  ? 'Write your essay answer here…'
-                  : 'Type your answer…'
-              }
+              placeholder="Type your answer…"
               className="glass-input w-full text-sm resize-y"
             />
           )}

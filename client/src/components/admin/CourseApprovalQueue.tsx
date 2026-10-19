@@ -65,7 +65,6 @@ interface CourseItem {
   subjectId?: string;
   subject?: { id: string; nameEn?: string; nameAr?: string };
   teacher?: { id: string; name: string; email: string };
-  modules?: UnitItem[];
   sections?: UnitItem[];
   createdAt?: string;
   updatedAt?: string;
@@ -403,9 +402,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
         <div className="space-y-4">
           {filteredCourses.map((course) => {
             const isExpanded = expandedCourseId === course.id;
-            const modules = course.modules || [];
-            const sections = course.sections || [];
-            const allUnits = modules.length > 0 ? modules : sections;
+            const allUnits = course.sections || [];
             const isActing = actionLoading === course.id;
 
             return (
@@ -472,7 +469,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                       </span>
                       <span className="flex items-center gap-1">
                         <Layers className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{allUnits.length} Chapters / Modules</span>
+                        <span>{allUnits.length} Chapters / Sections</span>
                       </span>
                     </div>
                   </div>
@@ -549,7 +546,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                     </h4>
 
                     {allUnits.length === 0 ? (
-                      <p className="text-xs text-slate-500 italic">No modules or sections found in this course.</p>
+                      <p className="text-xs text-slate-500 italic">No sections found in this course.</p>
                     ) : (
                       <div className="space-y-4">
                         {allUnits.map((unit: UnitItem, uIdx: number) => {
@@ -570,7 +567,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                               </div>
 
                               {lessons.length === 0 ? (
-                                <p className="text-xs text-slate-500 italic pl-3">No lessons in this module.</p>
+                                <p className="text-xs text-slate-500 italic pl-3">No lessons in this section.</p>
                               ) : (
                                 <div className="space-y-2 pl-3">
                                   {lessons.map((lesson: LessonItem, lIdx: number) => {

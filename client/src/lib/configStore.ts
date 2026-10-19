@@ -142,8 +142,6 @@ export interface AppConfig {
   sloganEn?: string | null;
   sloganAr?: string | null;
   allowTeacherRegistration: boolean;
-  enableCodePlaygrounds: boolean;
-  enableCollaborativeBoards: boolean;
   primaryColor: string;
   homeContent?: HomeContentConfig | null;
 }

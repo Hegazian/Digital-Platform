@@ -82,10 +82,7 @@ export class TeacherService {
     // Scope counts to lessons inside THIS teacher's courses only.
     const myLessons = await prisma.lesson.findMany({
       where: {
-        OR: [
-          { module: { course: { teacherId } } },
-          { section: { course: { teacherId } } },
-        ],
+        section: { course: { teacherId } },
       },
       select: { id: true },
     });
@@ -98,11 +95,9 @@ export class TeacherService {
           })
         : 0;
 
-    // Assessments tied to this student. (Assessment has no lesson relation in
-    // the current schema; cross-teacher exposure is bounded by the enrollment
-    // gate above — only students enrolled in THIS teacher's subjects pass.)
-    const attempts = await prisma.assessmentAttempt.findMany({
-      where: { studentId },
+    // Quizzes attempted by this student
+    const attempts = await prisma.quizAttempt.findMany({
+      where: { userId: studentId },
       select: { score: true, isPassed: true },
     });
 

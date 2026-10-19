@@ -9,7 +9,7 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
   let teacherId: string;
   let subjectId: string;
   let courseId: string;
-  let moduleId: string;
+  let sectionId: string;
   let lessonId: string;
 
   beforeAll(async () => {
@@ -67,27 +67,26 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
     } catch (e) {}
   });
 
-  it('1. should create a new Module under a course', async () => {
+  it('1. should create a new Section under a course', async () => {
     const res = await request(app)
-      .post(`/api/v1/courses/${courseId}/modules`)
+      .post(`/api/v1/courses/${courseId}/sections`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Unit 1: Quantum Mechanics',
         titleAr: 'الوحدة الأولى: ميكانيكا الكم',
         description: 'Deep dive into quantum principles',
-        sortOrder: 1,
       });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.id).toBeDefined();
     expect(res.body.data.titleEn).toBe('Unit 1: Quantum Mechanics');
-    moduleId = res.body.data.id;
+    sectionId = res.body.data.id;
   });
 
-  it('2. should create a Lesson under a Module with optional Video, Material, and Quiz in one request', async () => {
+  it('2. should create a Lesson under a Section with optional Video, Material, and Quiz in one request', async () => {
     const res = await request(app)
-      .post(`/api/v1/courses/modules/${moduleId}/lessons`)
+      .post(`/api/v1/courses/sections/${sectionId}/lessons`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Lesson 1.1: Wave-Particle Duality',
@@ -151,7 +150,7 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
     expect(res.body.data.title).toBe('Formula Cheat Sheet');
   });
 
-  it('4. should retrieve the full course curriculum tree with eager-loaded modules, lessons, videos, materials, and quizzes', async () => {
+  it('4. should retrieve the full course curriculum tree with eager-loaded sections, lessons, videos, materials, and quizzes', async () => {
     // Draft curricula are restricted to the owning teacher (NFR-001).
     const res = await request(app)
       .get(`/api/v1/courses/${courseId}`)
@@ -159,13 +158,13 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.modules.length).toBeGreaterThan(0);
+    expect(res.body.data.sections.length).toBeGreaterThan(0);
 
-    const fetchedMod = res.body.data.modules.find((m: any) => m.id === moduleId);
-    expect(fetchedMod).toBeDefined();
-    expect(fetchedMod.lessons.length).toBeGreaterThan(0);
+    const fetchedSec = res.body.data.sections.find((s: any) => s.id === sectionId);
+    expect(fetchedSec).toBeDefined();
+    expect(fetchedSec.lessons.length).toBeGreaterThan(0);
 
-    const fetchedLesson = fetchedMod.lessons.find((l: any) => l.id === lessonId);
+    const fetchedLesson = fetchedSec.lessons.find((l: any) => l.id === lessonId);
     expect(fetchedLesson).toBeDefined();
     expect(fetchedLesson.video).toBeDefined();
     expect(fetchedLesson.quiz).toBeDefined();
@@ -176,7 +175,7 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
   it('5. should delete a Lesson cleanly', async () => {
     // Create a temporary lesson to delete
     const tempLessonRes = await request(app)
-      .post(`/api/v1/courses/modules/${moduleId}/lessons`)
+      .post(`/api/v1/courses/sections/${sectionId}/lessons`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Temporary Lesson to Delete',
@@ -193,22 +192,94 @@ describe('Module, Lesson, Video, Material & Quiz Management (TDD)', () => {
     expect(delRes.body.success).toBe(true);
   });
 
-  it('6. should delete a Module cleanly', async () => {
-    const tempModRes = await request(app)
-      .post(`/api/v1/courses/${courseId}/modules`)
+  it('6. should delete a Section cleanly', async () => {
+    const tempSecRes = await request(app)
+      .post(`/api/v1/courses/${courseId}/sections`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
-        titleEn: 'Temporary Module to Delete',
-        titleAr: 'وحدة مؤقتة للحذف',
+        titleEn: 'Temporary Section to Delete',
+        titleAr: 'قسم مؤقت للحذف',
       });
 
-    const tempModId = tempModRes.body.data.id;
+    const tempSecId = tempSecRes.body.data.id;
 
     const delRes = await request(app)
-      .delete(`/api/v1/courses/modules/${tempModId}`)
+      .delete(`/api/v1/courses/sections/${tempSecId}`)
       .set('Authorization', `Bearer ${teacherToken}`);
 
     expect(delRes.status).toBe(200);
     expect(delRes.body.success).toBe(true);
   });
+
+  it('7. should reject CODE_PLAYGROUND and BOARD block types with 400 Bad Request (P0-3 / TASK-04)', async () => {
+    const playgroundRes = await request(app)
+      .post(`/api/v1/courses/lessons/${lessonId}/blocks`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({
+        blockType: 'CODE_PLAYGROUND',
+        configuration: { starterCode: 'print(1)' },
+      });
+
+    expect(playgroundRes.status).toBe(400);
+
+    const boardRes = await request(app)
+      .post(`/api/v1/courses/lessons/${lessonId}/blocks`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({
+        blockType: 'BOARD',
+        configuration: {},
+      });
+
+    expect(boardRes.status).toBe(400);
+  });
+
+  it('8. should return 404 Not Found for removed /api/v1/playgrounds and /api/v1/boards routes (TASK-04)', async () => {
+    const execRes = await request(app)
+      .post('/api/v1/playgrounds/execute')
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ code: 'print(1)' });
+
+    expect(execRes.status).toBe(404);
+
+    const boardGetRes = await request(app)
+      .get('/api/v1/boards/some-block-id')
+      .set('Authorization', `Bearer ${teacherToken}`);
+
+    expect(boardGetRes.status).toBe(404);
+  });
+
+  it('9. should return 404 Not Found for removed peripheral routes (TASK-05)', async () => {
+    const careersRes = await request(app).get('/api/v1/careers');
+    expect(careersRes.status).toBe(404);
+
+    const collectionsRes = await request(app).get('/api/v1/collections');
+    expect(collectionsRes.status).toBe(404);
+
+    const podcastsRes = await request(app).get('/api/v1/podcasts');
+    expect(podcastsRes.status).toBe(404);
+
+    const developerRes = await request(app).get('/api/v1/developer/tokens');
+    expect(developerRes.status).toBe(404);
+  });
+
+  it('10. should return 404 Not Found for removed CourseModule routes (TASK-06)', async () => {
+    const createModuleRes = await request(app)
+      .post(`/api/v1/courses/${courseId}/modules`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ titleEn: 'Retired Module', titleAr: 'وحدة ملغاة' });
+    expect(createModuleRes.status).toBe(404);
+
+    const moduleLessonRes = await request(app)
+      .post(`/api/v1/courses/modules/some-mod-id/lessons`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ titleEn: 'Retired Lesson', titleAr: 'درس ملغى' });
+    expect(moduleLessonRes.status).toBe(404);
+
+    const reorderModuleRes = await request(app)
+      .post(`/api/v1/courses/${courseId}/modules/reorder`)
+      .set('Authorization', `Bearer ${teacherToken}`)
+      .send({ modules: [] });
+    expect(reorderModuleRes.status).toBe(404);
+  });
 });
+

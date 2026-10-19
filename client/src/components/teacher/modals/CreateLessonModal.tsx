@@ -7,7 +7,7 @@ import { errorMessage } from '../../../lib/apiTypes';
 import VideoUploader from '../../VideoUploader';
 import Modal from '@/components/ui/Modal';
 
-type QuizQuestionType = 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER' | 'ESSAY';
+type QuizQuestionType = 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER';
 
 interface QuizQuestion {
   questionText: string;
@@ -174,15 +174,13 @@ export default function CreateLessonModal({
         };
       }
 
-      await fetchApi(
-        sectionId
-          ? `/courses/sections/${sectionId}/lessons`
-          : `/courses/modules/${moduleId}/lessons`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        }
-      );
+      const targetSectionId = sectionId || moduleId;
+      if (!targetSectionId) return;
+
+      await fetchApi(`/courses/sections/${targetSectionId}/lessons`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
 
       resetForm();
       onClose();
@@ -421,7 +419,6 @@ export default function CreateLessonModal({
                             <option value="TRUE_FALSE">True / False</option>
                             <option value="MULTIPLE_SELECT">Multiple Select</option>
                             <option value="SHORT_ANSWER">Short Answer</option>
-                            <option value="ESSAY">Essay</option>
                           </select>
                         </div>
 
@@ -499,13 +496,6 @@ export default function CreateLessonModal({
                             }}
                             className="glass-input w-full text-xs ml-4"
                           />
-                        )}
-
-                        {/* Essay note */}
-                        {q.type === 'ESSAY' && (
-                          <p className="text-[10px] text-slate-500 ml-4 italic">
-                            Essay answers are flagged for your manual review after submission.
-                          </p>
                         )}
                       </div>
                     );

@@ -29,7 +29,7 @@ vi.mock('../../../prisma', () => ({
     appConfig: {
       findFirst: vi.fn().mockResolvedValue(null),
     },
-    module: {
+    section: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -218,8 +218,7 @@ describe('CourseService Unit Tests', () => {
         teacherId: 'teacher-1',
         isPublished: false,
         status: 'UNDER_REVIEW',
-        modules: [{ lessons: [{ videoId: 'v1', materials: [], blocks: [] }] }],
-        sections: [],
+        sections: [{ lessons: [{ videoId: 'v1', materials: [], blocks: [] }] }],
       };
 
       (prisma.course.findUnique as any).mockResolvedValue(mockCourse);
@@ -239,7 +238,6 @@ describe('CourseService Unit Tests', () => {
         id: 'course-1',
         teacherId: 'teacher-owner',
         isPublished: false,
-        modules: [],
         sections: [],
       };
 

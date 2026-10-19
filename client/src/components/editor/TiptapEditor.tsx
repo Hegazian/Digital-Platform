@@ -4,11 +4,13 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Bold, Italic, Strikethrough, List, ListOrdered, Heading1, Heading2, Quote, Undo, Redo } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface TiptapEditorProps {
   content: string;
-  onChange: (content: string) => void;
+  onChange?: (content: string) => void;
   placeholder?: string;
+  editable?: boolean;
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -102,8 +104,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function TiptapEditor({ content, onChange, placeholder = "Write something amazing..." }: TiptapEditorProps) {
+export default function TiptapEditor({
+  content,
+  onChange,
+  placeholder = "Write something amazing...",
+  editable = true,
+}: TiptapEditorProps) {
   const editor = useEditor({
+    editable,
     extensions: [
       StarterKit,
       Placeholder.configure({
@@ -118,9 +126,19 @@ export default function TiptapEditor({ content, onChange, placeholder = "Write s
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange?.(editor.getHTML());
     },
   });
+
+  if (!editable) {
+    const safeHtml = DOMPurify.sanitize(content || '');
+    return (
+      <div
+        className="prose prose-invert max-w-none text-slate-300 p-4"
+        dangerouslySetInnerHTML={{ __html: safeHtml }}
+      />
+    );
+  }
 
   return (
     <div className="border border-gray-300 rounded-md shadow-sm overflow-hidden dark:border-gray-700 bg-white dark:bg-gray-900 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">

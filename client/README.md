@@ -1,63 +1,63 @@
-# 💻 EduPlatform Client — Next.js 14 Modern Web Application
+# 💻 EduPlatform Client — Next.js 14 Web Application
 
-The interactive web frontend for the EduPlatform e-learning system. Built with Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, and Zustand.
+The web frontend for EduPlatform, built with **Next.js 14.2.35 (App Router)**, **React 18**, **TypeScript**, **Tailwind CSS 3.4**, **Zustand**, and **TanStack React Query**.
+
+For complete system documentation, see [`../docs/README.md`](../docs/README.md).
 
 ---
 
-## 🎨 Frontend Architecture & Features
+## 🎨 Frontend Architecture & Key Patterns
 
-### 1. Bilingual RTL/LTR System
-- **Arabic (`ar`) RTL**: Default primary locale using Google Font **Tajawal** for clear Arabic typography.
-- **English (`en`) LTR**: Full mirror layout using Google Font **Inter**.
-- Real-time locale switching preserved across user sessions and synchronized with document `dir="rtl"` / `dir="ltr"`.
+### 1. Bilingual LTR/RTL Support (`en` / `ar`)
+- **Default Locale**: English (`en`, LTR) using Google Font **Inter**, with one-click toggle to Arabic (`ar`, RTL) using **Tajawal**.
+- **Translation Hook**: Components use `useT()` (`src/lib/useT.ts`) as `t('English text', 'النص العربي')` alongside bilingual database fields (`titleEn` / `titleAr`).
+- **Direction Sync**: `document.documentElement.dir` and `lang` update reactively from `useAppStore`.
 
-### 2. Live Dynamic Home Page Content Engine
-- All marketing copy, badges, titles, descriptions, CTA buttons, and footer information on the landing page are dynamically driven by the backend `AppConfig.homeContent` configuration.
-- **Zero-Regression Fallbacks**: Powered by `useHomeContent()` in [`src/lib/configStore.ts`](src/lib/configStore.ts). If any field is unset or custom config is missing, the application seamlessly falls back to `DEFAULT_HOME_CONTENT`.
-- **Dynamic Brand Theming**: The platform's primary accent color is injected at runtime into `--brand-primary` and `<meta name="theme-color">`.
+### 2. Dynamic Branding & Home Content Engine
+- Bootstrapped in [`src/app/providers.tsx`](src/app/providers.tsx) via `useConfigStore` (`GET /api/v1/config`).
+- Applies runtime site name, slogan, `--brand-primary` CSS custom property, feature flags, and `homeContent` marketing sections with fallback to `DEFAULT_HOME_CONTENT` ([`src/lib/configStore.ts`](src/lib/configStore.ts)).
 
-### 3. State Management
-- **`useAppStore`** ([`src/lib/store.ts`](src/lib/store.ts)): User authentication, access token, user role, active language, and UI modal states.
-- **`useConfigStore`** ([`src/lib/configStore.ts`](src/lib/configStore.ts)): Global platform settings, site name, slogan, exchange rates, feature flags, and `useHomeContent()`.
-
-### 4. Interactive Learning Components
-- **In-Browser Code Runner**: CodeMirror-based Python editor connected to the backend execution sandbox for programming lessons.
-- **Collaborative Whiteboard Canvas**: Multiplayer drawing board for real-time math, geometry, and physics problem solving.
-- **Secure Video Player**: Custom HLS video player with resolution controls, playback rate adjustments, and secure key acquisition.
-- **Tiptap Rich-Text Editor**: WYSIWYG editor for lesson notes, formatted text, and mathematical expressions.
-- **AI Tutor Drawer**: Slide-out conversational tutor for interactive lesson guidance and explanations.
+### 3. State Management & API Layer
+- **`fetchApi`** ([`src/lib/api.ts`](src/lib/api.ts)): Injects Bearer access token, sends `credentials: 'include'` for the `eduplat_rt` `httpOnly` cookie, and performs single-flight `POST /api/v1/auth/refresh` on `401` responses.
+- **`useAppStore`** ([`src/lib/store.ts`](src/lib/store.ts)): Persists `lang`, `user`, `token`, and selected course/subject in `localStorage` (`eduplatform-storage`).
+- **`useConfigStore`** ([`src/lib/configStore.ts`](src/lib/configStore.ts)): Caches public platform configuration and feature flags.
+- **TanStack React Query**: Manages server cache and invalidates queries on `eduplat:session-expired`.
 
 ---
 
 ## 📁 Directory Structure
 
-```
+```text
 client/
-├── public/                 # Static assets, logos, and icons
+├── e2e/                        # Playwright E2E test suites (7 spec files)
+├── public/                     # Static assets
 ├── src/
-│   ├── app/                # Next.js 14 App Router
-│   │   ├── admin/          # Admin Dashboard (/admin/dashboard)
-│   │   ├── courses/        # Course catalog & Course Player (/courses/[courseId])
-│   │   ├── student/        # Student Dashboard & progress tracking
-│   │   ├── teacher/        # Teacher Studio & Course Manager
-│   │   ├── layout.tsx      # Root HTML layout with font imports & Providers
-│   │   ├── page.tsx        # Dynamic Landing Page (Hero, Badges, Steps, Footer)
-│   │   └── providers.tsx   # Config bootstrap, query client, and theme providers
-│   ├── components/         # Reusable Component Library
-│   │   ├── admin/          # PlatformSettings (Home Content Editor), ApprovalQueue, etc.
-│   │   ├── editor/         # CodePlayground, CollaborativeBoard, TiptapEditor
-│   │   ├── player/         # VideoPlayerSection, LessonList, MaterialList
-│   │   ├── teacher/        # CourseManager, EditLessonModal, QuizEditor
-│   │   ├── Navbar.tsx      # Dynamic Top Navigation bar with bilingual toggle
-│   │   ├── Hero.tsx        # Dynamic Hero section with customizable topic badges
-│   │   ├── AuthModal.tsx   # Unified Login / Signup / Teacher Application modal
-│   │   └── ...
-│   └── lib/                # Client Utilities & Stores
-│       ├── api.ts          # Centralized fetchApi client with JWT bearer injection
-│       ├── apiTypes.ts     # Standardized API response types & error extractors
-│       ├── store.ts        # App & Auth Zustand store
-│       └── configStore.ts  # Public config, StrictHomeContent, and useHomeContent() hook
-├── tailwind.config.ts      # Tailwind CSS theme, animations, and color tokens
+│   ├── app/                    # Next.js 14 App Router pages
+│   │   ├── admin/dashboard/    # Admin Console (/admin/dashboard)
+│   │   ├── courses/            # Catalog (/courses) & Player (/courses/[courseId])
+│   │   ├── login/              # Login + MFA challenge page (/login)
+│   │   ├── profile/            # User profile settings (/profile)
+│   │   ├── register/           # Student & Teacher registration (/register)
+│   │   ├── student/dashboard/  # Student Dashboard (/student/dashboard)
+│   │   ├── teacher/dashboard/  # Teacher Studio (/teacher/dashboard)
+│   │   ├── layout.tsx          # Root HTML shell & fonts
+│   │   ├── page.tsx            # Configurable Landing Page (/)
+│   │   └── providers.tsx       # React Query & Config bootstrapper
+│   ├── components/             # UI & Domain Components
+│   │   ├── admin/              # Admin tabs (Metrics, Users, Approvals, Orders, Vouchers, Settings, etc.)
+│   │   ├── ai/                 # AITutorDrawer
+│   │   ├── commerce/           # CheckoutModal, VoucherRedeemModal
+│   │   ├── discussions/        # DiscussionForum
+│   │   ├── editor/             # TiptapEditor (sanitized via isomorphic-dompurify)
+│   │   ├── player/             # VideoPlayerSection, InteractiveQuizRunner, AssignmentRunner, etc.
+│   │   ├── settings/           # MfaSetupModal
+│   │   ├── teacher/            # CourseManager, AssignmentStudio, LiveSessionsManager, etc.
+│   │   └── ui/                 # Accessible Modal primitive
+│   ├── lib/                    # api.ts, apiTypes.ts, store.ts, configStore.ts, useRequireRole.ts, useT.ts
+│   └── middleware.ts           # Edge route guard for /admin, /teacher, /student, /profile
+├── next.config.mjs             # Rewrites (/api/v1 & /uploads -> :5000) and strict build gates
+├── playwright.config.ts        # Dual webServer E2E runner (Next :3000 + API :5000)
+├── tailwind.config.ts          # Tailwind theme tokens
 └── package.json
 ```
 
@@ -65,33 +65,33 @@ client/
 
 ## 🛠️ Getting Started
 
-### 1. Install Dependencies
 ```bash
 cd client
-npm install
+npm ci
+
+# Start Next.js development server on http://localhost:3000
+npm run dev
 ```
 
-### 2. Configure Environment
-Create a `.env.local` file:
+Optional `.env.local` (if not relying on default `/api/v1` Next.js rewrite to `http://localhost:5000`):
 ```ini
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 ```
 
-### 3. Start Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your web browser.
-
 ---
 
-## 🏗️ Build & Validation Commands
+## 🏗️ Build, Lint & E2E Commands
 
 ```bash
-# Typecheck and produce optimized production build
+# TypeScript check
+npm run typecheck
+
+# ESLint check
+npm run lint
+
+# Production build (fails on any TypeScript or ESLint error)
 npm run build
 
-# Run ESLint validation
-npm run lint
+# Run Playwright E2E tests (starts both client and server if not running)
+npx playwright test
 ```
-The build process compiles static pages and verifies that all TypeScript types, React hooks, and component interfaces pass without errors.

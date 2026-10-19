@@ -17,7 +17,7 @@ describe('Secure Video Playback Pipeline', () => {
   let teacherId: string;
   let studentId: string;
   let courseId: string;
-  let moduleId: string;
+  let sectionId: string;
   let lessonId: string;
   let traversalLessonId: string;
   let videoId: string;
@@ -88,10 +88,10 @@ describe('Secure Video Playback Pipeline', () => {
       },
     });
 
-    const mod = await prisma.courseModule.create({
-      data: { courseId, titleEn: 'M1', titleAr: 'و1' },
+    const sec = await prisma.section.create({
+      data: { courseId, titleEn: 'S1', titleAr: 'ق1' },
     });
-    moduleId = mod.id;
+    sectionId = sec.id;
 
     // Physical local-storage fixture (what StorageService would have written)
     const uploadDir = path.join(process.cwd(), 'uploads', 'lesson-videos');
@@ -114,7 +114,7 @@ describe('Secure Video Playback Pipeline', () => {
 
     const lesson = await prisma.lesson.create({
       data: {
-        moduleId,
+        sectionId,
         titleEn: 'Lesson with local video',
         titleAr: 'درس',
         orderIndex: 1,
@@ -129,7 +129,7 @@ describe('Secure Video Playback Pipeline', () => {
       if (tempFilePath && fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
       await prisma.video.deleteMany({ where: { id: { in: [...cleanupVideoIds] } } }).catch(() => undefined);
       await prisma.lesson.deleteMany({ where: { id: { in: [lessonId, traversalLessonId].filter(Boolean) } } }).catch(() => undefined);
-      await prisma.courseModule.deleteMany({ where: { id: moduleId } }).catch(() => undefined);
+      await prisma.section.deleteMany({ where: { id: sectionId } }).catch(() => undefined);
       await prisma.entitlement.deleteMany({ where: { studentId } }).catch(() => undefined);
       await prisma.course.deleteMany({ where: { id: courseId } }).catch(() => undefined);
       await prisma.subject.deleteMany({ where: { id: subjectId } }).catch(() => undefined);
@@ -196,7 +196,7 @@ describe('Secure Video Playback Pipeline', () => {
 
     const lesson = await prisma.lesson.create({
       data: {
-        moduleId,
+        sectionId,
         titleEn: 'Traversal lesson',
         titleAr: 'درس',
         orderIndex: 2,

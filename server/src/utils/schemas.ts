@@ -113,116 +113,6 @@ export const createOrderSchema = z.object({
   transactionRef: z.string().max(120).optional(),
 });
 
-// ── Assessment (exam) engine schemas ────────────────────────────────
-export const createQuestionPoolSchema = z.object({
-  titleEn: z.string().min(2, 'English title is required'),
-  titleAr: z.string().min(2, 'Arabic title is required'),
-  description: z.string().optional(),
-});
-
-export const addQuestionItemSchema = z
-  .object({
-    textEn: z.string().min(2, 'English question text is required'),
-    textAr: z.string().min(1).optional(),
-    questionType: z.enum(['MCQ', 'TRUE_FALSE', 'ESSAY']),
-    difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).default('MEDIUM'),
-    // Accepts ["a","b"] or a pre-stringified JSON array - both stored as JSON text.
-    optionsJson: z.union([z.array(z.string()), z.string()]).default([]),
-    // Accepts raw values ('true', 42) or already-encoded JSON ('"4"', '"true"').
-    correctAnswerJson: z.union([z.string(), z.number()]).optional(),
-    explanation: z.string().optional(),
-    points: z.number().int().min(1).max(100).default(10),
-  })
-  .superRefine((d, ctx) => {
-    let optionCount = 0;
-    if (Array.isArray(d.optionsJson)) {
-      optionCount = d.optionsJson.length;
-    } else {
-      try {
-        const parsed = JSON.parse(d.optionsJson);
-        optionCount = Array.isArray(parsed) ? parsed.length : 0;
-      } catch {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['optionsJson'],
-          message: 'optionsJson must be a JSON array of option strings',
-        });
-        return;
-      }
-    }
-
-    if (d.questionType === 'MCQ' && (optionCount < 2 || !d.correctAnswerJson)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['optionsJson'],
-        message: 'MCQ questions need at least two options and a correct answer',
-      });
-    }
-
-    if (d.questionType === 'TRUE_FALSE') {
-      let answer: any = d.correctAnswerJson;
-      if (typeof answer === 'string') {
-        try {
-          answer = JSON.parse(answer);
-        } catch {}
-      }
-      if (!answer || !['true', 'false'].includes(String(answer).toLowerCase())) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['correctAnswerJson'],
-          message: 'TRUE_FALSE questions need a correct answer of true or false',
-        });
-      }
-    }
-  })
-  .transform((d) => ({
-    ...d,
-    textAr: d.textAr && d.textAr.trim() ? d.textAr : d.textEn,
-    optionsJson: Array.isArray(d.optionsJson) ? JSON.stringify(d.optionsJson) : d.optionsJson,
-    correctAnswerJson:
-      d.correctAnswerJson === undefined
-        ? undefined
-        : typeof d.correctAnswerJson === 'number'
-        ? JSON.stringify(d.correctAnswerJson)
-        : isProbablyEncoded(d.correctAnswerJson)
-        ? d.correctAnswerJson
-        : JSON.stringify(d.correctAnswerJson),
-  }));
-
-/** True for values that are already JSON scalars/collections ('"4"', 'true', '[..]', '{..}'). */
-function isProbablyEncoded(v: string): boolean {
-  const trimmed = v.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) ||
-    trimmed === 'true' ||
-    trimmed === 'false' ||
-    trimmed === 'null'
-  ) {
-    return true;
-  }
-  return trimmed.startsWith('[') || trimmed.startsWith('{');
-}
-
-// Expired sessions legitimately arrive with zero answers.
-export const createAssessmentSchema = z.object({
-  poolId: z.string().uuid('Valid poolId is required'),
-  titleEn: z.string().min(2, 'English title is required'),
-  titleAr: z.string().min(2, 'Arabic title is required'),
-  durationMinutes: z.number().int().min(1).max(300).default(30),
-  passingScore: z.number().int().min(0).max(100).default(60),
-  totalQuestions: z.number().int().min(1).max(100).default(10),
-  maxAttempts: z.number().int().min(1).max(20).default(1),
-});
-
-export const submitAssessmentAttemptSchema = z.object({
-  answers: z.array(
-    z.object({
-      questionId: z.string().min(1),
-      answer: z.union([z.string(), z.number(), z.null()]),
-    })
-  ),
-});
-
 // Quiz Schema
 const quizQuestionOptionSchema = z.object({
   id: z.string().optional(),
@@ -233,7 +123,7 @@ const quizQuestionOptionSchema = z.object({
 
 const baseQuizQuestionSchema = z.object({
   questionText: z.string().min(1, 'Question text is required'),
-  type: z.enum(['MCQ', 'TRUE_FALSE', 'MULTIPLE_SELECT', 'SHORT_ANSWER', 'ESSAY']).optional(),
+  type: z.enum(['MCQ', 'TRUE_FALSE', 'MULTIPLE_SELECT', 'SHORT_ANSWER']).optional(),
   options: z.array(quizQuestionOptionSchema).optional(),
   correctAnswer: z.string().optional(),
   explanation: z.string().optional(),
@@ -274,7 +164,6 @@ export const createQuizSchema = z.object({
             ctx.addIssue({ code: 'custom', path: ['correctAnswer'], message: `${label}: SHORT_ANSWER requires a correctAnswer` });
           }
         }
-        // ESSAY requires nothing beyond text
       });
     }),
 });
@@ -492,27 +381,11 @@ export const gradeSubmissionSchema = z.object({
   feedback: z.string().max(5000, 'Feedback is too long').optional(),
 });
 
-// --- Module reordering ---
-export const reorderModulesSchema = z.object({
-  modules: z
-    .array(z.object({ id: z.string().min(1), sortOrder: z.number().int().min(0) }))
-    .min(1, 'modules array cannot be empty'),
-});
-
 // --- Lesson reordering ---
 export const reorderLessonsSchema = z.object({
   lessons: z
     .array(z.object({ id: z.string().min(1), orderIndex: z.number().int().min(0) }))
     .min(1, 'lessons array cannot be empty'),
-});
-
-// --- Module / lesson updates (partial) ---
-export const updateModuleSchema = z.object({
-  titleEn: z.string().min(2).optional(),
-  titleAr: z.string().min(1).optional(),
-  // Nullable so teachers can clear the description entirely.
-  description: z.string().max(5000).nullable().optional(),
-  sortOrder: z.number().int().min(0).optional(),
 });
 
 export const updateLessonSchema = z.object({

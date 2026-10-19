@@ -111,7 +111,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
 
     // Auto-refresh session on 401 (except auth endpoints themselves)
     const isAuthEndpoint = endpoint.startsWith('/auth/');
-    if (res.status === 401 && !isAuthEndpoint && !endpoint.includes('/playgrounds/execute')) {
+    if (res.status === 401 && !isAuthEndpoint) {
       if (!isRefreshing) {
         isRefreshing = true;
         const newToken = await refreshSession();
