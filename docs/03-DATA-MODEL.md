@@ -1,7 +1,7 @@
 # 03 — Data Model (Prisma / PostgreSQL)
 
-**Source of truth:** `server/prisma/schema.prisma`  
-**Sync method:** `prisma db push` only — there is **no** `server/prisma/migrations/` directory.  
+**Source of truth:** `server/prisma/schema.prisma` (32 models, 17 enums)  
+**Migrations & Sync:** Versioned baseline SQL migration in `server/prisma/migrations/0001_init/migration.sql` (`npm run db:migrate:deploy`) + `prisma db push` (`npm run db:push`)  
 **Seed:** `server/prisma/seed.ts` (`npm run db:seed`)  
 **Tables:** Prisma models map via `@@map("snake_case")`.
 
@@ -77,7 +77,7 @@ DiscussionThread 1─* DiscussionReply
 | mfaLastTimeStep | Int? | TOTP replay protection |
 | createdAt / updatedAt | DateTime | |
 
-Relations: grade, courses (as teacher, "TeacherCourses"), subscriptions, quizAttempts, lessonProgress, orders, entitlements, assessmentAttempts, notifications, liveSessions, submissions ("StudentSubmissions"), auditLogs, refreshTokens.
+Relations: grade, courses (as teacher, "TeacherCourses"), subscriptions, quizAttempts, lessonProgress, orders, entitlements, notifications, liveSessions, submissions ("StudentSubmissions"), auditLogs, refreshTokens.
 
 #### `RefreshToken` — `@@map("refresh_tokens")`
 | Field | Type | Notes |
@@ -163,7 +163,7 @@ Relations: course (Cascade), lessons[].
 
 Relations: section, video?, quiz?, materials[], blocks[], progress[].
 
-> **Unified Curriculum Model (TASK-06):** Curriculum hierarchy is unified strictly as **Course → Section → Lesson → LessonBlock**. `CourseModule` has been retired and removed. Free preview chapter access is controlled via `Section.isFreePreview`.
+> **Unified Curriculum Model:** Curriculum hierarchy is strictly **Course → Section → Lesson → LessonBlock**. Free preview chapter access is controlled via `Section.isFreePreview`.
 
 #### `LessonBlock` — `@@map("lesson_blocks")`
 lessonId, blockType LessonBlockType @default(TEXT), configurationJson (e.g. `{ mediaId, quizId, assignmentId }`), sortOrder, isRequired @default(true).  
@@ -252,7 +252,7 @@ Singleton-style platform settings:
 userId, titleEn, titleAr, messageEn, messageAr, isRead @default(false).
 
 #### `LiveSession` — `@@map("live_sessions")`
-teacherId, subjectId, titleEn, titleAr, startTime, durationMinutes, zoomMeetingId, zoomJoinUrl, zoomStartUrl. Index `[subjectId, startTime]`.
+teacherId, subjectId, titleEn, titleAr, startTime, durationMinutes, zoomMeetingId, zoomJoinUrl (stores teacher-provided Zoom / Google Meet / Teams join URL), zoomStartUrl. Index `[subjectId, startTime]`.
 
 #### `DiscussionThread` / `DiscussionReply`
 Thread: courseId, lessonId?, authorId, title, content @db.Text.  
@@ -263,15 +263,12 @@ userId, action, entityId?, entityType?, details Json?, ipAddress?. Indexes: `[ac
 
 ---
 
-## Design notes & gotchas
+## Design notes
 
-1. **Two curriculum trees** — `CourseModule` and `Section` both parent lessons; free preview lives on Section, not Module.
-2. **Course status vs isPublished** — Status enum is authoritative for governance; `isPublished` boolean is an additional flag used by some catalog filters.
-3. **Review status naming** — Schema uses **`UNDER_REVIEW`**. Requirements docs sometimes say `SUBMITTED_FOR_REVIEW`; manual guide says `PENDING_REVIEW`. Trust the enum in this doc.
-4. **No PARENT / Organization models** — Legacy design docs describe multi-tenancy and parent portal; neither exists in Prisma.
-5. **Money** — Order stores both EGP and USD totals; admin prices are EGP; conversion uses `AppConfig.exchangeRateUsdToEgp`.
-6. **Free courses** — Zod/business rule: `isFree=true` must not have a priced product attached.
-7. **Soft delete** — `Course.deletedAt`; commerce entitlement `orderId` is SetNull-safe.
-8. **Migrations gap** — `db push` can drift environments; production should adopt versioned migrations before multi-instance deploys.
-9. **Tables that docs mention but code does not** — Redis sessions, parent invites, `CourseEmbedding`, Organization — **not in schema**.
-10. **Uploads** — Binary files are not in DB; rows store paths/URLs. Local files under `server/uploads/` (gitignored).
+1. **Unified curriculum tree** — `Course` → `Section` → `Lesson` → `LessonBlock`; free preview chapter access lives on `Section.isFreePreview`.
+2. **Course status vs isPublished** — Status enum (`DRAFT`, `UNDER_REVIEW`, `APPROVED`, `PUBLISHED`, `REJECTED`, `ARCHIVED`) is authoritative for governance; `isPublished` boolean is an additional flag used by catalog filters.
+3. **Money** — `Order` stores both EGP and USD totals; admin prices are entered in EGP and converted using `AppConfig.exchangeRateUsdToEgp`.
+4. **Free courses** — Zod/business rule: `isFree=true` must not have a priced product attached.
+5. **Soft delete** — `Course.deletedAt`; commerce entitlement `orderId` is SetNull-safe.
+6. **Versioned Migrations** — Baseline migration is tracked in `server/prisma/migrations/0001_init/migration.sql` (`npm run db:migrate:deploy`).
+7. **Uploads** — Binary files are not in DB; rows store paths/URLs. Local files reside under `server/uploads/` (gitignored).

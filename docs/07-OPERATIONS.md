@@ -8,7 +8,6 @@
 | Client dev | `cd client && npm run dev` | 3000 |
 | Postgres dev | `docker compose up postgres-dev` | 5434 |
 | Postgres test | `docker compose up postgres-test` | 5433 |
-| Redis | `docker compose up redis` | 6379 (see gap log — unused by app code) |
 
 Built artifacts:
 
@@ -24,16 +23,17 @@ cd client && npm run build   # .next production build
 
 ```bash
 cd server
-npm run db:push          # schema → eduplatform_dev
-npm run db:push:test     # schema → eduplatform_test
-npm run db:reset:test    # force-reset test DB
-npm run db:seed          # prisma/seed.ts
-npm run create:admin     # create/promote admin
+npm run db:migrate:deploy # apply versioned SQL migrations (prisma/migrations/0001_init)
+npm run db:push           # schema → eduplatform_dev
+npm run db:push:test      # schema → eduplatform_test
+npm run db:reset:test     # force-reset test DB
+npm run db:seed           # prisma/seed.ts
+npm run create:admin      # create/promote admin
 ```
 
-**No migrations directory.** Schema sync is `prisma db push` only. CI uses the same approach.
+Baseline SQL migrations are stored in `server/prisma/migrations/0001_init/migration.sql` with `migration_lock.toml`.
 
-Seed contents (typical): default subjects, career tracks, curriculum structure, admin user(s).
+Seed contents: default educational stages, grades, subjects, curriculum structure, and admin user(s).
 
 ---
 
@@ -66,11 +66,11 @@ Seed contents (typical): default subjects, career tracks, curriculum structure, 
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 ```
 
-Optional: `API_PROXY_TARGET` for Next rewrites when not using the public API URL.
+Optional: `API_PROXY_TARGET` for Next rewrites when not using the public API URL; `NEXT_PUBLIC_ENABLE_GATEWAY_CHECKOUT=true` to expose Paymob/Fawry checkout tabs alongside Manual Wallet and Voucher redemption.
 
 ### Test env (`.env.test`)
 
-Isolated test DB `eduplatform_test` on **5433**, test JWT/payment secrets (`setup.ts` preserves `.env.test` values via `??=`).
+Isolated test DB `eduplatform_test` on **5433**, test JWT/payment secrets (`setup.ts` preserves `.env.test` values via `||=`).
 
 ---
 
@@ -86,13 +86,14 @@ Config: `server/vitest.config.ts`
 | Include | `src/**/*.{test,spec}.ts` |
 | File parallelism | **false** (DB contention) |
 | Timeouts | 45s (test + hooks) |
-| Coverage | v8; thresholds statements 80 / branches 75 / functions 80 / lines 80 |
+| Coverage | v8 (`@vitest/coverage-v8`); thresholds statements 70 / branches 60 / functions 80 / lines 70 |
 
 Run:
 
 ```bash
 cd server
 npm test                 # vitest run --no-file-parallelism
+npm run test:coverage    # vitest run --no-file-parallelism --coverage
 npm run typecheck
 ```
 
@@ -114,11 +115,33 @@ npm run typecheck
 | Discussions / AI / Audit / Config / Health | module specs |
 | Utils | `validate.spec.ts`, `webhook-security.spec.ts` |
 
-Current suite count: **55 test suites / 313 tests** (100% passing).
+Current suite count: **56 test suites / 324 tests** (100% passing).
 
 ---
 
-## Playwright (client)
+## Vitest + React Testing Library (client)
+
+Config: `client/vitest.config.ts` & `client/src/test/setup.ts`
+
+| Setting | Value |
+|---------|-------|
+| Environment | `jsdom` |
+| Globals | true |
+| Setup | `src/test/setup.ts` (`@testing-library/jest-dom`, DOM cleanup, `localStorage` & `matchMedia` mocks) |
+| Include | `src/**/*.{test,spec}.{ts,tsx}` |
+
+| File | Focus |
+|------|-------|
+| `src/lib/__tests__/api.spec.ts` | Bearer token injection, single-flight 401 `/auth/refresh` lock & retry, `eduplat:session-expired` event |
+| `src/lib/__tests__/configStore.spec.ts` | `DEFAULT_HOME_CONTENT` fallback, partial deep merge, EN/AR localization |
+| `src/components/__tests__/NotificationBell.spec.tsx` | Unread badge count, dropdown toggle, `PATCH /notifications/:id/read` |
+| `src/components/__tests__/CheckoutModal.spec.tsx` | Course details, instant voucher redemption, manual wallet order submission |
+
+Current suite count: **4 test suites / 12 tests** (100% passing).
+
+---
+
+## Playwright (client E2E)
 
 Config: `client/playwright.config.ts`
 
@@ -138,20 +161,18 @@ Specs:
 | File | Focus |
 |------|-------|
 | `accessibility.spec.ts` | Modal a11y contract |
-| `auth.spec.ts` | Home, language toggle, login form |
+| `auth.spec.ts` | Home, strict RTL/LTR language toggle (`expect(toggledDir).not.toBe(initialDir)`), login form |
 | `configuration.spec.ts` | Config-driven branding regression (needs E2E admin env) |
 | `courses.spec.ts` | Catalog navigation/search |
 | `navigation.spec.ts` | Cross-role navigation |
 | `routing.spec.ts` | Direct URLs + unauth redirects |
-| `video.spec.ts` | Video player security journey |
+| `video.spec.ts` | Catalog display, invalid course fallback, and course navigation |
 
 ```bash
 cd client
 npx playwright install
-npx playwright test
+npm run test:e2e
 ```
-
-**CI does not run Playwright** today (scheduled in `TASK-12`).
 
 ---
 
@@ -167,13 +188,14 @@ Triggers: push (all branches) + pull requests. Concurrency: cancel-in-progress.
 4. `prisma generate`
 5. `prisma db push`
 6. `npm run typecheck`
-7. `npm test`
+7. `npm run test:coverage` (enforces v8 coverage thresholds)
 
 ### Job `client`
 
 1. `npm ci`
 2. `npm run typecheck`
-3. `npm run build`  
+3. `npm test` (Vitest unit & component suites)
+4. `npm run build`  
    (ESLint + TypeScript failures fail the build via `next.config.mjs` gates)
 
 Node: **22**. Lockfiles required.
@@ -216,14 +238,11 @@ Size limits enforced at upload: video 500MB (disk-streamed via `multer.diskStora
 4. `NODE_ENV=production`; auth rate limits active.
 5. `TRUST_PROXY=true` behind nginx/ALB.
 6. HTTPS + correct `CLIENT_URL`/`FRONTEND_URL`.
-7. Postgres backups + schema strategy (migrations scheduled in `TASK-11`).
-8. `prisma db push` applied carefully; prefer `migrate deploy` once migrations exist.
-9. Admin seed passwords rotated; `create:admin` for real admins.
-10. Upload storage (local disk or Supabase) monitored for capacity.
-11. CI green on main; Playwright CI job scheduled in `TASK-12`.
-12. Redis removal from `docker-compose.yml` scheduled in `TASK-11`.
-13. License file if distributing publicly.
-14. Log/audit retention policy for `AuditLog`.
+7. Postgres backups + deploy versioned migrations via `npm run db:migrate:deploy`.
+8. Admin seed passwords rotated; `create:admin` for real admins.
+9. Upload storage (local disk or Supabase) monitored for capacity.
+10. CI green on main (Server coverage + Client Vitest, Typecheck & Build).
+11. Log/audit retention policy for `AuditLog`.
 
 ---
 
@@ -244,6 +263,5 @@ Size limits enforced at upload: video 500MB (disk-streamed via `multer.diskStora
 
 ## Repo hygiene
 
-- `.gitignore`: env files (except `.env.example`), keys, `dist/`, `.next/`, uploads, logs, `tmp_code/`, test artifacts.
-- `tmp_code/` is empty and gitignored — scratch only.
+- `.gitignore`: env files (except `.env.example`), keys, `dist/`, `.next/`, uploads, logs, test artifacts.
 - Root `node_modules/` is not a real install root — install in `client/` and `server/`.

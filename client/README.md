@@ -36,7 +36,7 @@ client/
 │   │   ├── admin/dashboard/    # Admin Console (/admin/dashboard)
 │   │   ├── courses/            # Catalog (/courses) & Player (/courses/[courseId])
 │   │   ├── login/              # Login + MFA challenge page (/login)
-│   │   ├── profile/            # User profile settings (/profile)
+│   │   ├── profile/            # User profile & MFA setup (/profile)
 │   │   ├── register/           # Student & Teacher registration (/register)
 │   │   ├── student/dashboard/  # Student Dashboard (/student/dashboard)
 │   │   ├── teacher/dashboard/  # Teacher Studio (/teacher/dashboard)
@@ -44,20 +44,24 @@ client/
 │   │   ├── page.tsx            # Configurable Landing Page (/)
 │   │   └── providers.tsx       # React Query & Config bootstrapper
 │   ├── components/             # UI & Domain Components
-│   │   ├── admin/              # Admin tabs (Metrics, Users, Approvals, Orders, Vouchers, Settings, etc.)
+│   │   ├── __tests__/          # Component specs (NotificationBell, CheckoutModal)
+│   │   ├── admin/              # Admin tabs (Metrics, Users, Approvals, Pricing, Orders, Vouchers, Settings)
 │   │   ├── ai/                 # AITutorDrawer
 │   │   ├── commerce/           # CheckoutModal, VoucherRedeemModal
 │   │   ├── discussions/        # DiscussionForum
 │   │   ├── editor/             # TiptapEditor (sanitized via isomorphic-dompurify)
+│   │   ├── layout/             # Navbar, NotificationBell
 │   │   ├── player/             # VideoPlayerSection, InteractiveQuizRunner, AssignmentRunner, etc.
 │   │   ├── settings/           # MfaSetupModal
 │   │   ├── teacher/            # CourseManager, AssignmentStudio, LiveSessionsManager, etc.
 │   │   └── ui/                 # Accessible Modal primitive
-│   ├── lib/                    # api.ts, apiTypes.ts, store.ts, configStore.ts, useRequireRole.ts, useT.ts
+│   ├── lib/                    # api.ts, apiTypes.ts, store.ts, configStore.ts, useRequireRole.ts, useT.ts, __tests__/
+│   ├── test/                   # Vitest + React Testing Library setup (setup.ts)
 │   └── middleware.ts           # Edge route guard for /admin, /teacher, /student, /profile
 ├── next.config.mjs             # Rewrites (/api/v1 & /uploads -> :5000) and strict build gates
 ├── playwright.config.ts        # Dual webServer E2E runner (Next :3000 + API :5000)
 ├── tailwind.config.ts          # Tailwind theme tokens
+├── vitest.config.ts            # Vitest jsdom unit & component test configuration
 └── package.json
 ```
 
@@ -80,9 +84,12 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 
 ---
 
-## 🏗️ Build, Lint & E2E Commands
+## 🏗️ Test, Build, Lint & E2E Commands
 
 ```bash
+# Run unit & component tests (Vitest + React Testing Library: 4 suites / 12 tests)
+npm test
+
 # TypeScript check
 npm run typecheck
 
@@ -93,5 +100,5 @@ npm run lint
 npm run build
 
 # Run Playwright E2E tests (starts both client and server if not running)
-npx playwright test
+npm run test:e2e
 ```

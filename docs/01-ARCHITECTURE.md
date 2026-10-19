@@ -41,7 +41,8 @@ server/
 ├── vitest.config.ts           # globals, node env, fileParallelism: false
 ├── .env / .env.example / .env.test
 ├── prisma/
-│   ├── schema.prisma          # 32 models, 16 enums
+│   ├── migrations/            # Versioned SQL migrations (0001_init/migration.sql)
+│   ├── schema.prisma          # 32 models, 17 enums
 │   └── seed.ts                # subjects, admin, curriculum
 ├── scripts/
 │   ├── db-env.js              # run prisma CLI against a given env file
@@ -64,7 +65,9 @@ server/
 | `build` | `tsc` |
 | `start` | `node dist/server.js` |
 | `test` | `vitest run --no-file-parallelism` |
+| `test:coverage` | `vitest run --no-file-parallelism --coverage` |
 | `typecheck` | `tsc --noEmit` |
+| `db:migrate:deploy` | `prisma migrate deploy` |
 | `db:push` | `prisma db push` (dev DB) |
 | `db:push:test` | `node scripts/db-env.js .env.test db push` |
 | `db:reset:test` | `node scripts/db-env.js .env.test db push --force-reset` |

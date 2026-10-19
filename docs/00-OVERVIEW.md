@@ -28,35 +28,29 @@ Registration via `POST /api/v1/auth/register` only accepts `STUDENT` and `TEACHE
 
 ## Feature Matrix (As-Built Code Reality)
 
-Status Legend:
-- ✅ **Implemented & Wired**: Backend and frontend are connected, secured, and verified by automated tests.
-- 🟡 **Partial / Scheduled for Phase 3–4**: Implemented in backend/frontend, with remaining enhancements scheduled in [`08-GAP-LOG.md`](./08-GAP-LOG.md) (`TASK-08`..`TASK-12`).
-- ❌ **Unused / Scheduled Removal**: Present in Docker only (`TASK-11`).
+All core domains are **Implemented, Wired, and Verified** by automated backend (Vitest + Supertest) and frontend (Vitest + React Testing Library + Playwright) test suites:
 
 | Domain | Status | Code Reality Notes |
 | :--- | :---: | :--- |
 | **Auth (JWT Access + Rotating Refresh)** | ✅ | Hashed `RefreshToken` table; reuse detection revokes entire user token family; Edge middleware checks `exp` and role allowlist. |
-| **TOTP MFA + QR Enrollment** | 🟡 | Backend (`/api/v1/mfa/*`) and `/login` challenge work; mounting `MfaSetupModal.tsx` on `/profile` is scheduled in `TASK-10`. |
+| **TOTP MFA + QR Enrollment** | ✅ | Backend (`/api/v1/mfa/*`), `/login` challenge, and `/profile` `MfaSetupModal.tsx` enrollment/re-enrollment flow. |
 | **RBAC (3 Roles + Teacher Approval)** | ✅ | `requireRole` + `requireApprovedTeacher`; student commerce endpoints disable admin bypass. |
 | **Academic Structure** | ✅ | `EducationalStage` → `Grade` → `AcademicYear` → `GradeSubject` → `Subject`. |
-| **Courses & Governance** | 🟡 | Lifecycle works and nested media/quiz fields are stripped from un-entitled callers (`TASK-01`/`TASK-02`); `reviewCourseStatus` `AuditLog.userId` fix scheduled in `TASK-08`. |
-| **Unified Curriculum (`Section` → `Lesson`)** | ✅ | Unified onto `Course` → `Section` → `Lesson` → `LessonBlock` (`CourseModule` retired in `TASK-06`). |
-| **Video Upload & Playback** | ✅ | Disk-streamed uploads up to 500MB (`multer.diskStorage()`) + entitlement-gated signed `/stream` endpoint; `/uploads/lesson-videos` blocked from static serving (`TASK-01`/`TASK-03`). |
-| **Materials (PDF/Office/etc.)** | ✅ | 50MB limit, MIME whitelist, served exclusively through entitlement-gated `GET /api/v1/materials/:id/download` (`TASK-01`). |
-| **Quizzes (Lesson-Attached)** | ✅ | Deterministic auto-grading for `MCQ`, `TRUE_FALSE`, `MULTIPLE_SELECT`, and normalized `SHORT_ANSWER`; teacher ownership and student entitlement enforced (`TASK-02`/`TASK-07`). |
-| **Assignments & Grading** | 🟡 | Full teacher/student workflow for written/essay and file submissions; local `/uploads/...` URL schema validation fix scheduled in `TASK-08`. |
+| **Courses & Governance** | ✅ | Lifecycle (`DRAFT` → `UNDER_REVIEW` → `APPROVED` → `PUBLISHED`), nested media/quiz sanitization for un-entitled callers, and admin `AuditLog` tracking. |
+| **Unified Curriculum (`Section` → `Lesson`)** | ✅ | Unified onto `Course` → `Section` → `Lesson` → `LessonBlock` with `Section.isFreePreview` support. |
+| **Video Upload & Playback** | ✅ | Disk-streamed uploads up to 500MB (`multer.diskStorage()`) + entitlement-gated signed `/stream` endpoint; `/uploads/lesson-videos` blocked from static serving. |
+| **Materials (PDF/Office/etc.)** | ✅ | 50MB limit, MIME whitelist, served exclusively through entitlement-gated `GET /api/v1/materials/:id/download`. |
+| **Quizzes (Lesson-Attached)** | ✅ | Deterministic auto-grading for `MCQ`, `TRUE_FALSE`, `MULTIPLE_SELECT`, and normalized `SHORT_ANSWER`; teacher ownership and student entitlement enforced. |
+| **Assignments & Grading** | ✅ | Full teacher/student workflow for written/essay and file submissions (supporting both local `/uploads/submission-files/...` paths and external URLs). |
 | **Progress Tracking** | ✅ | Watch time + completion tracking gated by `EntitlementResolver`. |
 | **Manual Subscriptions (Vodafone Cash / InstaPay)** | ✅ | Student request + Admin approval queue (`OfflinePaymentQueue`). |
-| **Commerce (Products, Orders, Vouchers)** | 🟡 | Manual orders, atomic vouchers, and inbound Paymob/Fawry webhooks work; gateway feature flag & mounting `CoursePricingManager.tsx` scheduled in `TASK-09`. |
+| **Commerce (Products, Orders, Vouchers)** | ✅ | Streamlined `CheckoutModal` (Manual Wallet + Vouchers, plus optional gateway flag), atomic vouchers, inbound Paymob/Fawry webhooks, and Admin `CoursePricingManager.tsx`. |
 | **Entitlement Resolver** | ✅ | Resolves access across `COURSE`, parent `SUBJECT`, and `GRADE_BUNDLE`. |
 | **Platform Config / Branding / `homeContent`** | ✅ | Public `GET /config` and Admin `PUT/PATCH /config` with live landing page editor. |
-| **Live Sessions** | 🟡 | Meeting URL support (`Zoom`/`Meet`/`Teams`) scheduled in `TASK-08`. |
+| **Live Sessions** | ✅ | Supports teacher-provided external meeting URLs (`Zoom`, `Google Meet`, `Microsoft Teams`) in `LiveSessionManager.tsx`. |
 | **AI Tutor Drawer** | ✅ | Calls Google Gemini (`gemini-1.5-flash`) via `POST /api/v1/ai/tutor`. |
 | **Discussions** | ✅ | Course threads and replies (`DiscussionForum.tsx`). |
-| **Notifications & Announcements** | 🟡 | Backend endpoints and Teacher `AnnouncementManager` work; student notification bell UI scheduled in `TASK-10`. |
-| **Redis** | ❌ | Present in `docker-compose.yml`, unused by `server/` (removal scheduled in `TASK-11`). |
-
-> **Pruned in Phase 2 (`TASK-04`..`TASK-07`)**: Unsandboxed `playground` RCE, single-user `board`, no-op `developer`, unmounted `podcasts`, redundant `collections`, `careers`, `CourseModule`, and duplicate `assessment` module have been removed to keep the codebase lean and reliable.
+| **Notifications & Announcements** | ✅ | Teacher `AnnouncementManager.tsx` broadcasts + Student `NotificationBell.tsx` in `Navbar.tsx` wired to `/api/v1/notifications/me`. |
 
 ---
 
@@ -64,16 +58,18 @@ Status Legend:
 
 ```text
 digital-platform/
-├── client/                 # Next.js 14 App Router SPA + Playwright E2E
+├── client/                 # Next.js 14 App Router SPA + Vitest + Playwright E2E
 │   ├── e2e/                # 7 Playwright spec files
 │   ├── playwright.config.ts
+│   ├── vitest.config.ts    # Vitest + jsdom unit/component test configuration
 │   └── src/
 │       ├── app/            # 9 App Router page routes
-│       ├── components/     # Role dashboards, course player, admin, teacher, ui
-│       ├── lib/            # api.ts, Zustand stores, i18n helpers
+│       ├── components/     # Role dashboards, course player, admin, teacher, ui, __tests__/
+│       ├── lib/            # api.ts, Zustand stores, i18n helpers, __tests__/
+│       ├── test/           # Vitest global setup (setup.ts)
 │       └── middleware.ts   # Edge UX route redirect guard
 ├── server/                 # Express 5 API
-│   ├── prisma/             # schema.prisma (32 models, 16 enums) + seed.ts
+│   ├── prisma/             # schema.prisma (32 models, 17 enums), migrations/, + seed.ts
 │   ├── scripts/            # db-env.js (test DB helper), run-demo.ts
 │   ├── src/
 │   │   ├── app.ts          # Middleware pipeline + /api/v1 route mounts
@@ -82,9 +78,10 @@ digital-platform/
 │   │   ├── modules/        # 19 domain modules (routes → controller → service + __tests__)
 │   │   └── utils/          # env, jwt, totp, schemas, storage, webhook-security, cache, logger
 │   ├── tests/setup.ts      # Vitest global setup
+│   ├── vitest.config.ts    # Vitest configuration + v8 coverage thresholds
 │   └── create-admin.js
 ├── docker-compose.yml      # postgres-dev (:5434), postgres-test (:5433)
 ├── .github/workflows/ci.yml
-├── docs/                   # Canonical engineering documentation (00 through 09 + tasks/)
+├── docs/                   # Canonical engineering documentation (00 through 07)
 └── README.md
 ```

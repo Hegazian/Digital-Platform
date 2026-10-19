@@ -10,7 +10,7 @@ For deep-dive documentation, see [`../docs/README.md`](../docs/README.md).
 
 - **Architecture Style**: Modular monolith (`routes` → `controller` → `service`) with 19 domain modules mounted under `/api/v1`.
 - **Runtime & Framework**: Node.js 22+ with Express 5.2.1 and strict TypeScript.
-- **Database & ORM**: PostgreSQL 15 managed via Prisma 5.11 (`prisma db push`).
+- **Database & ORM**: PostgreSQL 15 managed via Prisma 5.11 with versioned SQL migrations (`prisma/migrations/0001_init`) and `prisma db push`.
 - **Caching & Rate Limiting**: In-memory TTL cache (`src/utils/cache.ts`) and `express-rate-limit` middleware.
 - **Authentication**: Bearer Access JWT (`15m`), `httpOnly` Refresh JWT cookie (`eduplat_rt`, `7d`) with SHA-256 database rotation and reuse detection, plus RFC 6238 TOTP MFA (`otplib`).
 - **Validation**: Request body and query validation via Zod (`src/utils/schemas.ts`, `src/utils/validate.ts`).
@@ -22,7 +22,8 @@ For deep-dive documentation, see [`../docs/README.md`](../docs/README.md).
 ```text
 server/
 ├── prisma/
-│   ├── schema.prisma          # 32 models, 16 enums
+│   ├── migrations/            # Versioned baseline SQL migrations (0001_init/migration.sql)
+│   ├── schema.prisma          # 32 models, 17 enums
 │   └── seed.ts                # Initial curriculum & admin seed script
 ├── scripts/
 │   ├── db-env.js              # Helper to run Prisma CLI against .env.test
@@ -40,7 +41,7 @@ server/
 │   │   ├── courses/           # Courses, sections, lessons, blocks, subjects
 │   │   ├── discussions/       # Course discussion threads and replies
 │   │   ├── health/            # DB ping, uptime, and memory health check
-│   │   ├── live/              # Live session scheduling
+│   │   ├── live/              # Live session scheduling (Zoom / Google Meet / Teams join URLs)
 │   │   ├── materials/         # Lesson material uploads (50MB limit) & entitled download
 │   │   ├── notifications/     # User notifications
 │   │   ├── progress/          # Lesson watch time and completion tracking
@@ -56,7 +57,7 @@ server/
 ├── tests/
 │   └── setup.ts               # Vitest global test setup
 ├── create-admin.js            # CLI script to create/promote an ADMIN user
-├── vitest.config.ts           # Vitest configuration (serial file execution)
+├── vitest.config.ts           # Vitest configuration (serial file execution + v8 coverage thresholds)
 └── package.json
 ```
 
@@ -100,6 +101,9 @@ TRUST_PROXY="false"
 ## 🗄️ Database & Operational Commands
 
 ```bash
+# Deploy versioned SQL migrations to target DB
+npm run db:migrate:deploy
+
 # Push schema to development DB (localhost:5434 / eduplatform_dev)
 npm run db:push
 
@@ -118,13 +122,16 @@ npm run create:admin
 
 ---
 
-## 🧪 Testing & Typechecking
+## 🧪 Testing, Coverage & Typechecking
 
 Tests run serially against `eduplatform_test` (`localhost:5433`) using **Vitest** and **Supertest**:
 
 ```bash
-# Run all 55 test suites (313 tests)
+# Run all 56 test suites (324 tests)
 npm test
+
+# Run full suite with enforced v8 coverage thresholds (70% stmts, 60% branch, 80% funcs, 70% lines)
+npm run test:coverage
 
 # Run a single module's test suite
 npx vitest run src/modules/commerce

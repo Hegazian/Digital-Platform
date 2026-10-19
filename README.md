@@ -11,7 +11,7 @@
 
 A paid, bilingual (**English LTR / Arabic RTL**) educational platform built with an **Express 5 + TypeScript + Prisma** modular monolith backend and a **Next.js 14 App Router** frontend. Originally scoped for the Egyptian secondary curriculum (Thanaweya Amma), the platform's academic hierarchy, branding, and landing page copy are dynamically configurable from the Admin Dashboard.
 
-👉 **Full Technical Documentation**: See [`docs/README.md`](./docs/README.md) for the complete architecture, data model, API catalog, security guide, and engineering gap log.
+👉 **Full Technical Documentation**: See [`docs/README.md`](./docs/README.md) for the complete architecture, data model, API catalog, security guide, and operations manual.
 
 ---
 
@@ -24,19 +24,19 @@ A paid, bilingual (**English LTR / Arabic RTL**) educational platform built with
 
 ### 🛡️ Authentication, RBAC & Security
 - **JWT Access + Rotating Refresh Tokens**: Short-lived Bearer access tokens (`15m`) paired with `httpOnly` refresh cookies (`eduplat_rt`, `7d`) backed by a server-side SHA-256 `RefreshToken` registry and token-family reuse revocation.
-- **Two-Factor Authentication (TOTP MFA)**: RFC 6238 TOTP enrollment with QR code generation and replay protection (`mfaLastTimeStep`).
+- **Two-Factor Authentication (TOTP MFA)**: RFC 6238 TOTP enrollment on `/profile` (`MfaSetupModal`) with QR code generation and replay protection (`mfaLastTimeStep`).
 - **Role-Based Access Control (RBAC)**: Three distinct roles (`STUDENT`, `TEACHER`, `ADMIN`) plus secondary teacher approval gating (`TeacherStatus`: `PENDING`, `APPROVED`, `REJECTED`).
 
 ### 📚 Course Delivery & Learning Tools
 - **Academic Hierarchy**: `EducationalStage` → `Grade` → `AcademicYear` → `GradeSubject` → `Subject` → `Course` → `Section` → `Lesson` → `LessonBlock`.
-- **Course Governance Workflow**: `DRAFT` → `UNDER_REVIEW` → `APPROVED` → `PUBLISHED` / `REJECTED` / `ARCHIVED`, with soft-delete protection (`deletedAt`).
-- **Gated Video & Material Delivery**: Video upload (local disk or Supabase Storage) with entitlement-checked playback URLs and HMAC-SHA256 signed local range streaming (`/api/v1/videos/:videoId/stream`).
-- **Quizzes & Assignments**: Timed auto-graded lesson quizzes (MCQ, True/False, Multi-Select, Short Answer) and file/text homework assignments with teacher grading and feedback.
-- **Interactive Lesson Blocks**: Support for `VIDEO`, `TEXT`, `DOCUMENT`, `QUIZ`, `ASSIGNMENT`, `LIVE_SESSION`, and `LINK` blocks, plus an authenticated Google Gemini AI Tutor drawer (`POST /api/v1/ai/tutor`).
+- **Course Governance Workflow**: `DRAFT` → `UNDER_REVIEW` → `APPROVED` → `PUBLISHED` / `REJECTED` / `ARCHIVED`, with soft-delete protection (`deletedAt`) and admin audit logging (`AuditLog`).
+- **Gated Video & Material Delivery**: Disk-streamed video uploads (local disk or Supabase Storage) with entitlement-checked playback URLs, HMAC-SHA256 signed local range streaming (`/api/v1/videos/:videoId/stream`), and entitlement-gated material downloads (`/api/v1/materials/:id/download`).
+- **Quizzes & Assignments**: Timed auto-graded lesson quizzes (`MCQ`, `TRUE_FALSE`, `MULTIPLE_SELECT`, `SHORT_ANSWER`) and file/text homework assignments with teacher grading and feedback.
+- **Interactive Lesson Blocks**: Support for `VIDEO`, `TEXT`, `DOCUMENT`, `QUIZ`, `ASSIGNMENT`, `LIVE_SESSION` (external Zoom / Google Meet / Teams join URLs), and `LINK` blocks, plus an authenticated Google Gemini AI Tutor drawer (`POST /api/v1/ai/tutor`).
 
 ### 💳 Commerce, Subscriptions & Entitlements
 - **Hierarchical Entitlement Resolver**: Access granted via direct `COURSE` purchase, parent `SUBJECT` subscription/purchase, or `GRADE_BUNDLE` entitlement, plus `Section.isFreePreview` and `Course.isFree` support.
-- **Payment Channels**: Manual wallet subscriptions/orders (Vodafone Cash, InstaPay) with Admin reconciliation queues, atomic `Voucher` code redemption, and HMAC-verified inbound webhooks for **Paymob** and **Fawry**.
+- **Payment Channels**: Manual wallet subscriptions/orders (Vodafone Cash, InstaPay) with Admin reconciliation queues, atomic `Voucher` code redemption, and HMAC-verified inbound webhooks for **Paymob** and **Fawry** (`CoursePricingManager` mounted in Admin Console).
 
 ---
 
@@ -79,16 +79,18 @@ graph TB
 ```text
 digital-platform/
 ├── client/                     # Next.js 14.2.35 App Router Frontend
-│   ├── e2e/                    # Playwright E2E test specifications
+│   ├── e2e/                    # Playwright E2E test specifications (7 spec files)
 │   ├── src/
 │   │   ├── app/                # App Router pages (/, /courses, /student, /teacher, /admin, /profile)
-│   │   ├── components/         # Role dashboards, course player, editors, modals
-│   │   ├── lib/                # fetchApi client, Zustand stores, i18n helper
+│   │   ├── components/         # Role dashboards, course player, editors, modals, __tests__/
+│   │   ├── lib/                # fetchApi client, Zustand stores, i18n helper, __tests__/
+│   │   ├── test/               # Vitest + React Testing Library global setup
 │   │   └── middleware.ts       # Edge UX route guard
+│   ├── vitest.config.ts        # Frontend unit/component test configuration
 │   └── package.json
 │
 ├── server/                     # Express 5 + TypeScript Backend API
-│   ├── prisma/                 # schema.prisma (32 models, 16 enums) & seed.ts
+│   ├── prisma/                 # schema.prisma (32 models, 17 enums), migrations/, & seed.ts
 │   ├── scripts/                # Test database environment helper (db-env.js)
 │   ├── src/
 │   │   ├── modules/            # 19 domain modules (routes, controllers, services, __tests__)
@@ -97,11 +99,12 @@ digital-platform/
 │   │   ├── app.ts              # Express app pipeline & route mounts
 │   │   └── server.ts           # HTTP server entry point
 │   ├── tests/setup.ts          # Vitest global setup
+│   ├── vitest.config.ts        # Backend test & v8 coverage threshold configuration
 │   └── package.json
 │
-├── docs/                       # Canonical codebase documentation (00-OVERVIEW to 09-ROADMAP)
-├── .github/workflows/ci.yml    # GitHub Actions CI (Server Vitest + Client Typecheck & Build)
-└── docker-compose.yml          # Local PostgreSQL (Dev :5434, Test :5433) containers
+├── docs/                       # Canonical codebase documentation (00-OVERVIEW to 07-OPERATIONS)
+├── .github/workflows/ci.yml    # GitHub Actions CI (Server Coverage + Client Vitest, Typecheck & Build)
+└── docker-compose.yml          # Local PostgreSQL 15 (Dev :5434, Test :5433) containers
 ```
 
 ---
@@ -131,8 +134,8 @@ npm ci
 # DATABASE_URL="postgresql://devuser:devpassword@localhost:5434/eduplatform_dev"
 cp .env.example .env
 
-# Push Prisma schema to development database & seed initial data
-npm run db:push
+# Apply Prisma migrations (or db:push) & seed initial data
+npm run db:migrate:deploy
 npm run db:seed
 
 # Start development server
@@ -151,23 +154,27 @@ npm run dev
 
 ## 🧪 Testing & Verification
 
-### Backend Tests (Vitest + Supertest)
+### Backend Tests & Coverage (Vitest + Supertest)
 ```bash
 cd server
 
 # Sync schema to the isolated test database (Port 5433)
 npm run db:push:test
 
-# Run all 55 backend test suites serially (313 tests)
+# Run all 56 backend test suites serially (324 tests)
 npm test
+
+# Run with enforced v8 coverage thresholds
+npm run test:coverage
 
 # Type-check backend code
 npm run typecheck
 ```
 
-### Frontend Typecheck, Lint & Build
+### Frontend Unit/Component Tests, Typecheck, Lint & Build
 ```bash
 cd client
+npm test
 npm run typecheck
 npm run lint
 npm run build
@@ -176,7 +183,7 @@ npm run build
 ### End-to-End Tests (Playwright)
 ```bash
 cd client
-npx playwright test
+npm run test:e2e
 ```
 
 ---
@@ -188,10 +195,8 @@ All architectural and operational documentation lives in [`docs/`](./docs/README
 - [**00 — Overview**](./docs/00-OVERVIEW.md): Product scope, 3-role matrix, and feature status.
 - [**01 — Architecture**](./docs/01-ARCHITECTURE.md): Request pipeline, module pattern, and client-server integration.
 - [**02 — Local Setup**](./docs/02-SETUP.md): Detailed environment variables, database sync, and troubleshooting.
-- [**03 — Data Model**](./docs/03-DATA-MODEL.md): Complete reference for all 35 Prisma models and 20 enums.
-- [**04 — Auth & Security**](./docs/04-AUTH-AND-SECURITY.md): JWT rotation, TOTP MFA, RBAC, entitlement resolver, and known security gaps.
+- [**03 — Data Model**](./docs/03-DATA-MODEL.md): Complete reference for all 32 Prisma models and 17 enums.
+- [**04 — Auth & Security**](./docs/04-AUTH-AND-SECURITY.md): JWT rotation, TOTP MFA, RBAC, entitlement resolver, and security controls.
 - [**05 — Features**](./docs/05-FEATURES.md): Feature-by-feature breakdown across all domains.
 - [**06 — API Catalog**](./docs/06-API-CATALOG.md): Complete REST endpoint catalog under `/api/v1`.
 - [**07 — Operations & CI**](./docs/07-OPERATIONS.md): Testing, CI pipeline, storage, and production checklist.
-- [**08 — Gap Log**](./docs/08-GAP-LOG.md): Known bugs, unmounted UI components, stubs, and technical risks.
-- [**09 — Roadmap & Simplification Plan**](./docs/09-ROADMAP.md): Prioritized engineering roadmap and simplification strategy.

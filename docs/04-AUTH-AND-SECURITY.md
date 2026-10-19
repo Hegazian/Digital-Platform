@@ -24,7 +24,7 @@ Implemented in [`server/src/modules/auth/auth.service.ts`](../server/src/modules
 4. `POST /api/v1/auth/mfa-login` verifies the 6-digit TOTP code (`src/utils/totp.ts`) and updates `User.mfaLastTimeStep` to block replay attacks within the same 30-second window.
 5. Issue access + refresh tokens and persist the hashed `RefreshToken` record.
 
-> **Current UI Note**: While backend MFA endpoints (`/api/v1/mfa/setup`, `/api/v1/mfa/verify`) and `/login` MFA challenge verification are complete, [`MfaSetupModal.tsx`](../client/src/components/settings/MfaSetupModal.tsx) is currently unmounted in `/profile/page.tsx`.
+> **UI Enrollment**: Authenticated users can enroll or re-enroll in TOTP 2FA on `/profile` ([`client/src/app/profile/page.tsx`](../client/src/app/profile/page.tsx)) via [`MfaSetupModal.tsx`](../client/src/components/settings/MfaSetupModal.tsx). Re-enrolling when `mfaEnabled=true` requires current password and active 6-digit TOTP verification.
 
 ---
 
@@ -61,19 +61,19 @@ In `AuthService.refreshToken`:
 
 ---
 
-## Security Controls & Remediations (Tracked in `08-GAP-LOG.md`)
+## Enforced Security Controls
 
-1. **Protected Media & Material Downloads (`P0-1` — ✅ Resolved in TASK-01)**:
+1. **Protected Media & Material Downloads**:
    - `CourseService.getAllCourses` and `CourseService.getCourseById` strip `lessons.video.videoUrl` and `lessons.materials.fileUrl` for un-enrolled/anonymous callers on non-preview lessons.
    - `app.ts` blocks direct unauthenticated static access (`403 Forbidden`) to `/uploads/lesson-videos` and `/uploads/lesson-materials`.
    - `GET /api/v1/materials/:id/download` enforces course/lesson entitlement before returning material download URLs.
-2. **Quiz Answer Key & Ownership Lockdown (`P0-2` — ✅ Resolved in TASK-02)**:
+2. **Quiz Answer Key & Ownership Lockdown**:
    - `CourseService.sanitizeCourseContent` strips `Question.correctAnswer`, `Question.explanation`, and `options[].isCorrect`.
    - `QuizService.getQuizById` (`GET /api/v1/quizzes/:id`) enforces teacher ownership (`EntitlementResolver.getQuizOwnerTeacherId`) and student course entitlement (`EntitlementResolver.hasLessonAccess`), stripping answer keys for all students.
-3. **Host Python Subprocess Execution (`P0-3` — ✅ Resolved in TASK-04)**:
-   - Removed `playground.controller.ts`, `playground.routes.ts`, `board.controller.ts`, `board.routes.ts`, and the `Playground` / `Board` Prisma models, completely eliminating host OS `child_process.spawn('python')` execution.
-4. **Disk Streaming Video Uploads (`P0-4` — ✅ Resolved in TASK-03)**:
+3. **Zero Host Code Execution**:
+   - No arbitrary code execution endpoints exist; lesson blocks are restricted to safe media/activity types (`VIDEO`, `TEXT`, `DOCUMENT`, `QUIZ`, `ASSIGNMENT`, `LIVE_SESSION`, `LINK`).
+4. **Disk Streaming Video Uploads**:
    - `video.routes.ts` uses `multer.diskStorage()` streaming to `.tmp` with automatic cleanup in `finally`, eliminating 500MB V8 heap OOM risks.
-5. **Edge Middleware & Rich-Text Sanitization (`P0-5` — ✅ Resolved in TASK-03)**:
+5. **Edge Middleware & Rich-Text Sanitization**:
    - `client/src/middleware.ts` validates JWT `exp` timestamps, enforces strict role whitelists (`STUDENT | TEACHER | ADMIN`), and deletes expired/invalid `eduplat_rt` cookies.
    - `TiptapEditor.tsx` sanitizes HTML via `DOMPurify.sanitize` (`isomorphic-dompurify`) before rendering `dangerouslySetInnerHTML`.

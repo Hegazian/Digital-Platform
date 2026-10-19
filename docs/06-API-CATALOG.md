@@ -236,7 +236,7 @@ Router-level: `authenticate + requireRole([ADMIN])`.
 
 | Method | Path | Purpose | Auth |
 |--------|------|---------|------|
-| POST | `/live/sessions` | Create Zoom live session | Teacher |
+| POST | `/live/sessions` | Create live session (supports external Zoom / Google Meet / Teams `joinUrl`) | Teacher |
 | GET | `/live/sessions/subject/:subjectId` | Sessions for subject | Student |
 
 ---
@@ -293,7 +293,7 @@ The Next.js client calls these prefixes via `fetchApi`:
 - Auth/profile/MFA, config, academic, subjects, courses (incl. teacher curriculum + admin review)
 - videos, materials, progress
 - quizzes, assignments
-- teacher analytics/announcements/live
+- teacher analytics/announcements/live, notifications (`NotificationBell`)
 - discussions, AI tutor
 - commerce (products, orders, vouchers, entitlement checks, admin queues)
 - subscriptions (admin queue)

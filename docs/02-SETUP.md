@@ -4,7 +4,7 @@
 
 - Node.js **22** (CI uses Node 22)
 - npm
-- Docker + Docker Compose (Postgres + Redis)
+- Docker + Docker Compose (PostgreSQL 15)
 - (Optional) Supabase project for remote video/material storage
 - (Optional) Resend API key, Paymob/Fawry secrets, Gemini API key
 
@@ -37,11 +37,8 @@ docker compose up -d
 |---------|-----------|-----------|-----------------|----------|
 | `postgres-dev` | postgres:15-alpine | **5434** | `devuser` / `devpassword` | **`eduplatform_dev`** |
 | `postgres-test` | postgres:15-alpine | **5433** | `testuser` / `testpassword` | **`eduplatform_test`** |
-| `redis` | redis:7-alpine | 6379 | — | — |
 
-Volumes: `postgres_dev_data`, `postgres_test_data`, `redis_data`.
-
-**Note:** Older READMEs say DB `eduplatform` on 5434 — the compose file uses **`eduplatform_dev`** and user `devuser`. Use compose values.
+Volumes: `postgres_dev_data`, `postgres_test_data`.
 
 ---
 
@@ -97,15 +94,16 @@ If unset, the client defaults to relative `/api/v1` and relies on Next rewrites 
 
 ---
 
-## 4. Database schema sync
+## 4. Database schema sync & migrations
 
-Schema is pushed to PostgreSQL via Prisma:
+Schema is managed via versioned Prisma migrations (`server/prisma/migrations/0001_init`) or `prisma db push`:
 
 ```bash
 cd server
-npm run db:push          # dev DB (eduplatform_dev)
-npm run db:push:test     # test DB (eduplatform_test) via scripts/db-env.js
-npm run db:reset:test    # force-reset test DB
+npm run db:migrate:deploy # apply versioned SQL migrations
+npm run db:push           # dev DB (eduplatform_dev)
+npm run db:push:test      # test DB (eduplatform_test) via scripts/db-env.js
+npm run db:reset:test     # force-reset test DB
 ```
 
 Seeding:
@@ -124,7 +122,7 @@ cd server
 npm run create:admin     # node create-admin.js
 ```
 
-Default seed admin referenced in older docs: `admin@eduplatform.com` / `AdminPass123!` — **change this in any shared environment**.
+Default seed admin: `admin@eduplatform.com` / `AdminPass123!` — **change this in any shared environment**.
 
 ---
 
@@ -162,10 +160,12 @@ Same-origin `/api/v1` and `/uploads` are rewritten to the API origin, so cookies
 # Server
 cd server
 npm run typecheck
-npm test                 # vitest, serial file execution (DB contention)
+npm test                 # vitest, serial file execution (56 suites / 324 tests)
+npm run test:coverage    # vitest with enforced v8 coverage thresholds
 
 # Client
 cd client
+npm test                 # vitest + React Testing Library (4 suites / 12 tests)
 npm run typecheck
 npm run lint             # next lint
 npm run build            # quality gates: eslint + tsc failures fail the build
