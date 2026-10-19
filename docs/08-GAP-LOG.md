@@ -21,11 +21,11 @@ This document records all **verified security vulnerabilities (P0)**, **function
 ### 1. Built Frontend Components Never Mounted in App Router Pages
 Five complete frontend components exist in `client/src/components/` and are wired to backend endpoints, but are **not imported by any page**:
 
-1. [`MfaSetupModal.tsx`](../client/src/components/settings/MfaSetupModal.tsx) — TOTP QR setup modal (never mounted in `/profile/page.tsx`).
+1. **MfaSetupModal.tsx** — ✅ Resolved in TASK-10 (mounted in `/profile/page.tsx` with status badge and re-enrollment support).
 2. **CoursePricingManager.tsx** — ✅ Resolved in TASK-09 (mounted in `AdminDashboard.tsx` under dedicated 'Pricing & Products' tab).
 3. **AssessmentRunner.tsx** — ✅ Resolved in TASK-07 (retired alongside `assessment` module).
 4. **PodcastPlayer.tsx & CollectionCard.tsx** — ✅ Resolved in TASK-05 (pruned alongside `podcasts` and `collections`).
-5. **Student Notification Inbox**: `GET /api/v1/notifications/me` and `PATCH /api/v1/notifications/:id/read` exist on the server, and teachers can broadcast announcements via `AnnouncementManager.tsx`, but students have no notification bell or inbox UI.
+5. **Student Notification Inbox** — ✅ Resolved in TASK-10 (built and mounted `NotificationBell.tsx` in `Navbar.tsx` wired to `GET /notifications/me` and `PATCH /notifications/:id/read`).
 
 ### 2. Verified Functional Bugs in Active Flows
 

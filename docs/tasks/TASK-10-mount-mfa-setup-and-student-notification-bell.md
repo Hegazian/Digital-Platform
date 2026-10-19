@@ -68,9 +68,9 @@ Ensure `NotificationBell` respects RTL/LTR layout alignment (`right-0` in LTR, `
 
 ## 4. Code Review Checklist
 
-- [ ] Does `GET /api/v1/auth/profile` return `mfaEnabled` (and **never** `mfaSecret`)?
-- [ ] Is `MfaSetupModal.tsx` mounted on `/profile` and able to complete QR code setup and 6-digit verification?
-- [ ] Is `NotificationBell.tsx` mounted in `Navbar.tsx` for authenticated users, showing unread badge counts and marking notifications read via `PATCH /api/v1/notifications/:id/read`?
+- [x] Does `GET /api/v1/auth/profile` return `mfaEnabled` (and **never** `mfaSecret`)?
+- [x] Is `MfaSetupModal.tsx` mounted on `/profile` and able to complete QR code setup and 6-digit verification?
+- [x] Is `NotificationBell.tsx` mounted in `Navbar.tsx` for authenticated users, showing unread badge counts and marking notifications read via `PATCH /api/v1/notifications/:id/read`?
 
 ---
 

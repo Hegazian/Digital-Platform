@@ -123,22 +123,41 @@ export class TeacherService {
 
   static async broadcastAnnouncement(data: {
     teacherId: string;
-    courseId: string;
+    courseId?: string;
     titleEn: string;
     titleAr: string;
     messageEn: string;
     messageAr: string;
   }) {
-    const course = await prisma.course.findUnique({
-      where: { id: data.courseId },
-    });
+    let courseIds: string[] = [];
+    let subjectIds: string[] = [];
 
-    if (!course) {
-      throw new NotFoundError('Course not found');
+    if (data.courseId) {
+      const course = await prisma.course.findUnique({
+        where: { id: data.courseId },
+      });
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      if (course.teacherId !== data.teacherId) {
+        throw new ForbiddenError('You do not own this course');
+      }
+
+      courseIds = [course.id];
+      subjectIds = [course.subjectId];
+    } else {
+      const teacherCourses = await prisma.course.findMany({
+        where: { teacherId: data.teacherId },
+        select: { id: true, subjectId: true },
+      });
+      courseIds = teacherCourses.map((c) => c.id);
+      subjectIds = Array.from(new Set(teacherCourses.map((c) => c.subjectId)));
     }
 
-    if (course.teacherId !== data.teacherId) {
-      throw new ForbiddenError('You do not own this course');
+    if (courseIds.length === 0 && subjectIds.length === 0) {
+      return { notificationsSent: 0 };
     }
 
     // Find all entitled students for course subject or course
@@ -146,8 +165,8 @@ export class TeacherService {
       where: {
         status: 'ACTIVE',
         OR: [
-          { resourceType: 'SUBJECT', resourceId: course.subjectId },
-          { resourceType: 'COURSE', resourceId: course.id },
+          { resourceType: 'SUBJECT', resourceId: { in: subjectIds } },
+          { resourceType: 'COURSE', resourceId: { in: courseIds } },
         ],
       },
       select: { studentId: true },
