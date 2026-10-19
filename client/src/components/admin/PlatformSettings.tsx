@@ -76,6 +76,10 @@ export default function PlatformSettings() {
         setConfig((prev) => ({
           ...prev,
           ...res.data,
+          siteDescriptionEn: res.data.siteDescriptionEn ?? prev.siteDescriptionEn,
+          siteDescriptionAr: res.data.siteDescriptionAr ?? prev.siteDescriptionAr,
+          sloganEn: res.data.sloganEn ?? prev.sloganEn,
+          sloganAr: res.data.sloganAr ?? prev.sloganAr,
           homeContent: res.data.homeContent ? {
             ...DEFAULT_HOME_CONTENT,
             ...res.data.homeContent,

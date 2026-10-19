@@ -204,9 +204,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     err = new BadRequestError('Referenced record does not exist');
   }
 
-  Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
-
   const statusCode = err.statusCode || 500;
+  if (statusCode >= 500) {
+    Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
+  } else {
+    Logger.warn(err.message || 'Client Request Error', requestId, { statusCode, path: req.originalUrl });
+  }
+
   res.status(statusCode).json({
     success: false,
     message: statusCode >= 500 ? 'Internal Server Error' : err.message,
