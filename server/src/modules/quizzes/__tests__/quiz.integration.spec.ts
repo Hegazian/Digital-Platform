@@ -96,19 +96,19 @@ describe('Quiz API Integration Tests', () => {
 
       expect(res.status).toBe(200);
       const question = res.body.data.questions[0];
-      expect(question.explanation).toBeNull();
+      expect(question.explanation).toBeUndefined();
       expect(question.options[0].isCorrect).toBeUndefined();
     });
 
-    it('should retain correct answers for teacher', async () => {
+    it('does not expose answer keys to an unrelated teacher', async () => {
       const res = await request(app)
         .get(`/api/v1/quizzes/${quizId}`)
         .set('Authorization', `Bearer ${teacherToken}`);
 
       expect(res.status).toBe(200);
       const question = res.body.data.questions[0];
-      expect(question.explanation).toBe('Basic math');
-      expect(question.options[1].isCorrect).toBe(true);
+      expect(question.explanation).toBeUndefined();
+      expect(question.options[1].isCorrect).toBeUndefined();
     });
   });
 

@@ -52,7 +52,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       })
     );
     adminToken = jwt.sign(
-      { userId: adminUser.id, role: adminUser.role },
+      { userId: adminUser.id, role: adminUser.role, authVersion: adminUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -73,7 +73,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       })
     );
     teacherOwnerToken = jwt.sign(
-      { userId: teacherOwner.id, role: teacherOwner.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: teacherOwner.id, role: teacherOwner.role, teacherStatus: TeacherStatus.APPROVED, authVersion: teacherOwner.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -94,7 +94,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       })
     );
     otherTeacherToken = jwt.sign(
-      { userId: otherTeacher.id, role: otherTeacher.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: otherTeacher.id, role: otherTeacher.role, teacherStatus: TeacherStatus.APPROVED, authVersion: otherTeacher.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -114,7 +114,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       })
     );
     studentToken = jwt.sign(
-      { userId: studentUser.id, role: studentUser.role },
+      { userId: studentUser.id, role: studentUser.role, authVersion: studentUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -200,7 +200,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
           estimatedDuration: 40,
           video: {
             title: 'gravitation_lesson1.mp4',
-            videoUrl: 'https://stream.eduplatform.com/vod/gravitation1.mp4',
+            videoUrl: '/uploads/lesson-videos/gravitation1.mp4',
             duration: 2400,
           },
           materials: [
@@ -361,7 +361,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
 
       // Fetch course details with all lessons & resources
       const courseRes = await request(app)
-        .get(`/api/v1/courses/${testCourse.id}`)
+        .get(`/api/v1/courses/${testCourse.id}/learning`)
         .set('Authorization', `Bearer ${studentToken}`);
 
       expect(courseRes.status).toBe(200);
@@ -371,7 +371,14 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
       const { egpToUsd } = await import('../../utils/currency');
       expect(data.priceUsd).toBe(await egpToUsd(220));
       expect(data.modules.length).toBeGreaterThan(0);
-      expect(data.modules[0].lessons[0].video.videoUrl).toBe('https://stream.eduplatform.com/vod/gravitation1.mp4');
+      const video = data.modules[0].lessons[0].video;
+      expect(video.id).toBeDefined();
+      expect(video.videoUrl).toBeUndefined();
+      const playback = await request(app)
+        .get(`/api/v1/videos/${video.id}/playback-url`)
+        .set('Authorization', `Bearer ${studentToken}`);
+      expect(playback.status).toBe(200);
+      expect(playback.body.data.playbackUrl).toContain('/api/v1/videos/');
       expect(data.modules[0].lessons[0].materials.length).toBe(1);
       expect(data.modules[0].lessons[0].quiz.questions.length).toBe(1);
     });

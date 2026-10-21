@@ -1,12 +1,19 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useConfigBootstrap } from '@/lib/configStore';
 import { SESSION_EXPIRED_EVENT } from '@/lib/api';
+import { useAppStore } from '@/lib/store';
 
 function ConfigBootstrapper({ children }: { children: React.ReactNode }) {
   useConfigBootstrap();
+  const lang = useAppStore((state) => state.lang);
+  useLayoutEffect(() => { void useAppStore.persist.rehydrate(); }, []);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, [lang]);
   return <>{children}</>;
 }
 

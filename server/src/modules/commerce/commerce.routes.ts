@@ -4,6 +4,7 @@ import { authenticate, requireRole } from '../auth/auth.middleware';
 import { Role } from '@prisma/client';
 import { validateBody } from '../../utils/validate';
 import { createOrderSchema } from '../../utils/schemas';
+import { requireCapability } from '../../utils/capabilities';
 
 const commerceRouter = Router();
 
@@ -98,7 +99,7 @@ commerceRouter.get(
 );
 
 // Automated Webhook Callbacks (Paymob & Fawry)
-commerceRouter.post('/webhooks/paymob', CommerceController.processPaymobWebhook);
-commerceRouter.post('/webhooks/fawry', CommerceController.processFawryWebhook);
+commerceRouter.post('/webhooks/paymob', requireCapability('AUTOMATED_PAYMENT_GATEWAYS'), CommerceController.processPaymobWebhook);
+commerceRouter.post('/webhooks/fawry', requireCapability('AUTOMATED_PAYMENT_GATEWAYS'), CommerceController.processFawryWebhook);
 
 export default commerceRouter;

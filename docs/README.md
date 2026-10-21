@@ -1,0 +1,37 @@
+# Implementation documentation — start here
+
+Version: **21 October 2026**. Baseline code: **2fbdc8e**. The M0 internal engineering checkpoint is finalized; [implementation status](M0_IMPLEMENTATION_STATUS.md) records verification, ENG-13's continuing release obligation and the production holds. G1–G3 remain open.
+
+> A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
+
+## Ordered start checklist
+
+1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
+2. Read [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); keep external onboarding disabled until safety gate G0.
+3. Review the completed M0 evidence, then follow M1–M3 dependencies in [roadmap](ROADMAP_BACKLOG.md). ENG-13 continues the full-product coverage/release work.
+4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [M0 implementation status](M0_IMPLEMENTATION_STATUS.md).
+5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
+6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
+7. Rehearse [operations, migration and recovery](MIGRATION_OPERATIONS.md), resolve minor-consent/retention and license decisions, and collect [release gate evidence](TESTING_RELEASE_GATES.md) for a limited pilot.
+8. Keep every M4 capability disabled at API boundaries; enable each only after its own gate. Automated payment adapters have independent provider sign-offs.
+
+## Package index
+
+| Document | Purpose |
+|---|---|
+| [Product goal and scope](PRODUCT_SCOPE.md) | Audiences, permissions, all-school curriculum, launch scope and exclusions |
+| [Target architecture](TARGET_ARCHITECTURE.md) | Module/data ownership, workers, deployment and safety boundaries |
+| [API and data contracts](API_DATA_CONTRACTS.md) | Normative DTOs, schemas, actions, errors, validation and compatibility |
+| [Roadmap and backlog](ROADMAP_BACKLOG.md) | All 77 task links, dependencies, milestones and execution order |
+| [Audit traceability](AUDIT_TRACEABILITY.md) | All 58 findings and all 42 previous acceptance dispositions |
+| [Testing and release gates](TESTING_RELEASE_GATES.md) | Baseline, fixtures, CI, exit criteria and sign-off evidence |
+| [M0 implementation status](M0_IMPLEMENTATION_STATUS.md) | Final internal checkpoint, exact results, task dispositions and production holds |
+| [M0 manual testing](M0_MANUAL_TESTING.md) | Local setup, step-by-step checks and visible browser replay |
+| [M0 review resolution](M0_REVIEW_RESOLUTION.md) | All five follow-up findings and regression evidence |
+| [M0 dependency review](M0_DEPENDENCY_REVIEW.md) | Patched runtime paths and bounded development-only exceptions |
+| [Migration and operations](MIGRATION_OPERATIONS.md) | Data/asset preservation, deployment, rollback, recovery and monitoring |
+| [Task template](TASK_TEMPLATE.md) | Required task detail and completion checklist |
+| [Documentation verification](VERIFICATION_REPORT.md) | Task/finding/case coverage, links, dependencies and archived hash checks |
+| [Archived documents](archive/INDEX.md) | Exact previous guides/FR/TC identifiers, superseded status and hashes |
+
+Task source is maintained in [documentation authoring scripts](scripts/build-docs.cjs); [task-manifest.json](task-manifest.json) is machine-readable output. Run 'node docs/scripts/build-docs.cjs' to rebuild generated task/index/entry docs, then 'node docs/scripts/validate-docs.cjs'. Shared hand-written specifications are not overwritten by the generator. No script connects to the application, database or external services.

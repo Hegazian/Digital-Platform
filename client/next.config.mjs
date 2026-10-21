@@ -19,12 +19,6 @@ const nextConfig = {
       },
     ];
   },
-  eslint: {
-    // QH-1: quality gates back ON. `next build` now fails on ESLint errors
-    // (warnings still pass). If this blocks a hotfix, fix the lint error -
-    // do not silently re-disable the gate.
-    ignoreDuringBuilds: false,
-  },
   typescript: {
     // QH-1: type errors fail the build. Run `npm run typecheck` locally.
     ignoreBuildErrors: false,

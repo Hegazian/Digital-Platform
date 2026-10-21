@@ -163,14 +163,14 @@ describe('Course Read Visibility & Answer Sanitization', () => {
     expect(res.status).toBe(404);
   });
 
-  it('anonymous GET /courses/:id on a published course strips isCorrect and explanation', async () => {
+  it('anonymous GET /courses/:id returns catalog metadata without lesson curriculum', async () => {
     const res = await request(app).get(`/api/v1/courses/${publishedCourseId}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data.status).toBe('PUBLISHED');
-    expect(res.body.data.modules[0].lessons[0].quiz.questions[0].options.some((o: any) => o.text === 'Right')).toBe(true);
+    expect(res.body.data.modules).toBeUndefined();
+    expect(res.body.data.sections).toBeUndefined();
     expect(collectAnswerFlags(res.body)).toBe(false);
-    expect(res.body.data.modules[0].lessons[0].quiz.questions[0].explanation).toBeNull();
   });
 
   it('teacher portal (my-courses) lists the owning teacher DRAFT courses', async () => {

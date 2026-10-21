@@ -5,7 +5,7 @@ import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
 import bcrypt from 'bcrypt';
 
-describe('Collaborative Board API & State Persistence (TDD)', () => {
+describe('Collaborative Board API hard-off gate', () => {
   let teacherToken: string;
   let teacherId: string;
   let lessonBlockId: string;
@@ -97,18 +97,16 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
     }
   });
 
-  it('GET /api/v1/boards/:blockId - should fetch or initialize board state', async () => {
+  it('returns FEATURE_DISABLED for reads even when the request is authenticated', async () => {
     const res = await request(app)
       .get(`/api/v1/boards/${lessonBlockId}`)
       .set('Authorization', `Bearer ${teacherToken}`);
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toBeDefined();
-    expect(res.body.data.lessonBlockId).toBe(lessonBlockId);
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 
-  it('POST /api/v1/boards/:blockId/state - should save updated board state binary/JSON', async () => {
+  it('never persists writes while collaboration is staged', async () => {
     const res = await request(app)
       .post(`/api/v1/boards/${lessonBlockId}/state`)
       .set('Authorization', `Bearer ${teacherToken}`)
@@ -116,15 +114,9 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
         elementsJson: JSON.stringify([{ type: 'line', x1: 10, y1: 10, x2: 50, y2: 50, color: '#00ffff' }]),
       });
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-
-    // Verify persistence
-    const fetchRes = await request(app)
-      .get(`/api/v1/boards/${lessonBlockId}`)
-      .set('Authorization', `Bearer ${teacherToken}`);
-
-    expect(fetchRes.body.data.elementsJson).toContain('#00ffff');
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
+    expect(await prisma.board.findUnique({ where: { lessonBlockId } })).toBeNull();
   });
 
   it('GET board by a non-enrolled outsider is rejected (IDOR guard)', async () => {
@@ -132,7 +124,7 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
       .get(`/api/v1/boards/${lessonBlockId}`)
       .set('Authorization', `Bearer ${outsiderToken}`);
 
-    expect([403, 404]).toContain(res.status);
+    expect(res.status).toBe(503);
   });
 
   it('POST board state by a non-owner is rejected (IDOR guard)', async () => {
@@ -141,7 +133,7 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
       .set('Authorization', `Bearer ${outsiderToken}`)
       .send({ elementsJson: '[]' });
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(503);
   });
 
   it('unknown block id returns 404 and creates nothing', async () => {
@@ -149,13 +141,13 @@ describe('Collaborative Board API & State Persistence (TDD)', () => {
     const res = await request(app)
       .get(`/api/v1/boards/${ghostId}`)
       .set('Authorization', `Bearer ${teacherToken}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(503);
 
     const post = await request(app)
       .post(`/api/v1/boards/${ghostId}/state`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({ elementsJson: '[]' });
-    expect(post.status).toBe(404);
+    expect(post.status).toBe(503);
 
     const rows = await prisma.board.findMany({ where: { lessonBlockId: ghostId } });
     expect(rows.length).toBe(0);

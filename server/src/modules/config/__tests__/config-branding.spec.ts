@@ -108,7 +108,9 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(cfg.siteDescriptionEn).toBe(payload.siteDescriptionEn);
     expect(cfg.hostDomain).toBe(payload.hostDomain);
     expect(cfg.supportEmail).toBe(payload.supportEmail);
-    expect(cfg.requireCourseApproval).toBe(false);
+    expect(cfg.requireCourseApproval).toBe(true);
+    expect(cfg.enableCodePlaygrounds).toBe(false);
+    expect(cfg.enableCollaborativeBoards).toBe(false);
     expect(cfg.allowTeacherRegistration).toBe(false);
     expect(cfg.primaryColor).toBe('#7c3aed');
   });

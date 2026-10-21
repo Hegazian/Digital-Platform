@@ -11,8 +11,9 @@ export const getAppConfig = async (req: Request, res: Response) => {
       });
     }
 
-    // Return the stored row as-is; schema defaults cover every field.
-    res.status(200).json({ success: true, data: config ?? {} });
+    // Never advertise staged capabilities as enabled, even if an old row or
+    // forged admin setting stored true.
+    res.status(200).json({ success: true, data: config ? { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false } : {} });
   } catch (error) {
     res.status(200).json({
       success: true,
@@ -27,8 +28,8 @@ export const getAppConfig = async (req: Request, res: Response) => {
         exchangeRateUsdToEgp: 48,
         requireCourseApproval: true,
         allowTeacherRegistration: true,
-        enableCodePlaygrounds: true,
-        enableCollaborativeBoards: true,
+        enableCodePlaygrounds: false,
+        enableCollaborativeBoards: false,
         primaryColor: "#4f46e5",
       },
     });
@@ -73,12 +74,12 @@ export const updateAppConfig = async (req: Request, res: Response) => {
           Number(exchangeRateUsdToEgp) || 48
         ),
       }),
-      ...(requireCourseApproval !== undefined && {
-        requireCourseApproval: Boolean(requireCourseApproval),
-      }),
+      // Course approval is a platform invariant; clients cannot turn it off.
+      requireCourseApproval: true,
       ...(allowTeacherRegistration !== undefined && { allowTeacherRegistration: Boolean(allowTeacherRegistration) }),
-      ...(enableCodePlaygrounds !== undefined && { enableCodePlaygrounds: Boolean(enableCodePlaygrounds) }),
-      ...(enableCollaborativeBoards !== undefined && { enableCollaborativeBoards: Boolean(enableCollaborativeBoards) }),
+      // Hard-off until isolated execution and realtime collaboration gates pass.
+      enableCodePlaygrounds: false,
+      enableCollaborativeBoards: false,
       ...(primaryColor !== undefined && { primaryColor }),
       ...(homeContent !== undefined && { homeContent }),
     };
@@ -100,7 +101,7 @@ export const updateAppConfig = async (req: Request, res: Response) => {
     }
 
     // The row already contains exactly what was provided + prior values.
-    res.status(200).json({ success: true, data: config ?? {} });
+    res.status(200).json({ success: true, data: config ? { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false } : {} });
   } catch (error: any) {
     console.error("Failed to update config:", error);
     res.status(500).json({ success: false, message: error?.message || "Failed to update config" });

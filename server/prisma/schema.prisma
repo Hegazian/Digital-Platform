@@ -75,6 +75,8 @@ model User {
   name          String
   role          Role      @default(STUDENT)
   isActive      Boolean   @default(true)
+  /// Incremented whenever authorization-sensitive account state changes.
+  authVersion   Int       @default(1)
   teacherStatus TeacherStatus? 
   avatar        String?
   gradeId       String?

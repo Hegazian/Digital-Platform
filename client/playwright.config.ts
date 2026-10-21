@@ -1,7 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+if (process.env.LEGACY_E2E_ENABLED !== 'true') throw new Error('Legacy future-feature journeys are not a release gate. Use npm run test:e2e for the isolated M0 browser suite.');
+
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/m0/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // Dev-server E2E is subject to transient blips (next dev recompiles,

@@ -40,6 +40,7 @@ subjectRouter.put(
 courseRouter.get('/', optionalAuth, CourseController.getAllCourses);
 courseRouter.get('/teacher/dashboard', authenticate, requireApprovedTeacher, CourseController.getTeacherDashboard);
 courseRouter.get('/teacher/my-courses', authenticate, requireApprovedTeacher, CourseController.getTeacherCourses);
+courseRouter.get('/:id/learning', authenticate, CourseController.getLearningCourse);
 courseRouter.get('/:id', optionalAuth, CourseController.getCourseById);
 courseRouter.post('/', authenticate, requireApprovedTeacher, validateBody(createCourseSchema), CourseController.createCourse);
 courseRouter.patch('/:id', authenticate, requireApprovedTeacher, validateBody(updateCourseSchema), CourseController.updateCourse);

@@ -5,7 +5,7 @@ import { prisma } from '../../prisma';
 import { generateAccessToken } from '../../utils/jwt';
 import bcrypt from 'bcrypt';
 
-describe('Playground Execution API (TDD)', () => {
+describe('Playground capability gate', () => {
   let studentToken: string;
   let studentUserId: string;
 
@@ -35,7 +35,8 @@ describe('Playground Execution API (TDD)', () => {
     });
   });
 
-  it('POST /api/v1/playgrounds/execute - should execute simple python code successfully', async () => {
+  it('never executes code even when the legacy opt-in flag is set', async () => {
+    process.env.CODE_EXECUTION_ENABLED = 'true';
     const res = await request(app)
       .post('/api/v1/playgrounds/execute')
       .set('Authorization', `Bearer ${studentToken}`)
@@ -44,27 +45,13 @@ describe('Playground Execution API (TDD)', () => {
         code: 'print("Hello from TDD")',
       });
     
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.output).toContain('Hello from TDD');
-    expect(res.body.data.error).toBe('');
-  });
-
-  it('POST /api/v1/playgrounds/execute - should return error for syntax error code', async () => {
-    const res = await request(app)
-      .post('/api/v1/playgrounds/execute')
-      .set('Authorization', `Bearer ${studentToken}`)
-      .send({
-        language: 'python',
-        code: 'print("Missing parenthesis)',
-      });
-    
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(503);
     expect(res.body.success).toBe(false);
-    expect(res.body.data.error).toBeDefined();
+    expect(res.body.code).toBe('FEATURE_DISABLED');
+    delete process.env.CODE_EXECUTION_ENABLED;
   });
 
-  it('POST /api/v1/playgrounds/execute - should reject unauthorized requests', async () => {
+  it('returns the staged capability response before auth or execution', async () => {
     const res = await request(app)
       .post('/api/v1/playgrounds/execute')
       .send({
@@ -72,6 +59,7 @@ describe('Playground Execution API (TDD)', () => {
         code: 'print("Hack")',
       });
     
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 });

@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/erro
 import { VideoStatus, Role } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
 import { egpToUsd, usdToEgp } from '../../utils/currency';
+import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
 
 export class CourseService {
   /**
@@ -10,25 +11,37 @@ export class CourseService {
    * response delivered to users who cannot manage the course, otherwise
    * correct answers / explanations leak to students (NFR-001).
    */
-  private static sanitizeCourseContent<T extends { modules?: any[]; sections?: any[] }>(course: T): T {
-    const stripLesson = (lesson: any) => {
-      if (lesson?.quiz?.questions) {
-        lesson.quiz.questions = lesson.quiz.questions.map((q: any) => ({
-          ...q,
-          options: Array.isArray(q.options)
-            ? q.options.map(({ isCorrect: _isCorrect, ...opt }: any) => opt)
-            : q.options,
-          explanation: null,
-        }));
+  private static sanitizeCourseContent<T extends Record<string, any>>(course: T, includeCurriculum = false): T {
+    const scrub = (value: any): any => {
+      if (Array.isArray(value)) return value.map(scrub);
+      if (!value || typeof value !== 'object') return value;
+      if ('quizId' in value && 'questionText' in value && typeof value.id === 'string') {
+        const options = Array.isArray(value.options) ? value.options.map((option: any) => {
+          if (!option || typeof option !== 'object') return option;
+          return { ...(option.id !== undefined && { id: option.id }), ...(option.text !== undefined && { text: option.text }) };
+        }) : value.options;
+        return { id: value.id, questionText: value.questionText, type: value.type, orderIndex: value.orderIndex, points: value.points, options };
       }
-      return lesson;
+      if ('fileUrl' in value && 'lessonId' in value && typeof value.id === 'string') {
+        value = { ...value, fileUrl: `/api/v1/materials/${value.id}/content` };
+      }
+      const forbidden = new Set(['correctAnswer', 'correctAnswerJson', 'isCorrect', 'explanation', 'questionsSnapshotJson', 'email', 'videoUrl']);
+      return Object.fromEntries(Object.entries(value).filter(([key]) => !forbidden.has(key)).map(([key, item]) => [key, scrub(item)]));
     };
+    if (includeCurriculum) return scrub(course) as T;
+    const catalogFields = ['id', 'titleEn', 'titleAr', 'description', 'teacherId', 'subjectId', 'academicYearId', 'gradeId', 'slug', 'thumbnail', 'status', 'isPublished', 'isFree', 'createdAt', 'updatedAt', 'teacher', 'subject', 'grade', 'priceEgp', 'priceUsd', 'productId'];
+    return scrub(Object.fromEntries(catalogFields.filter((key) => key in course).map((key) => [key, course[key]]))) as T;
+  }
 
-    return {
-      ...course,
-      modules: course.modules?.map((m: any) => ({ ...m, lessons: m.lessons?.map(stripLesson) })),
-      sections: course.sections?.map((s: any) => ({ ...s, lessons: s.lessons?.map(stripLesson) })),
-    };
+  static async getLearningCourse(id: string, user: { userId: string; role: Role }) {
+    const catalog = await this.getCourseById(id, user);
+    await EntitlementResolver.assertLearningAccess(user.userId, user.role, {
+      courseId: catalog.id,
+      teacherId: catalog.teacherId,
+    });
+    // Load curriculum only after entitlement succeeds, through the manager-only query shape.
+    const curriculum = await this.getCourseById(id, { userId: catalog.teacherId, role: Role.TEACHER });
+    return this.sanitizeCourseContent(curriculum, true);
   }
 
   private static canManageCourse(course: { teacherId: string }, user?: { userId: string; role: Role } | null): boolean {
@@ -92,22 +105,6 @@ export class CourseService {
         grade: {
           select: { id: true, nameEn: true, nameAr: true, code: true },
         },
-        modules: {
-          orderBy: { sortOrder: 'asc' },
-          include: {
-            lessons: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                video: true,
-                quiz: {
-                  include: { questions: true },
-                },
-                materials: true,
-                blocks: true,
-              },
-            },
-          },
-        },
       },
       skip,
       take: limitNum,
@@ -149,74 +146,56 @@ export class CourseService {
     };
   }
 
-  static async getCourseById(id: string, user?: { userId: string; role: Role } | null) {
-    const course = await prisma.course.findUnique({
+  static async getCourseById(id: string, user?: { userId: string; role: Role } | null): Promise<any> {
+    const visibility = await prisma.course.findUnique({
       where: { id },
-      include: {
-        teacher: {
-          select: { id: true, name: true, avatar: true, email: true },
-        },
-        subject: true,
-        grade: true,
-        modules: {
-          orderBy: { sortOrder: 'asc' },
-          include: {
-            lessons: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                video: true,
-                quiz: {
-                  include: { questions: true },
-                },
-                materials: true,
-                blocks: true,
-              },
-            },
-          },
-        },
-        sections: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            lessons: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                video: true,
-                quiz: {
-                  include: { questions: true },
-                },
-                materials: true,
-                blocks: true,
-              },
-            },
-          },
-        },
-      },
+      select: { id: true, teacherId: true, status: true, isPublished: true },
     });
+    if (!visibility) throw new NotFoundError('Course not found');
+    const canManage = this.canManageCourse(visibility, user);
+    if (!canManage && (visibility.status !== 'PUBLISHED' || !visibility.isPublished)) throw new NotFoundError('Course not found');
 
-    if (!course) {
-      throw new NotFoundError('Course not found');
-    }
+    const curriculumInclude = {
+      teacher: { select: { id: true, name: true, avatar: true, email: true } },
+      subject: true,
+      grade: true,
+      modules: {
+        orderBy: { sortOrder: 'asc' as const },
+        include: { lessons: {
+          orderBy: { orderIndex: 'asc' as const },
+          include: { video: true, quiz: { include: { questions: true } }, materials: true, blocks: true },
+        } },
+      },
+      sections: {
+        orderBy: { orderIndex: 'asc' as const },
+        include: { lessons: {
+          orderBy: { orderIndex: 'asc' as const },
+          include: { video: true, quiz: { include: { questions: true } }, materials: true, blocks: true },
+        } },
+      },
+    };
 
-    // Visibility: only admins and the owning teacher may read unpublished
-    // courses. Everyone else gets a 404 (no existence leak) for drafts.
-    const canManage = this.canManageCourse(course, user);
-    if (!canManage && (course.status !== 'PUBLISHED' || !course.isPublished)) {
-      throw new NotFoundError('Course not found');
-    }
+    const course = canManage
+      ? await prisma.course.findUnique({ where: { id }, include: curriculumInclude })
+      : await prisma.course.findUnique({
+          where: { id },
+          include: {
+            teacher: { select: { id: true, name: true, avatar: true } },
+            subject: { select: { id: true, nameEn: true, nameAr: true } },
+            grade: { select: { id: true, nameEn: true, nameAr: true, code: true } },
+          },
+        });
+    if (!course) throw new NotFoundError('Course not found');
 
     const product = prisma.product
-      ? await prisma.product.findFirst({
-          where: { productType: 'COURSE', resourceId: course.id },
-        })
+      ? await prisma.product.findFirst({ where: { productType: 'COURSE', resourceId: course.id } })
       : null;
-
     const enriched = {
       ...course,
       priceEgp: course.isFree ? 0 : product ? Number(product.priceEgp) : 150,
       priceUsd: course.isFree ? 0 : product ? Number(product.priceUsd) : 10,
       productId: product?.id,
     };
-
     return canManage ? enriched : this.sanitizeCourseContent(enriched);
   }
 

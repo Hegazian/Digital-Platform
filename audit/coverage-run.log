@@ -1,0 +1,38 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 D:/digital platform/server
+      Coverage enabled with v8
+
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  00:53:12
+   Duration  2.97s (transform 235ms, setup 445ms, import 605ms, tests 58ms, environment 1ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    55.3 |    20.42 |    37.5 |   56.21 |                   
+ src               |   85.71 |    66.66 |     100 |   85.71 |                   
+  prisma.ts        |   85.71 |    66.66 |     100 |   85.71 | 5                 
+ src/utils         |   54.06 |    18.38 |    37.5 |   54.93 |                   
+  env.ts           |   76.92 |    55.55 |     100 |   76.92 | 21,28-31          
+  errors.ts        |      60 |       20 |   33.33 |   55.55 | 17-35             
+  schemas.ts       |   47.52 |     7.29 |    5.55 |   49.48 | ...92-395,421,474 
+  validate.ts      |   47.61 |       25 |      50 |   47.36 | 15,21-34          
+  ...k-security.ts |   70.37 |    55.55 |   88.88 |   70.83 | 16-22,59,103      
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 55.3% ( 99/179 )
+Branches     : 20.42% ( 29/142 )
+Functions    : 37.5% ( 15/40 )
+Lines        : 56.21% ( 95/169 )
+================================================================================
+ERROR: Coverage for lines (56.21%) does not meet global threshold (80%)
+ERROR: Coverage for functions (37.5%) does not meet global threshold (80%)
+ERROR: Coverage for statements (55.3%) does not meet global threshold (80%)
+ERROR: Coverage for branches (20.42%) does not meet global threshold (75%)

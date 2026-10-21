@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
 describe('Developer Webhooks (TDD)', () => {
   let adminToken: string;
   let adminId: string;
-  let webhookId: string;
+  let webhookId: string | undefined;
 
   beforeAll(async () => {
     const hashedPassword = await bcrypt.hash('password123', 10);
@@ -31,7 +31,7 @@ describe('Developer Webhooks (TDD)', () => {
 
   afterAll(async () => {
     try {
-      await prisma.webhookEndpoint.deleteMany();
+      if (webhookId) await prisma.webhookEndpoint.deleteMany({ where: { id: webhookId, userId: adminId } });
       await prisma.user.deleteMany({ where: { email: { contains: 'admin_webhooks_' } } });
     } catch (e) {}
   });
@@ -45,10 +45,8 @@ describe('Developer Webhooks (TDD)', () => {
         events: ['user.created', 'course.completed'],
       });
 
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.id).toBeDefined();
-    webhookId = res.body.data.id;
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 
   it('GET /api/v1/developer/webhooks - should list registered webhooks', async () => {
@@ -56,8 +54,7 @@ describe('Developer Webhooks (TDD)', () => {
       .get('/api/v1/developer/webhooks')
       .set('Authorization', `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 });

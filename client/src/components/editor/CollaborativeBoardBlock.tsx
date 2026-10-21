@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Pencil, Square, Eraser, RotateCcw, Save, AlertCircle } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
-import { useConfigStore } from '../../lib/configStore';
 
 interface BoardElement {
   type: 'pen' | 'rect';
@@ -18,6 +17,7 @@ interface BoardElement {
 interface CollaborativeBoardBlockProps {
   blockId?: string;
 }
+const COLLABORATIVE_BOARDS_AVAILABLE = false;
 
 export default function CollaborativeBoardBlock({ blockId = 'demo-board-1' }: CollaborativeBoardBlockProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -29,10 +29,9 @@ export default function CollaborativeBoardBlock({ blockId = 'demo-board-1' }: Co
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const { config } = useConfigStore();
-
   // Load board state on mount
   useEffect(() => {
+    if (!COLLABORATIVE_BOARDS_AVAILABLE) return;
     async function loadBoard() {
       try {
         const res = await fetchApi(`/boards/${blockId}`);
@@ -158,11 +157,11 @@ export default function CollaborativeBoardBlock({ blockId = 'demo-board-1' }: Co
     setElements([]);
   };
 
-  if (config && !config.enableCollaborativeBoards) {
+  if (!COLLABORATIVE_BOARDS_AVAILABLE) {
     return (
       <div className="p-4 bg-slate-100 border border-slate-200 rounded-md text-slate-500 text-sm flex items-center gap-2">
         <AlertCircle size={16} />
-        Collaborative whiteboards are currently disabled by the administrator.
+        Collaborative whiteboards are not available yet.
       </div>
     );
   }

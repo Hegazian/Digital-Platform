@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 
 /**
  * Absolute uploads root, deliberately independent of process.cwd().
@@ -33,14 +34,32 @@ export function getUploadsRoot(): string {
  * Storage Utility for handling file uploads (Supabase Storage with local fallback).
  */
 export class StorageService {
+  /** A production process must never expose teaching/submission files from a public bucket. */
+  static async assertPrivateProductionStorage(): Promise<void> {
+    if (process.env.NODE_ENV !== 'production') return;
+    const base = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!base || !key || !base.startsWith('https://')) throw new Error('Production requires private Supabase storage configuration');
+    const response = await fetch(`${base.replace(/\/$/, '')}/storage/v1/bucket`, { headers: { Authorization: `Bearer ${key}`, apikey: key }, signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) throw new Error('Unable to verify private production storage');
+    const buckets = await response.json();
+    if (!Array.isArray(buckets) || ['lesson-videos', 'lesson-materials', 'submission-files'].some((id) => !buckets.some((bucket: any) => bucket.id === id && bucket.public === false))) {
+      throw new Error('Educational and submission storage buckets must exist and be private');
+    }
+  }
+
   /**
    * Upload a file buffer to Supabase Storage or local fallback.
    */
   static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials'): Promise<string> {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (process.env.NODE_ENV === 'production' && (!supabaseUrl || !supabaseKey)) {
+      throw new Error('Private Supabase storage credentials are required in production');
+    }
 
-    const uniqueFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const extension = path.extname(fileName).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    const uniqueFileName = `${randomUUID()}${extension}`;
 
     if (supabaseUrl && supabaseKey) {
       try {
@@ -51,25 +70,25 @@ export class StorageService {
             'Authorization': `Bearer ${supabaseKey}`,
             'API-Key': supabaseKey,
             'Content-Type': mimeType,
-            'x-upsert': 'true',
+            'x-upsert': 'false',
           },
           body: fileBuffer as any,
         });
 
         if (response.ok) {
-          // For materials we return public URL, for videos we return the raw object path to be signed later
-          if (bucketName === 'lesson-materials') {
-            return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${uniqueFileName}`;
-          } else {
-            return `${bucketName}/${uniqueFileName}`; // internal path for signed URLs
-          }
+          // Persist only private bucket paths. Delivery always goes through an authorized adapter.
+          return `${bucketName}/${uniqueFileName}`;
         }
       } catch (error) {
-        console.warn('Supabase storage upload failed, falling back to local storage:', error);
+        console.warn('Supabase storage upload failed');
       }
     }
 
-    // Fallback to local uploads directory
+    if (process.env.NODE_ENV === 'production' && supabaseUrl) {
+      throw new Error('Private storage upload failed; production uploads cannot fall back to local storage');
+    }
+
+    // Local-only development fallback
     const uploadDir = path.join(getUploadsRoot(), bucketName);
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -83,11 +102,14 @@ export class StorageService {
 
   /**
    * Generates a secure, temporary signed URL for private bucket objects.
-   * Expires in 7200 seconds (2 hours) by default.
+   * Expires only for the requested, bounded delivery interval.
    */
-  static async getSignedUrl(internalPath: string, expiresIn: number = 7200): Promise<string> {
+  static async getSignedUrl(internalPath: string, expiresIn: number = 120): Promise<string> {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (process.env.NODE_ENV === 'production' && (!supabaseUrl || !supabaseKey)) {
+      throw new Error('Private Supabase storage credentials are required in production');
+    }
 
     if (internalPath.startsWith('/uploads/')) {
       // It's a local file. We return a backend API route that streams the file securely.
@@ -97,6 +119,7 @@ export class StorageService {
 
     if (supabaseUrl && supabaseKey) {
       try {
+        const boundedExpiry = Math.min(120, Math.max(1, Math.floor(expiresIn)));
         // internalPath format: "lesson-videos/163000000-video.mp4"
         const signUrl = `${supabaseUrl}/storage/v1/object/sign/${internalPath}`;
         const response = await fetch(signUrl, {
@@ -106,7 +129,7 @@ export class StorageService {
             'API-Key': supabaseKey,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ expiresIn }),
+          body: JSON.stringify({ expiresIn: boundedExpiry }),
         });
 
         if (response.ok) {
@@ -117,7 +140,7 @@ export class StorageService {
           }
         }
       } catch (error) {
-        console.error('Error generating Supabase signed URL:', error);
+        console.error('Error generating Supabase signed URL');
       }
     }
     
@@ -132,10 +155,12 @@ export class StorageService {
       const parts = fileUrl.split('/');
       const fileName = parts.pop()!;
       const bucketName = parts.pop()!;
-      const localFilePath = path.join(getUploadsRoot(), bucketName, fileName);
-      if (fs.existsSync(localFilePath)) {
-        fs.unlinkSync(localFilePath);
-      }
+      const root = path.resolve(getUploadsRoot());
+      const localFilePath = path.resolve(root, bucketName, fileName);
+      if (!localFilePath.startsWith(root + path.sep) || !fs.existsSync(localFilePath)) return;
+      const realRoot = fs.realpathSync(root);
+      const realFilePath = fs.realpathSync(localFilePath);
+      if (realFilePath.startsWith(realRoot + path.sep)) fs.unlinkSync(realFilePath);
     }
     // Note: Supabase deletion can be added here if needed
   }

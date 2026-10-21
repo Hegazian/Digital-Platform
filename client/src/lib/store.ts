@@ -177,6 +177,9 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'eduplatform-storage',
+      // Keep the first client render identical to SSR, then restore the locale
+      // and session in Providers before child passive effects write state.
+      skipHydration: true,
       partialize: (state) => ({
         lang: state.lang,
         dir: state.dir,

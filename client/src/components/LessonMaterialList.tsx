@@ -3,23 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { fetchApi } from '@/lib/api';
+import ProtectedFileLink from './ProtectedFileLink';
 import { errorMessage } from '@/lib/apiTypes';
 import { FileText, Download, Lock, AlertCircle } from 'lucide-react';
-
-/** Only allow safe URL protocols to prevent javascript: XSS injection. */
-function sanitizeUrl(url: string): string {
-  if (!url) return '#';
-  try {
-    const parsed = new URL(url, window.location.origin);
-    if (['http:', 'https:'].includes(parsed.protocol)) return url;
-    // Relative paths are safe
-    if (url.startsWith('/')) return url;
-    return '#';
-  } catch {
-    // If URL parsing fails, only allow relative paths
-    return url.startsWith('/') ? url : '#';
-  }
-}
 
 interface Material {
   id: string;
@@ -114,11 +100,10 @@ export default function LessonMaterialList({ lessonId }: LessonMaterialListProps
       </h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {materials.map((item) => (
-          <a
+          <ProtectedFileLink
             key={item.id}
-            href={sanitizeUrl(item.fileUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
+            fileUrl={item.fileUrl}
+            fileName={item.title}
             className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all group"
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -134,7 +119,7 @@ export default function LessonMaterialList({ lessonId }: LessonMaterialListProps
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors shrink-0 ms-2">
               <Download className="w-4 h-4" />
             </div>
-          </a>
+          </ProtectedFileLink>
         ))}
       </div>
     </div>

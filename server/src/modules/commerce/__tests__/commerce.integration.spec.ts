@@ -99,17 +99,17 @@ describe('Commerce & Entitlement Integration Tests', () => {
         .set('Authorization', `Bearer ${studentToken}`)
         .send({
           productId,
-          paymentMethod: 'PAYMOB',
+          paymentMethod: 'MANUAL',
           idempotencyKey: `idemp-ord-${Date.now()}`,
         });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.status).toBe('PENDING');
-      expect(res.body.data.paymentMethod).toBe('PAYMOB');
+      expect(res.body.data.paymentMethod).toBe('MANUAL');
     });
 
-    it('should reconcile Paymob webhook callback idempotently and grant entitlement', async () => {
+    it('rejects automated gateway checkout and keeps gateway callbacks disabled', async () => {
       const idempotencyKey = `idemp-webhook-${Date.now()}`;
       
       // Create initial order
@@ -121,45 +121,21 @@ describe('Commerce & Entitlement Integration Tests', () => {
           paymentMethod: 'PAYMOB',
           idempotencyKey,
         });
-      const orderId = orderRes.body.data.id;
-
-      // Simulate Paymob webhook notification (amount matches the order total)
-      const payload1 = {
-        orderId,
-        transactionRef: `paymob_tx_${Date.now()}`,
-        success: true,
-        amount: 450,
-      };
-      const { calculatePaymobHmac } = await import('../../../utils/webhook-security');
-      const hmac1 = calculatePaymobHmac(payload1, process.env.PAYMOB_HMAC_SECRET || 'test_paymob_hmac_secret_key_123');
-
-      const webhookRes1 = await request(app)
-        .post('/api/v1/commerce/webhooks/paymob')
-        .set('x-paymob-hmac', hmac1)
-        .send(payload1);
-
-      expect(webhookRes1.status).toBe(200);
-      expect(webhookRes1.body.data.status).toBe('PAID');
-
-      // Duplicate webhook call should be idempotent
-      const webhookRes2 = await request(app)
-        .post('/api/v1/commerce/webhooks/paymob')
-        .set('x-paymob-hmac', hmac1)
-        .send(payload1);
-
-      expect(webhookRes2.status).toBe(200);
-      expect(webhookRes2.body.message).toMatch(/Order already processed/i);
+      expect(orderRes.status).toBe(400);
+      const webhookRes = await request(app).post('/api/v1/commerce/webhooks/paymob').send({ orderId: 'forged' });
+      expect(webhookRes.status).toBe(503);
+      expect(webhookRes.body.code).toBe('FEATURE_DISABLED');
     });
   });
 
   describe('Entitlements Access API', () => {
-    it('should confirm student active entitlement for subject', async () => {
+    it('does not grant access for an order awaiting verified manual payment', async () => {
       const res = await request(app)
         .get(`/api/v1/commerce/entitlements/check?resourceType=SUBJECT&resourceId=${subjectId}`)
         .set('Authorization', `Bearer ${studentToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.hasAccess).toBe(true);
+      expect(res.body.data.hasAccess).toBe(false);
     });
   });
 

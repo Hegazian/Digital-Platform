@@ -81,12 +81,12 @@ export class MaterialService {
 
     // Allow Admin or Course Teacher
     if (userRole === Role.ADMIN || (userRole === Role.TEACHER && teacherId === userId)) {
-      return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+      return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
     }
 
     // Allow free preview lessons
     if (isFreePreview) {
-      return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+      return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
     }
 
     const courseId = lesson.module?.courseId || lesson.section?.courseId;
@@ -105,7 +105,28 @@ export class MaterialService {
       throw new ForbiddenError('Active course access or subscription required to access lesson materials');
     }
 
-    return await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } });
+    return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
+  }
+
+  private static withProtectedUrls<T extends Array<{ id: string }>>(materials: T): T {
+    return materials.map((material) => ({ ...material, fileUrl: `/api/v1/materials/${material.id}/content` })) as unknown as T;
+  }
+
+  static async getMaterialForDelivery(materialId: string, userId: string, userRole: Role) {
+    const material = await prisma.material.findUnique({
+      where: { id: materialId },
+      include: { lesson: { include: { section: { include: { course: true } }, module: { include: { course: true } } } } },
+    });
+    if (!material) throw new NotFoundError('Material not found');
+    const course = material.lesson.module?.course || material.lesson.section?.course;
+    if (!course) throw new NotFoundError('Course not found');
+    const owner = course.teacherId === userId;
+    const preview = !!material.lesson.section?.isFreePreview;
+    if (userRole !== Role.ADMIN && !owner && !preview) {
+      const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+      await EntitlementResolver.assertLearningAccess(userId, userRole, { courseId: course.id, teacherId: course.teacherId });
+    }
+    return material;
   }
 
   /**

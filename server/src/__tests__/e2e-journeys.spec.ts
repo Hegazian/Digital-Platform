@@ -241,9 +241,9 @@ describe('End-to-End Journeys', () => {
       const anon = await request(app).get(`/api/v1/courses/${cleanupIds.courseId}`);
       expect(anon.status).toBe(200);
       expect(anon.body.data.status).toBe('PUBLISHED');
-      // Answer keys must not leak to anonymous viewers
-      const q = anon.body.data.modules[0].lessons[0].quiz.questions[0];
-      expect(q.options.some((o: any) => o.isCorrect === true)).toBe(false);
+      // Catalog DTOs never contain protected curriculum or answer keys.
+      expect(anon.body.data.modules).toBeUndefined();
+      expect(anon.body.data.sections).toBeUndefined();
     });
   });
 

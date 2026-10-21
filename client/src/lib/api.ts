@@ -92,7 +92,8 @@ async function refreshSession(): Promise<string | null | undefined> {
   }
 }
 
-export async function fetchApi(endpoint: string, options: RequestInit = {}) {
+export async function fetchApi(endpoint: string, options: RequestInit & { responseType?: 'blob' } = {}) {
+  const { responseType, ...requestOptions } = options;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const isFormData = options.body instanceof FormData;
 
@@ -104,7 +105,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
 
   try {
     let res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
+      ...requestOptions,
       headers,
       credentials: 'include',
     });
@@ -120,7 +121,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
         if (newToken) {
           onRefreshed(newToken);
           res = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
+            ...requestOptions,
             headers: { ...headers, Authorization: `Bearer ${newToken}` },
             credentials: 'include',
           });
@@ -144,7 +145,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
         );
         if (newToken) {
           res = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
+            ...requestOptions,
             headers: { ...headers, Authorization: `Bearer ${newToken}` },
             credentials: 'include',
           });
@@ -152,6 +153,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
       }
     }
 
+    if (res.ok && responseType === 'blob') return res.blob();
     const text = await res.text();
     // Single untyped boundary: raw JSON is parsed once here; all consumers
     // above this layer work with concrete types.

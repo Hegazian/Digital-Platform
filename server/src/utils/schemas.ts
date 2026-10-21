@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SUBMISSION_UPLOAD_PATH } from '../modules/assignments/submission-upload';
 
 // Auth Schemas
 export const registerSchema = z
@@ -107,7 +108,8 @@ export const createManualSubscriptionSchema = z.object({
 // Commerce Order Schema (student checkout)
 export const createOrderSchema = z.object({
   productId: z.string().uuid('Valid productId is required'),
-  paymentMethod: z.enum(['MANUAL', 'PAYMOB', 'FAWRY']),
+  // Automated gateways stay staged; only verified manual payment is offered.
+  paymentMethod: z.literal('MANUAL'),
   // Client-generated UUID; replaying the same key returns the same order.
   idempotencyKey: z.string().min(8, 'Idempotency key is required'),
   transactionRef: z.string().max(120).optional(),
@@ -319,9 +321,10 @@ export const submitAssignmentSchema = z.object({
   submissionText: z.string().optional(),
   files: z.array(
     z.object({
-      fileUrl: z.string().url('Invalid file URL'),
+      fileUrl: z.string().max(256).regex(SUBMISSION_UPLOAD_PATH, 'Invalid submission upload reference'),
+      uploadToken: z.string().min(1).max(8192),
       fileName: z.string().min(1, 'File name is required'),
-      sizeBytes: z.number().optional(),
+      sizeBytes: z.number().int().nonnegative().max(20 * 1024 * 1024).optional(),
     })
   ).optional(),
 });

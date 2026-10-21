@@ -45,11 +45,13 @@ export class VideoController {
       const userId = req.user!.userId;
 
       const secureUrl = await VideoService.getSecurePlaybackUrl(videoId as string, userId);
+      res.setHeader('Cache-Control', 'private, no-store');
 
       res.status(200).json({
         success: true,
         data: {
           playbackUrl: secureUrl,
+          expiresAt: new Date(Date.now() + 120_000).toISOString(),
         },
       });
     } catch (error) {
@@ -80,6 +82,10 @@ export class VideoController {
       if (payload.videoId !== videoId || payload.purpose !== 'stream') {
         throw new UnauthorizedError('Invalid token purpose or video mismatch');
       }
+      if (typeof payload.userId !== 'string' || !(await VideoService.verifyPlaybackAccess(videoId as string, payload.userId))) {
+        throw new ForbiddenError('Video access is no longer available');
+      }
+      res.setHeader('Cache-Control', 'private, no-store');
 
       const { prisma } = await import('../../prisma');
       const video = await prisma.video.findUnique({ where: { id: videoId as string } });
@@ -99,32 +105,36 @@ export class VideoController {
       if (!fs.existsSync(filePath)) {
         throw new BadRequestError('Video file missing from disk');
       }
+      const realRoot = fs.realpathSync(uploadsRoot);
+      const realFilePath = fs.realpathSync(filePath);
+      if (!realFilePath.startsWith(realRoot + path.sep)) throw new ForbiddenError('Invalid video storage path');
 
-      const stat = fs.statSync(filePath);
+      const stat = fs.statSync(realFilePath);
       const fileSize = stat.size;
       const range = req.headers.range;
+      const contentType = ({ '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.mpeg': 'video/mpeg', '.mpg': 'video/mpeg' } as Record<string, string>)[path.extname(realFilePath).toLowerCase()] || 'video/mp4';
 
       if (range) {
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
         const chunksize = (end - start) + 1;
-        const file = fs.createReadStream(filePath, { start, end });
+        const file = fs.createReadStream(realFilePath, { start, end });
         const head = {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunksize,
-          'Content-Type': 'video/mp4',
+          'Content-Type': contentType,
         };
         res.writeHead(206, head);
         file.pipe(res);
       } else {
         const head = {
           'Content-Length': fileSize,
-          'Content-Type': 'video/mp4',
+          'Content-Type': contentType,
         };
         res.writeHead(200, head);
-        fs.createReadStream(filePath).pipe(res);
+        fs.createReadStream(realFilePath).pipe(res);
       }
     } catch (error) {
       next(error);

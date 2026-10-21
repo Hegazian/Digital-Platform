@@ -104,6 +104,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
 export default function TiptapEditor({ content, onChange, placeholder = "Write something amazing..." }: TiptapEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({

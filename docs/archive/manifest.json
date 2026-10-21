@@ -1,0 +1,67 @@
+[
+  {
+    "path": "README.md",
+    "archive": "docs/archive/README.md",
+    "sha256": "07e180e3214a6d4232ece1e42a9341b48f9af8238e8b21b5f20aefcc5bc54321"
+  },
+  {
+    "path": "task.md",
+    "archive": "docs/archive/task.md",
+    "sha256": "b2b5133850b4fb7e622dec6d50db07d7eba7c94d8380510b44166cefaa1c73ba"
+  },
+  {
+    "path": "implementation_plan.md",
+    "archive": "docs/archive/implementation_plan.md",
+    "sha256": "ced90391614b4c3ee0f5d987c57d9d241f84de41600c218de54f92f0d757cea0"
+  },
+  {
+    "path": "Educational_Platform_Requirements_and_Test_Plan.md",
+    "archive": "docs/archive/Educational_Platform_Requirements_and_Test_Plan.md",
+    "sha256": "28b2ffdab42866924119673aa068436fc53e3723182dd810b00d629ef2ccec54"
+  },
+  {
+    "path": "Educational_Platform_System_Design_Document.md",
+    "archive": "docs/archive/Educational_Platform_System_Design_Document.md",
+    "sha256": "35b694f51090b53691be9936431a745e72447402d52911a9aa363132f1ce099f"
+  },
+  {
+    "path": "project_overview_and_usage_guide.md",
+    "archive": "docs/archive/project_overview_and_usage_guide.md",
+    "sha256": "87c2a0aed2a5fec55e67df6309af80c26940374b9a862ae4537428b7c7a4dc44"
+  },
+  {
+    "path": "manual_testing_guide.md",
+    "archive": "docs/archive/manual_testing_guide.md",
+    "sha256": "e4679e50c964caf9faa9b1190d6493cbfb3dc49a4f19d162febd54a55ede6c52"
+  },
+  {
+    "path": "REQUIREMENTS_COVERAGE.md",
+    "archive": "docs/archive/REQUIREMENTS_COVERAGE.md",
+    "sha256": "52e3fc4a67153e776afaea3ffcee8454abe7d9a033e61f29fcfd8daf48616102"
+  },
+  {
+    "path": "teacher.md",
+    "archive": "docs/archive/teacher.md",
+    "sha256": "7874f1a08e60d9d3f576b04d35d0e033ec6ac9e0118c902f37dfb92bc768e88c"
+  },
+  {
+    "path": "DEEP_DIVE_ANALYSIS_AND_ENHANCEMENTS.md",
+    "archive": "docs/archive/DEEP_DIVE_ANALYSIS_AND_ENHANCEMENTS.md",
+    "sha256": "5d66498147a69f4ab87160ec3cf1e8bb133a7b181b2ac864c6c2ceb279b42fcf"
+  },
+  {
+    "path": "LEARNHOUSE_DEEP_DIVE_ANALYSIS.md",
+    "archive": "docs/archive/LEARNHOUSE_DEEP_DIVE_ANALYSIS.md",
+    "sha256": "350e21a02d653f6a8a8e0ef9712d5f120f6fc6d6d165d091a4c5fe52c07d98c9"
+  },
+  {
+    "path": "server/README.md",
+    "archive": "docs/archive/server/README.md",
+    "sha256": "bad7d14cd1505dcd22acd66641874e9dd2cd8bb73ae41ff99304260343eec49d"
+  },
+  {
+    "path": "client/README.md",
+    "archive": "docs/archive/client/README.md",
+    "sha256": "04a848a1bd5c9ce654ef0061e23f4e06ae565acb0813aff6d24de61888868e6c"
+  }
+]

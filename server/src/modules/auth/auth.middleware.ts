@@ -12,40 +12,20 @@ export interface AuthRequest extends Request {
   };
 }
 
-/**
- * Short-TTL cache so deactivation takes effect within seconds without a DB
- * round-trip on every request. Admins can force-instant revocation via
- * invalidateActivationCache().
- */
-const activationCache = new Map<string, { active: boolean; expiresAt: number }>();
-const ACTIVATION_CACHE_TTL_MS = 30_000;
+/** Kept as a no-op for existing callers; authorization is read from the DB on
+ * every protected request, making revocation effective across API instances. */
+export function invalidateActivationCache(_userId: string | null | undefined): void {}
 
-async function isUserActive(userId: string): Promise<boolean> {
-  const cached = activationCache.get(userId);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.active;
-  }
-  const user = await prisma.user.findUnique({
+async function getCurrentAccount(userId: string) {
+  return prisma.user.findUnique({
     where: { id: userId },
-    select: { isActive: true },
+    select: { id: true, isActive: true, role: true, teacherStatus: true, authVersion: true },
   });
-  const active = user?.isActive ?? false;
-  activationCache.set(userId, { active, expiresAt: Date.now() + ACTIVATION_CACHE_TTL_MS });
-  return active;
 }
 
-/** Periodic cleanup to prevent unbounded memory growth. */
-const ACTIVATION_CACHE_CLEANUP_INTERVAL_MS = 60_000;
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of activationCache) {
-    if (entry.expiresAt <= now) activationCache.delete(key);
-  }
-}, ACTIVATION_CACHE_CLEANUP_INTERVAL_MS).unref();
-
-/** Forces the next request from this user to re-check the database. */
-export function invalidateActivationCache(userId: string | null | undefined): void {
-  if (userId) activationCache.delete(userId);
+function isApprovedAccount(account: { role: Role; teacherStatus: TeacherStatus | null } | null): boolean {
+  if (!account) return false;
+  return account.role !== Role.TEACHER || account.teacherStatus === TeacherStatus.APPROVED;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -68,16 +48,22 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     return next(new UnauthorizedError('Complete multi-factor authentication first'));
   }
 
-  // Revocation check: deactivated users are rejected within the cache TTL.
-  const active = await isUserActive(decoded.userId);
-  if (!active) {
+  // The token proves identity only. Current role/approval/activation are
+  // authoritative in the database, so stale elevated claims never survive a
+  // demotion and changes take effect across every API process immediately.
+  const account = await getCurrentAccount(decoded.userId);
+  if (!account?.isActive) {
     return next(new UnauthorizedError('Account is deactivated or suspended'));
   }
+  if ((decoded.authVersion ?? 0) !== account.authVersion) {
+    return next(new UnauthorizedError('Session authorization has changed; please sign in again'));
+  }
+  if (!isApprovedAccount(account)) return next(new ForbiddenError('Teacher account is not approved'));
 
   req.user = {
-    userId: decoded.userId,
-    role: decoded.role,
-    teacherStatus: decoded.teacherStatus,
+    userId: account.id,
+    role: account.role,
+    teacherStatus: account.teacherStatus ?? undefined,
   };
   next();
 };
@@ -92,13 +78,12 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
     try {
       const decoded = verifyAccessToken(authHeader.split(' ')[1]) as any;
       if (decoded.purpose !== 'mfa_challenge') {
-        // Deactivated users are treated as anonymous, consistent with authenticate().
-        const active = await isUserActive(decoded.userId);
-        if (active) {
+        const account = await getCurrentAccount(decoded.userId);
+        if (account?.isActive && (decoded.authVersion ?? 0) === account.authVersion && isApprovedAccount(account)) {
           req.user = {
-            userId: decoded.userId,
-            role: decoded.role,
-            teacherStatus: decoded.teacherStatus
+            userId: account.id,
+            role: account.role,
+            teacherStatus: account.teacherStatus ?? undefined,
           };
         }
       }

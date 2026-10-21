@@ -38,6 +38,7 @@ export class CourseController {
   static async getAllCourses(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const courses = await CourseService.getAllCourses(req.query, req.user ?? null);
+      if (req.user) res.setHeader('Cache-Control', 'private, no-store');
       res.status(200).json({ success: true, data: courses });
     } catch (error) {
       next(error);
@@ -47,10 +48,19 @@ export class CourseController {
   static async getCourseById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const course = await CourseService.getCourseById(req.params.id as string, req.user ?? null);
+      if (req.user) res.setHeader('Cache-Control', 'private, no-store');
       res.status(200).json({ success: true, data: course });
     } catch (error) {
       next(error);
     }
+  }
+
+  static async getLearningCourse(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const course = await CourseService.getLearningCourse(req.params.id as string, req.user!);
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.status(200).json({ success: true, data: course });
+    } catch (error) { next(error); }
   }
 
   static async createCourse(req: AuthRequest, res: Response, next: NextFunction) {

@@ -83,6 +83,7 @@ export default function InteractiveQuizRunner({
   answersRef.current = { singleAnswers, multiAnswers, textAnswers };
 
   const submittingRef = useRef(false);
+  const submitRef = useRef<() => void>(() => {});
   const [submitting, setSubmitting] = useState(false);
 
   const [result, setResult] = useState<{
@@ -189,8 +190,7 @@ export default function InteractiveQuizRunner({
 
   // The countdown interval captures whichever handleSubmit existed when the
   // attempt started; route it through a ref so it always invokes the latest.
-  const submitRef = useRef(handleSubmit);
-  submitRef.current = handleSubmit;
+  useEffect(() => { submitRef.current = handleSubmit; });
 
   if (!quiz || questions.length === 0) {
     return (

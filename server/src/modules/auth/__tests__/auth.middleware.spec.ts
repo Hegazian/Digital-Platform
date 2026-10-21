@@ -3,11 +3,11 @@ import { authenticate, requireRole, requireApprovedTeacher, AuthRequest } from '
 import { Role, TeacherStatus } from '@prisma/client';
 import * as jwtUtils from '../../../utils/jwt';
 
-// authenticate() performs a DB-backed activation (revocation) check.
+// Authenticated sessions are resolved against current DB state on each request.
 vi.mock('../../../prisma', () => ({
   prisma: {
     user: {
-      findUnique: vi.fn().mockResolvedValue({ isActive: true }),
+      findUnique: vi.fn().mockResolvedValue({ id: 'u1', isActive: true, role: 'STUDENT', teacherStatus: null, authVersion: 0 }),
     },
   },
 }));
@@ -26,6 +26,15 @@ describe('Auth Middleware Suite', () => {
       await authenticate(mReq, mRes, mNext);
 
       expect(mReq.user).toEqual({ userId: 'u1', role: Role.STUDENT, teacherStatus: undefined });
+      expect(mNext).toHaveBeenCalledWith();
+    });
+
+    it('uses the current database role instead of a stale elevated JWT claim', async () => {
+      const mReq = { headers: { authorization: 'Bearer stale_admin_token' } } as AuthRequest;
+      const mNext = vi.fn();
+      vi.spyOn(jwtUtils, 'verifyAccessToken').mockReturnValue({ userId: 'u1', role: Role.ADMIN, authVersion: 0 } as any);
+      await authenticate(mReq, {} as any, mNext);
+      expect(mReq.user?.role).toBe(Role.STUDENT);
       expect(mNext).toHaveBeenCalledWith();
     });
 

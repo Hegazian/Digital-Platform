@@ -1103,7 +1103,7 @@ export default function PlatformSettings() {
                   <input
                     type="checkbox"
                     checked={config.requireCourseApproval}
-                    onChange={(e) => setConfig({ ...config, requireCourseApproval: e.target.checked })}
+                    disabled
                     className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
                   />
                   <div>
@@ -1133,13 +1133,13 @@ export default function PlatformSettings() {
                   <input
                     type="checkbox"
                     checked={config.enableCodePlaygrounds}
-                    onChange={(e) => setConfig({ ...config, enableCodePlaygrounds: e.target.checked })}
+                    disabled
                     className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
                   />
                   <div>
-                    <span className="text-xs font-bold text-white block">Enable Interactive Code Runner</span>
+                    <span className="text-xs font-bold text-white block">Code Runner (staged)</span>
                     <span className="text-[11px] text-slate-400">
-                      Provide in-browser code editor and sandbox execution for programming lessons.
+                      Code execution is unavailable until a separate isolated runner passes its security review.
                     </span>
                   </div>
                 </label>
@@ -1148,13 +1148,13 @@ export default function PlatformSettings() {
                   <input
                     type="checkbox"
                     checked={config.enableCollaborativeBoards}
-                    onChange={(e) => setConfig({ ...config, enableCollaborativeBoards: e.target.checked })}
+                    disabled
                     className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
                   />
                   <div>
-                    <span className="text-xs font-bold text-white block">Enable Collaborative Whiteboards</span>
+                    <span className="text-xs font-bold text-white block">Collaborative Whiteboards (staged)</span>
                     <span className="text-[11px] text-slate-400">
-                      Activate real-time multiplayer drawing boards for interactive problem solving.
+                      Board APIs remain disabled until concurrency and collaboration gates pass.
                     </span>
                   </div>
                 </label>

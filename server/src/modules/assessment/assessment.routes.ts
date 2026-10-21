@@ -11,6 +11,10 @@ import {
 } from '../../utils/schemas';
 
 const assessmentRouter = Router();
+assessmentRouter.use((_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, private');
+  next();
+});
 
 // Catalog reads (teachers author from pools; students browse exams)
 assessmentRouter.get('/pools', authenticate, requireApprovedTeacher, AssessmentController.listQuestionPools);

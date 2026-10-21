@@ -157,7 +157,8 @@ describe('Admin API Integration Tests', () => {
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({ status: 'APPROVED' });
 
-      expect(res.status).toBe(403);
+      // Pending teachers do not receive a normal authenticated session.
+      expect(res.status).toBe(401);
     });
   });
 });

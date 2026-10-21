@@ -224,38 +224,37 @@ export class QuizService {
    * Get quiz by ID.
    * If isTeacher is false, the correct answers are stripped from the options.
    */
-  static async getQuizById(id: string, isTeacher: boolean = false) {
+  static async getQuizById(id: string, userId: string, userRole: Role): Promise<any> {
     const quiz = await prisma.quiz.findUnique({
       where: { id },
       include: {
-        questions: {
-          orderBy: { orderIndex: 'asc' },
-        },
+        questions: { orderBy: { orderIndex: 'asc' } },
+        lesson: { include: { module: { include: { course: true } }, section: { include: { course: true } } } },
       },
     });
-
-    if (!quiz) {
-      throw new NotFoundError('Quiz not found');
-    }
-
-    if (!isTeacher) {
-      // Strip `isCorrect` / accepted answers for students
-      quiz.questions = quiz.questions.map((q) => {
-        const rawOptions = (q.options as any[]) || [];
-        const sanitizedOptions = rawOptions.map((opt) => ({
-          id: opt.id,
-          text: opt.text,
-        }));
+    if (!quiz) throw new NotFoundError('Quiz not found');
+    const courseTeacherId = quiz.lesson?.module?.course.teacherId || quiz.lesson?.section?.course.teacherId;
+    const canReviewKeys = userRole === Role.ADMIN || (userRole === Role.TEACHER && courseTeacherId === userId);
+    const { lesson: _lesson, ...quizDto } = quiz;
+    return {
+      ...quizDto,
+      questions: quiz.questions.map((question) => {
+        const { options } = question;
+        const safeOptions = canReviewKeys ? options : Array.isArray(options) ? options.map((option: any) => {
+          if (!option || typeof option !== 'object') return option;
+          return { ...(option.id !== undefined && { id: option.id }), ...(option.text !== undefined && { text: option.text }) };
+        }) : options;
+        if (canReviewKeys) return { ...question, options: safeOptions };
         return {
-          ...q,
-          options: sanitizedOptions,
-          correctAnswer: q.type === 'ESSAY' || q.type === 'SHORT_ANSWER' ? null : q.correctAnswer,
-          explanation: null, // Hide explanation before submission
+          id: question.id,
+          questionText: question.questionText,
+          type: question.type,
+          orderIndex: question.orderIndex,
+          points: question.points,
+          options: safeOptions,
         };
-      });
-    }
-
-    return quiz;
+      }),
+    };
   }
 
   /**

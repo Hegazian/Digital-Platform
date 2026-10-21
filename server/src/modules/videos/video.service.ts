@@ -4,6 +4,7 @@ import { VideoStatus } from '@prisma/client';
 import { StorageService } from '../../utils/storage';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
 export class VideoService {
   /**
@@ -58,8 +59,9 @@ export class VideoService {
     }
 
     // Owner or admin bypass
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user && (user.role === 'ADMIN' || video.teacherId === userId)) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, isActive: true } });
+    if (!user?.isActive) return false;
+    if (user.role === 'ADMIN' || video.teacherId === userId) {
       return true;
     }
 
@@ -101,11 +103,11 @@ export class VideoService {
 
     if (video.videoUrl.startsWith('/uploads/')) {
       // Local fallback: generate a short-lived JWT token that the frontend can use to hit our streaming endpoint
-      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '2h' });
+      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '120s', jwtid: randomUUID() });
       return `/api/v1/videos/${video.id}/stream?token=${token}`;
     }
 
     // Supabase Storage: generate a signed URL
-    return await StorageService.getSignedUrl(video.videoUrl, 7200); // 2 hours
+    return await StorageService.getSignedUrl(video.videoUrl, 120);
   }
 }

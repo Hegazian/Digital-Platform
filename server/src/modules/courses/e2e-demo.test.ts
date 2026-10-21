@@ -38,7 +38,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     adminToken = jwt.sign(
-      { userId: adminUser.id, role: adminUser.role },
+      { userId: adminUser.id, role: adminUser.role, authVersion: adminUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -57,7 +57,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     teacherToken = jwt.sign(
-      { userId: teacherUser.id, role: teacherUser.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: teacherUser.id, role: teacherUser.role, teacherStatus: TeacherStatus.APPROVED, authVersion: teacherUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -76,7 +76,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     otherTeacherToken = jwt.sign(
-      { userId: otherTeacherUser.id, role: otherTeacherUser.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: otherTeacherUser.id, role: otherTeacherUser.role, teacherStatus: TeacherStatus.APPROVED, authVersion: otherTeacherUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -94,7 +94,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     studentToken = jwt.sign(
-      { userId: studentUser.id, role: studentUser.role },
+      { userId: studentUser.id, role: studentUser.role, authVersion: studentUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -170,7 +170,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         estimatedDuration: 45,
         video: {
           title: 'kinematics-lecture-full-hd.mp4',
-          videoUrl: 'https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4',
+          videoUrl: '/uploads/lesson-videos/physics-sec1-lesson1.mp4',
           duration: 2700,
         },
         materials: [
@@ -301,7 +301,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
 
     // 3.4 Student fetches published course and consumes lesson
     const courseDetailsRes = await request(app)
-      .get(`/api/v1/courses/${createdCourse.id}`)
+      .get(`/api/v1/courses/${createdCourse.id}/learning`)
       .set('Authorization', `Bearer ${studentToken}`);
 
     expect(courseDetailsRes.status).toBe(200);
@@ -310,7 +310,14 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
     expect(courseData.priceEgp).toBeDefined();
     expect(courseData.teacher.id).toBe(teacherUser.id);
     expect(courseData.modules.length).toBeGreaterThan(0);
-    expect(courseData.modules[0].lessons[0].video.videoUrl).toBe('https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4');
+    const video = courseData.modules[0].lessons[0].video;
+    expect(video.id).toBeDefined();
+    expect(video.videoUrl).toBeUndefined();
+    const playback = await request(app)
+      .get(`/api/v1/videos/${video.id}/playback-url`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(playback.status).toBe(200);
+    expect(playback.body.data.playbackUrl).toContain('/api/v1/videos/');
   });
 
   // STEP 4: Admin Edit & Delete Powers

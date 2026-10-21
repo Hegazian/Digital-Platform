@@ -1,0 +1,53 @@
+[
+  {
+    "id": "B01",
+    "description": "Persisted Arabic language does not restore root HTML lang/dir",
+    "observed": {
+      "htmlLang": "en",
+      "htmlDir": null,
+      "appRtl": true
+    }
+  },
+  {
+    "id": "B02",
+    "description": "Career catalog calls an unsupported API path",
+    "observed": {
+      "careerRequests": [
+        "/career-tracks"
+      ]
+    }
+  },
+  {
+    "id": "B03",
+    "description": "A mixed curriculum hides all section lessons",
+    "observed": {
+      "moduleLessonVisible": true,
+      "sectionLessonVisible": false
+    }
+  },
+  {
+    "id": "B04",
+    "description": "Lesson body and typed text block are not rendered",
+    "observed": {
+      "bodyTextVisible": false,
+      "blockTextVisible": false
+    }
+  },
+  {
+    "id": "B05",
+    "description": "Player whiteboard uses demo ID instead of real lesson block ID",
+    "observed": {
+      "boardRequests": [
+        "/boards/demo-board-1"
+      ]
+    }
+  },
+  {
+    "id": "B06",
+    "description": "Course paywall hides a free-preview section from a guest",
+    "observed": {
+      "paywallVisible": true,
+      "previewLessonVisible": false
+    }
+  }
+]

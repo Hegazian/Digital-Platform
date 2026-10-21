@@ -1,3 +1,4 @@
+import { validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
 import { Router } from 'express';
 import { VideoController } from './video.controller';
 import { authenticate, requireApprovedTeacher } from '../auth/auth.middleware';
@@ -31,7 +32,7 @@ const upload = multer({
 });
 
 // Upload endpoint (Approved Teachers Only)
-router.post('/upload', authenticate, requireApprovedTeacher, upload.single('file'), VideoController.uploadVideo);
+router.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, upload.single('file'), validateUploadedFile, scanUploadedFile, VideoController.uploadVideo);
 
 // Playback & Security endpoints (Authenticated Users with Entitlement Check)
 router.get('/:videoId/playback-url', authenticate, VideoController.getPlaybackUrl);

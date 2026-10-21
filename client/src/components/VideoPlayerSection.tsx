@@ -15,11 +15,11 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
+import { usePlaybackSource } from '../lib/usePlaybackSource';
 import { errorMessage } from '../lib/apiTypes';
 import CodePlaygroundBlock from './editor/CodePlaygroundBlock';
 import CollaborativeBoardBlock from './editor/CollaborativeBoardBlock';
 import DiscussionForum from './discussions/DiscussionForum';
-import AITutorDrawer from './ai/AITutorDrawer';
 import LMSPlayerHeader from './player/LMSPlayerHeader';
 import CurriculumSidebar, { CurriculumLesson, CurriculumModule } from './player/CurriculumSidebar';
 import PDFDocumentViewer from './player/PDFDocumentViewer';
@@ -70,11 +70,12 @@ export default function VideoPlayerSection() {
   >('video');
 
   // Video Player Controls
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playback = usePlaybackSource(videoRef, activeLesson?.videoId || undefined, activeLesson?.video?.videoUrl);
+  const videoUrl = playback.url;
 
   /**
    * Access policy (TC-STUDENT-032/033): admins, the owning teacher, and
@@ -107,7 +108,12 @@ export default function VideoPlayerSection() {
 
     try {
       const res = await fetchApi(`/courses/${selectedCourseId}`);
-      const courseData = res.data || res;
+      let courseData = res.data || res;
+      const allowed = await computeAccess(courseData);
+      if (allowed) {
+        const learning = await fetchApi(`/courses/${selectedCourseId}/learning`);
+        courseData = learning.data || learning;
+      }
       setCourse(courseData);
 
       // Extract modules & lessons
@@ -158,7 +164,6 @@ export default function VideoPlayerSection() {
       setModules(extractedModules);
 
       // Access + prior-progress hydration
-      const allowed = await computeAccess(courseData);
       setHasAccess(allowed);
       setAccessChecked(true);
 
@@ -175,7 +180,6 @@ export default function VideoPlayerSection() {
       if (allowed && extractedModules.length > 0 && extractedModules[0].lessons.length > 0) {
         const firstLesson = extractedModules[0].lessons[0];
         setActiveLesson(firstLesson);
-        loadLessonVideo(firstLesson);
       }
     } catch (err: unknown) {
       setError(errorMessage(err, 'Failed to load course curriculum'));
@@ -185,35 +189,6 @@ export default function VideoPlayerSection() {
   useEffect(() => {
     loadCourseData();
   }, [loadCourseData]);
-
-  // Load video for active lesson
-  const loadLessonVideo = async (lesson: CurriculumLesson) => {
-    setError(null);
-    setVideoUrl(null);
-
-    // Absolute http(s) URLs (e.g. Supabase public assets) are playable as-is.
-    if (lesson.video?.videoUrl && /^https?:\/\//i.test(lesson.video.videoUrl)) {
-      setVideoUrl(lesson.video.videoUrl);
-      return;
-    }
-
-    if (lesson.videoId) {
-      try {
-        // Secure flow: server checks entitlement and returns either a signed
-        // cloud URL or a short-lived token-gated stream URL for local files.
-        // Raw '/uploads/...' paths are NEVER playable from the client origin.
-        const res = await fetchApi(`/videos/${lesson.videoId}/playback-url`);
-        if (res.data?.playbackUrl) {
-          setVideoUrl(res.data.playbackUrl);
-          return;
-        }
-      } catch {
-        // fall through to empty state below
-      }
-      setVideoUrl(null);
-      // No demo fallback: lessons without a playable video show an empty state.
-    }
-  };
 
   const handleEnroll = async () => {
     if (!user) {
@@ -231,7 +206,7 @@ export default function VideoPlayerSection() {
     setError(null);
     try {
       await fetchApi(`/courses/${selectedCourseId}/enroll`, { method: 'POST' });
-      setHasAccess(true);
+      await loadCourseData();
       setMessage('Enrolled successfully — start learning below!');
     } catch (err: unknown) {
       setError(errorMessage(err, 'Failed to enroll'));
@@ -241,8 +216,8 @@ export default function VideoPlayerSection() {
   };
 
   const handleSelectLesson = (lesson: CurriculumLesson) => {
+    if (activeLesson?.id === lesson.id) playback.retry();
     setActiveLesson(lesson);
-    loadLessonVideo(lesson);
     // Switch to video tab by default on lesson change
     setActiveTab('video');
   };
@@ -448,6 +423,7 @@ export default function VideoPlayerSection() {
                     playsInline
                     className="w-full h-full object-contain"
                     onEnded={handleLessonCompleted}
+                    onLoadedMetadata={playback.onLoadedMetadata}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
@@ -455,7 +431,7 @@ export default function VideoPlayerSection() {
                       <VideoIcon className="w-7 h-7 text-slate-600" />
                     </div>
                     <div className="text-center space-y-1">
-                      <p className="text-xs font-semibold text-slate-400">No video stream loaded</p>
+                      <p role={playback.error ? 'alert' : undefined} className="text-xs font-semibold text-slate-400">{playback.error ? (lang === 'ar' ? 'تعذر تجديد الوصول إلى الفيديو. أعد اختيار الدرس للمحاولة.' : playback.error) : 'No video stream loaded'}</p>
                       <p className="text-[11px] text-slate-600">Select a lesson from the curriculum to begin</p>
                     </div>
                   </div>
@@ -566,8 +542,6 @@ export default function VideoPlayerSection() {
         </div>
       </div>
 
-      {/* Embedded Gemini AI Tutor Floating Drawer */}
-      <AITutorDrawer />
       </>
       )}
 
@@ -584,18 +558,13 @@ export default function VideoPlayerSection() {
           onClose={() => setShowCheckout(false)}
           onAccessGranted={async () => {
             setShowCheckout(false);
-            setHasAccess(true);
+            await loadCourseData();
             setMessage('Payment verified — start learning below!');
             if (user) {
               try {
                 const prog = await fetchApi(`/progress/course/${course.id}`);
                 setCompletedLessonIds(new Set(prog.data?.completedLessonIds || []));
               } catch {}
-              const first = modules[0]?.lessons[0];
-              if (first && !activeLesson) {
-                setActiveLesson(first);
-                loadLessonVideo(first);
-              }
             }
           }}
         />

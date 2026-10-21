@@ -7,8 +7,8 @@ export class LiveController {
     try {
       const teacherId = req.user!.userId;
       const session = await LiveService.createLiveSession({
-        teacherId,
         ...req.body,
+        teacherId,
       });
       res.status(201).json({ success: true, data: session });
     } catch (err) {

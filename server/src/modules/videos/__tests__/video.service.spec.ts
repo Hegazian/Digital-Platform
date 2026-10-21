@@ -72,7 +72,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT', isActive: true });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'student-1');
       expect(hasAccess).toBe(true);
@@ -86,7 +86,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT', isActive: true });
       (prisma.subscription.findFirst as any).mockResolvedValue(null);
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'student-1');
@@ -101,7 +101,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT', isActive: true });
       (prisma.subscription.findFirst as any).mockResolvedValue({ id: 'sub-1', isActive: true });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'student-1');
@@ -116,7 +116,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'teacher-1', role: 'TEACHER' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'teacher-1', role: 'TEACHER', isActive: true });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'teacher-1');
       expect(hasAccess).toBe(true);
@@ -130,7 +130,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'admin-1', role: 'ADMIN' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'admin-1', role: 'ADMIN', isActive: true });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'admin-1');
       expect(hasAccess).toBe(true);

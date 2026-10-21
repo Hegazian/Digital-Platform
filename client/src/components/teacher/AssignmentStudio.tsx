@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import ProtectedFileLink from '@/components/ProtectedFileLink';
 import { errorMessage } from '@/lib/apiTypes';
 
 interface CourseLite {
@@ -404,9 +405,9 @@ export default function AssignmentStudio() {
                     </p>
                   </div>
                   {(s.files || []).map((f, i) => (
-                    <a key={i} href={f.fileUrl} target="_blank" rel="noreferrer" className="text-[11px] text-indigo-300 hover:underline">
+                    <ProtectedFileLink key={i} fileUrl={f.fileUrl} fileName={f.fileName} className="text-[11px] text-indigo-300 hover:underline">
                       {f.fileName}
-                    </a>
+                    </ProtectedFileLink>
                   ))}
                 </div>
 

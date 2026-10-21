@@ -3,6 +3,12 @@ import { prisma } from '../../../prisma';
 import { AdminService } from '../admin.service';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../../utils/errors';
 
+const transactionMocks = vi.hoisted(() => ({
+  userUpdate: vi.fn(),
+  userCount: vi.fn().mockResolvedValue(1),
+  tokenUpdateMany: vi.fn().mockResolvedValue({ count: 0 }),
+}));
+
 vi.mock('../../../prisma', () => ({
   prisma: {
     user: {
@@ -36,12 +42,17 @@ vi.mock('../../../prisma', () => ({
     refreshToken: {
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
+    $transaction: vi.fn((callback: (tx: any) => any) => callback({
+      user: { update: transactionMocks.userUpdate, count: transactionMocks.userCount },
+      refreshToken: { updateMany: transactionMocks.tokenUpdateMany },
+    })),
   },
 }));
 
 describe('AdminService Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    transactionMocks.userCount.mockResolvedValue(1);
   });
 
   describe('getPendingTeachers', () => {
@@ -67,15 +78,15 @@ describe('AdminService Unit Tests', () => {
       const mockTeacher = { id: 't1', email: 'teacher@test.com', name: 'T', role: 'TEACHER', teacherStatus: 'PENDING' };
       const mockUpdated = { ...mockTeacher, teacherStatus: 'APPROVED' };
       (prisma.user.findUnique as any).mockResolvedValue(mockTeacher);
-      (prisma.user.update as any).mockResolvedValue(mockUpdated);
+      transactionMocks.userUpdate.mockResolvedValue(mockUpdated);
 
       const result = await AdminService.updateTeacherStatus('t1', 'APPROVED');
 
       expect(result.teacherStatus).toBe('APPROVED');
-      expect(prisma.user.update).toHaveBeenCalledWith(
+      expect(transactionMocks.userUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 't1' },
-          data: { teacherStatus: 'APPROVED' },
+          data: expect.objectContaining({ teacherStatus: 'APPROVED', authVersion: { increment: 1 } }),
         })
       );
     });
@@ -104,7 +115,7 @@ describe('AdminService Unit Tests', () => {
       const mockUser = { id: 's1', role: 'STUDENT' };
       const mockUpdated = { id: 's1', email: 's@t.com', name: 'S', role: 'STUDENT', isActive: false };
       (prisma.user.findUnique as any).mockResolvedValue(mockUser);
-      (prisma.user.update as any).mockResolvedValue(mockUpdated);
+      transactionMocks.userUpdate.mockResolvedValue(mockUpdated);
 
       const result = await AdminService.setUserActiveStatus('s1', false);
 
@@ -183,7 +194,7 @@ describe('AdminService Unit Tests', () => {
       const mockUser = { id: 'u1', email: 'user@test.com', name: 'Old' };
       (prisma.user.findUnique as any).mockResolvedValue(mockUser);
       (prisma.grade.findUnique as any).mockResolvedValue({ id: 'g1' });
-      (prisma.user.update as any).mockResolvedValue({
+      transactionMocks.userUpdate.mockResolvedValue({
         ...mockUser,
         name: 'New Name',
         gradeId: 'g1',
@@ -195,7 +206,7 @@ describe('AdminService Unit Tests', () => {
       });
 
       expect(result.name).toBe('New Name');
-      expect(prisma.user.update).toHaveBeenCalled();
+      expect(transactionMocks.userUpdate).toHaveBeenCalled();
     });
   });
 

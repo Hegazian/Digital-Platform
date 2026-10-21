@@ -6,12 +6,12 @@ import { python } from '@codemirror/lang-python';
 import { Play, Loader2, AlertCircle } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
 import { errorMessage } from '../../lib/apiTypes';
-import { useConfigStore } from '../../lib/configStore';
 
 interface CodePlaygroundBlockProps {
   initialCode?: string;
   language?: string;
 }
+const CODE_EXECUTION_AVAILABLE = false;
 
 export default function CodePlaygroundBlock({ initialCode = 'print("Hello, EduPlatform!")', language = 'python' }: CodePlaygroundBlockProps) {
   const [code, setCode] = useState(initialCode);
@@ -19,8 +19,6 @@ export default function CodePlaygroundBlock({ initialCode = 'print("Hello, EduPl
   const [error, setError] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   
-  const { config } = useConfigStore();
-
   const handleRun = async () => {
     setIsRunning(true);
     setOutput('');
@@ -45,11 +43,11 @@ export default function CodePlaygroundBlock({ initialCode = 'print("Hello, EduPl
     }
   };
 
-  if (config && !config.enableCodePlaygrounds) {
+  if (!CODE_EXECUTION_AVAILABLE) {
     return (
       <div className="p-4 bg-slate-100 border border-slate-200 rounded-md text-slate-500 text-sm flex items-center gap-2">
         <AlertCircle size={16} />
-        Code playgrounds are currently disabled by the administrator.
+        Code execution is not available yet. The lesson code sample remains available for reading.
       </div>
     );
   }

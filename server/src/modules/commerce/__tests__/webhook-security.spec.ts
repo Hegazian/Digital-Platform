@@ -85,7 +85,7 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
     } catch (e) {}
   });
 
-  it('should REJECT Paymob webhook missing HMAC signature with 401', async () => {
+  it('keeps Paymob webhook unavailable until gateway launch', async () => {
     const res = await request(app)
       .post('/api/v1/commerce/webhooks/paymob')
       .send({
@@ -94,12 +94,12 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
         success: true,
       });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
     expect(res.body.success).toBe(false);
-    expect(res.body.message).toMatch(/signature/i);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 
-  it('should REJECT Paymob webhook with forged / invalid HMAC signature with 401', async () => {
+  it('does not process forged webhook payloads while the gateway is staged', async () => {
     const payload = {
       orderId,
       transactionRef: `tx_${Date.now()}`,
@@ -113,12 +113,12 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
       .set('x-paymob-hmac', forgedSignature)
       .send(payload);
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
     expect(res.body.success).toBe(false);
-    expect(res.body.message).toMatch(/invalid.*signature/i);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 
-  it('should ACCEPT Paymob webhook with valid HMAC signature and reconcile order', async () => {
+  it('does not process even valid signed webhooks before gateway launch', async () => {
     const payload = {
       orderId,
       transactionRef: `legit_tx_${Date.now()}`,
@@ -133,15 +133,13 @@ describe('Payment Webhook Cryptographic Verification (TDD)', () => {
       .set('x-paymob-hmac', validSignature)
       .send(payload);
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.status).toBe('PAID');
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
 
     // Verify Entitlement was created
     const entitlement = await prisma.entitlement.findFirst({
       where: { studentId, orderId },
     });
-    expect(entitlement).toBeDefined();
-    expect(entitlement?.status).toBe('ACTIVE');
+    expect(entitlement).toBeNull();
   });
 });

@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText, Download, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
+import { resolveDocumentUrl } from '@/lib/protected-files';
+import { useAppStore } from '@/lib/store';
 
 interface MaterialItem {
   id: string;
@@ -16,8 +18,26 @@ interface PDFDocumentViewerProps {
 }
 
 export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps) {
-  const [selectedDoc, setSelectedDoc] = useState<MaterialItem>(materials[0]);
+  const [selectedId, setSelectedId] = useState<string>();
   const [zoom, setZoom] = useState(100);
+  const lang = useAppStore((state) => state.lang);
+  const activeDoc = materials.find((item) => item.id === selectedId) || materials[0];
+  const [source, setSource] = useState<{ key: string; url?: string; error?: boolean }>();
+  const fileUrl = activeDoc?.fileUrl;
+  useEffect(() => {
+    if (!fileUrl) return;
+    const controller = new AbortController();
+    let release: (() => void) | undefined;
+    void resolveDocumentUrl(fileUrl, controller.signal).then((resolved) => {
+      if (controller.signal.aborted) return resolved.revoke();
+      release = resolved.revoke;
+      setSource({ key: fileUrl, url: resolved.url });
+    }).catch(() => {
+      if (!controller.signal.aborted) setSource({ key: fileUrl, error: true });
+    });
+    return () => { controller.abort(); release?.(); };
+  }, [fileUrl]);
+  const documentUrl = source?.key === fileUrl ? source.url : undefined;
 
   if (!materials || materials.length === 0) {
     return (
@@ -31,8 +51,6 @@ export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps)
     );
   }
 
-  const activeDoc = selectedDoc || materials[0];
-
   return (
     <div className="glass-panel rounded-3xl border border-slate-800 overflow-hidden space-y-4 animate-fadeIn">
       {/* Top Toolbar */}
@@ -42,7 +60,7 @@ export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps)
           {materials.map((m) => (
             <button
               key={m.id || m.fileUrl}
-              onClick={() => setSelectedDoc(m)}
+              onClick={() => setSelectedId(m.id)}
               className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                 activeDoc.fileUrl === m.fileUrl
                   ? 'bg-indigo-600 text-white shadow-md'
@@ -76,7 +94,8 @@ export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps)
           </div>
 
           <a
-            href={activeDoc.fileUrl}
+            href={documentUrl}
+            aria-disabled={!documentUrl}
             target="_blank"
             rel="noopener noreferrer"
             download
@@ -90,9 +109,15 @@ export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps)
 
       {/* Embedded Document Frame */}
       <div className="p-4 bg-slate-950/80 min-h-[500px] flex items-center justify-center">
-        {activeDoc.fileUrl.endsWith('.pdf') || activeDoc.fileType === 'pdf' ? (
+        {!documentUrl ? (
+          <p role={source?.key === fileUrl && source.error ? 'alert' : 'status'}>
+            {source?.key === fileUrl && source.error
+              ? lang === 'ar' ? 'تعذر تحميل المستند.' : 'Unable to load the document.'
+              : lang === 'ar' ? 'جارٍ تحميل المستند…' : 'Loading document…'}
+          </p>
+        ) : activeDoc.fileUrl.endsWith('.pdf') || ['pdf', 'application/pdf'].includes(activeDoc.fileType || '') ? (
           <iframe
-            src={`${activeDoc.fileUrl}#toolbar=0&navpanes=0`}
+            src={`${documentUrl}#toolbar=0&navpanes=0`}
             title={activeDoc.title}
             className="w-full h-[600px] rounded-2xl border border-slate-800 bg-white"
             style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
@@ -105,7 +130,7 @@ export default function PDFDocumentViewer({ materials }: PDFDocumentViewerProps)
               Click below to view or download this study document in a new tab.
             </p>
             <a
-              href={activeDoc.fileUrl}
+              href={documentUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition shadow-lg"

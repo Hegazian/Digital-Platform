@@ -2,6 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../auth/auth.middleware';
 import { AssignmentService } from './assignment.service';
 import { Role } from '@prisma/client';
+import { prisma } from '../../prisma';
+import { ForbiddenError, NotFoundError } from '../../utils/errors';
+import path from 'path';
+import fs from 'fs';
+import { getUploadsRoot, StorageService } from '../../utils/storage';
+import { createSubmissionUploadToken } from './submission-upload';
 
 export class AssignmentController {
   /**
@@ -27,6 +33,7 @@ export class AssignmentController {
         success: true,
         data: {
           fileUrl,
+          uploadToken: createSubmissionUploadToken(req.user!.userId, fileUrl, file.originalname, file.size),
           fileName: file.originalname,
           sizeBytes: file.size,
           mimeType: file.mimetype,
@@ -69,7 +76,7 @@ export class AssignmentController {
         req.body
       );
 
-      res.status(200).json({ success: true, data: assignment });
+      res.status(200).json({ success: true, data: AssignmentController.protectAssignmentFiles(assignment) });
     } catch (error) {
       next(error);
     }
@@ -95,7 +102,7 @@ export class AssignmentController {
       const userRole = req.user?.role as Role;
 
       const assignment = await AssignmentService.getAssignmentById(assignmentId, userId, userRole);
-      res.status(200).json({ success: true, data: assignment });
+      res.status(200).json({ success: true, data: AssignmentController.protectAssignmentFiles(assignment) });
     } catch (error) {
       next(error);
     }
@@ -108,7 +115,7 @@ export class AssignmentController {
       const userRole = req.user?.role as Role;
 
       const assignments = await AssignmentService.getAssignmentsByLesson(lessonId, userId, userRole);
-      res.status(200).json({ success: true, data: assignments });
+      res.status(200).json({ success: true, data: assignments.map((item: any) => AssignmentController.protectAssignmentFiles(item)) });
     } catch (error) {
       next(error);
     }
@@ -120,7 +127,7 @@ export class AssignmentController {
       const studentId = req.user!.userId;
 
       const submission = await AssignmentService.submitAssignment(assignmentId, studentId, req.body);
-      res.status(201).json({ success: true, data: submission });
+      res.status(201).json({ success: true, data: AssignmentController.protectSubmissionFiles(submission) });
     } catch (error) {
       next(error);
     }
@@ -139,7 +146,7 @@ export class AssignmentController {
         req.body
       );
 
-      res.status(200).json({ success: true, data: graded });
+      res.status(200).json({ success: true, data: AssignmentController.protectSubmissionFiles(graded) });
     } catch (error) {
       next(error);
     }
@@ -157,7 +164,7 @@ export class AssignmentController {
         userRole
       );
 
-      res.status(200).json({ success: true, data: submissions });
+      res.status(200).json({ success: true, data: submissions.map((item: any) => AssignmentController.protectSubmissionFiles(item)) });
     } catch (error) {
       next(error);
     }
@@ -167,9 +174,46 @@ export class AssignmentController {
     try {
       const studentId = req.user!.userId;
       const submissions = await AssignmentService.getStudentSubmissionsHistory(studentId);
-      res.status(200).json({ success: true, data: submissions });
+      res.status(200).json({ success: true, data: submissions.map((item: any) => AssignmentController.protectSubmissionFiles(item)) });
     } catch (error) {
       next(error);
     }
+  }
+
+  private static protectAssignmentFiles<T extends object>(assignment: T): T {
+    const withSubmissions = assignment as T & { submissions?: Array<any> };
+    return { ...withSubmissions, submissions: withSubmissions.submissions?.map((submission) => AssignmentController.protectSubmissionFiles(submission)) } as T;
+  }
+
+  private static protectSubmissionFiles<T extends { files?: Array<{ id: string }> }>(submission: T): T {
+    return { ...submission, files: submission.files?.map((file) => ({ ...file, fileUrl: `/api/v1/assignments/submission-files/${file.id}/content` })) } as T;
+  }
+
+  static async getSubmissionFile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const file = await prisma.assignmentSubmissionFile.findUnique({
+        where: { id: req.params.fileId as string },
+        include: { submission: { include: { assignment: true } } },
+      });
+      if (!file) throw new NotFoundError('Submission file not found');
+      const allowed = req.user!.role === Role.ADMIN || file.submission.studentId === req.user!.userId || file.submission.assignment.createdById === req.user!.userId;
+      if (!allowed) throw new ForbiddenError('You do not have access to this submission file');
+      const stored = file.fileUrl;
+      if (stored.startsWith('/uploads/')) {
+        const root = path.resolve(getUploadsRoot());
+        const filePath = path.resolve(root, stored.replace(/^\/uploads\//, ''));
+        if (!filePath.startsWith(root + path.sep) || !fs.existsSync(filePath)) throw new NotFoundError('Submission file not found');
+        const realRoot = fs.realpathSync(root);
+        const realFilePath = fs.realpathSync(filePath);
+        if (!realFilePath.startsWith(realRoot + path.sep)) throw new NotFoundError('Submission file not found');
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', `attachment; filename="${path.basename(file.fileName).replace(/["\r\n]/g, '_')}"`);
+        return res.sendFile(realFilePath, { dotfiles: 'allow' });
+      }
+      if (!stored.startsWith('submission-files/')) throw new NotFoundError('Submission file not found');
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.redirect(302, await StorageService.getSignedUrl(stored, 120));
+    } catch (error) { next(error); }
   }
 }

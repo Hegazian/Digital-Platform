@@ -1,4 +1,5 @@
 import { prisma } from '../../prisma';
+import { studentOptions } from './student-options';
 import { NotFoundError, BadRequestError } from '../../utils/errors';
 import {
   QuestionType,
@@ -206,7 +207,7 @@ export class AssessmentService {
         textAr: q.textAr,
         type: q.questionType,
         points: q.points,
-        options,
+        options: studentOptions(options),
       };
     });
 
@@ -262,7 +263,7 @@ export class AssessmentService {
         textAr: q.textAr,
         type: q.questionType,
         points: q.points,
-        options,
+        options: studentOptions(options),
       };
     });
 
@@ -312,7 +313,7 @@ export class AssessmentService {
           isPassed: false,
         },
       });
-      return { message: 'Exam session expired', status: AssessmentAttemptStatus.EXPIRED, attempt: expiredAttempt };
+      return { message: 'Exam session expired', status: AssessmentAttemptStatus.EXPIRED, attempt: { id: expiredAttempt.id, assessmentId: expiredAttempt.assessmentId, status: expiredAttempt.status, submittedAt: expiredAttempt.submittedAt, score: expiredAttempt.score, isPassed: expiredAttempt.isPassed } };
     }
 
     let questionsRaw: any[] = [];
@@ -366,7 +367,7 @@ export class AssessmentService {
       status: AssessmentAttemptStatus.SUBMITTED,
       score: scorePercentage,
       isPassed,
-      attempt: updatedAttempt,
+      attempt: { id: updatedAttempt.id, assessmentId: updatedAttempt.assessmentId, status: updatedAttempt.status, submittedAt: updatedAttempt.submittedAt, score: updatedAttempt.score, isPassed: updatedAttempt.isPassed },
     };
   }
 }

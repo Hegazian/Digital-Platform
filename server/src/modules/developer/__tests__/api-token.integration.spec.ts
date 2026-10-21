@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
 describe('Developer API Tokens (TDD)', () => {
   let adminToken: string;
   let adminId: string;
-  let apiTokenId: string;
+  let apiTokenId: string | undefined;
 
   beforeAll(async () => {
     const hashedPassword = await bcrypt.hash('password123', 10);
@@ -31,7 +31,7 @@ describe('Developer API Tokens (TDD)', () => {
 
   afterAll(async () => {
     try {
-      await prisma.apiToken.deleteMany();
+      if (apiTokenId) await prisma.apiToken.deleteMany({ where: { id: apiTokenId, userId: adminId } });
       await prisma.user.deleteMany({ where: { email: { contains: 'admin_dev_' } } });
     } catch (e) {}
   });
@@ -45,11 +45,8 @@ describe('Developer API Tokens (TDD)', () => {
         scopes: ['read:users', 'write:enrollments'],
       });
 
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.id).toBeDefined();
-    expect(res.body.data.token).toBeDefined(); // Only returned once!
-    apiTokenId = res.body.data.id;
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 
   it('GET /api/v1/developer/tokens - should list API tokens', async () => {
@@ -57,9 +54,7 @@ describe('Developer API Tokens (TDD)', () => {
       .get('/api/v1/developer/tokens')
       .set('Authorization', `Bearer ${adminToken}`);
 
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data[0].token).toBeUndefined(); // Should not return raw token on list
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('FEATURE_DISABLED');
   });
 });

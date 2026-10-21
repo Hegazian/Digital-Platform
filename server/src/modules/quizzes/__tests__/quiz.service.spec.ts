@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '../../../prisma';
 import { QuizService } from '../quiz.service';
@@ -88,6 +89,7 @@ describe('QuizService Unit Tests', () => {
     it('should strip correct answers for students', async () => {
       const mockQuiz = {
         id: 'q1',
+        lesson: { module: { course: { teacherId: 'teacher-id' } }, section: null },
         questions: [
           {
             id: 'qu1',
@@ -101,15 +103,17 @@ describe('QuizService Unit Tests', () => {
       };
       (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
 
-      const result = await QuizService.getQuizById('q1', false);
+      const result = await QuizService.getQuizById('q1', 'student-id', Role.STUDENT);
 
-      expect(result.questions[0].explanation).toBeNull();
+      expect(result.questions[0]).not.toHaveProperty('explanation');
+      expect(result.questions[0]).not.toHaveProperty('correctAnswer');
       expect((result.questions[0].options as any[])[0].isCorrect).toBeUndefined();
     });
 
     it('should keep correct answers and explanations for teachers', async () => {
       const mockQuiz = {
         id: 'q1',
+        lesson: { module: { course: { teacherId: 'teacher-id' } }, section: null },
         questions: [
           {
             id: 'qu1',
@@ -123,7 +127,7 @@ describe('QuizService Unit Tests', () => {
       };
       (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
 
-      const result = await QuizService.getQuizById('q1', true);
+      const result = await QuizService.getQuizById('q1', 'teacher-id', Role.TEACHER);
 
       expect(result.questions[0].explanation).toBe('Exp');
       expect((result.questions[0].options as any[])[0].isCorrect).toBe(true);

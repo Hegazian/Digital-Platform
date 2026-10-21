@@ -1,0 +1,84 @@
+# LRN-07 — Migrate sections to one canonical module hierarchy
+
+| Field | Value |
+|---|---|
+| Stable ID | LRN-07 |
+| Priority | P1 |
+| Release milestone | M1 — Foundation and content delivery |
+| Status | **Planned** |
+| Implementation owner | Canonical curriculum migration owner |
+| Dependencies | [ENG-05](ENG-05.md), [ENH-02](ENH-02.md) |
+| Original finding / request | [LRN-07 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original evidence classification | P1 / S |
+| Acceptance links | [A21](../AUDIT_TRACEABILITY.md#a21) |
+| Release disposition | Required before completing this milestone; no release credit for documentation alone. |
+
+
+
+## Current behavior and evidence
+
+The player uses modules **or else** sections, hiding all section lessons if any module exists. Progress counts both trees. The database allows no parent or two parents, including parents in different courses.
+
+Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+
+## Intended behavior and ownership boundary
+
+Course -> CourseModule (displayed as module/unit) -> Lesson is canonical; legacy sections become modules without losing IDs/progress/previews/order.
+
+Canonical curriculum migration owner owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+
+## Ordered implementation changes
+
+1. Backend: introduce unified curriculum reads/writes and protected legacy section adapters; require course-consistent module parent for every new lesson.
+2. Frontend: remove modules-or-sections branch; render a single ordered tree and migrate editor controls to units/modules.
+3. Database: add section-to-module mapping, Lesson.moduleId, preview flag, stable order and composite FK (moduleId,courseId); backfill before making parent required.
+4. Configuration/infrastructure: migration dry-run reports orphan/two-parent/cross-course lessons; require manual resolution for ambiguous rows, no silent deletion.
+5. Progress: deduplicate by lessonId and preserve completion records, existing URLs and legacy position mapping.
+
+Implementation locations (existing source entry points; new models/modules described above are proposed):
+
+- [server/prisma/schema.prisma](<../../server/prisma/schema.prisma>)
+- [server/src/modules/courses/course.service.ts](<../../server/src/modules/courses/course.service.ts>)
+- [server/src/modules/courses/section.service.ts](<../../server/src/modules/courses/section.service.ts>)
+- [server/src/modules/progress/progress.service.ts](<../../server/src/modules/progress/progress.service.ts>)
+- [client/src/components/VideoPlayerSection.tsx](<../../client/src/components/VideoPlayerSection.tsx>)
+
+## API, type and schema contract
+
+Concrete intended boundary example (IDs and dates are illustrative, not production fixtures):
+
+```text
+CourseModule={"id":"m_1","courseId":"c_1","position":0}; Lesson={"id":"existing_lesson_id","moduleId":"m_1","courseId":"c_1","position":0,"isPreview":true}; exactly one canonical parent.
+```
+
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+
+## Authorization, concurrency and failure handling
+
+Teacher owns/assigned course; cannot attach a lesson to another course module. Reordering uses expected curriculumVersion and unique stable order. Migration is restartable by mapping keys and cannot duplicate modules on rerun.
+
+Commands validate the current actor at execution time. Repeated mutations use the owning contract's scoped idempotency or expected version; stale edits return 409/412 rather than silently overwrite. Retry only retryable infrastructure/serialization failures with bounded backoff, never validation/authorization failures. A durable write must not report success from process memory. Record request/entity/actor IDs and safe error codes, with no credentials, answer keys, student bodies or signed URLs in logs. Operations must expose stalled work for manual recovery.
+
+## Migration, compatibility and rollback
+
+Expand -> map sections -> backfill valid parents -> resolve anomalies -> compare lesson/progress counts and order -> switch readers -> enforce NOT NULL/composite FK -> later retire section fields. Keep lesson IDs unchanged. Rollback reads mapping, no destructive section drop until compatibility retirement.
+
+Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+
+## Verification and acceptance tests
+
+- **LRN-07-T01** — Mixed course renders every lesson once and totals match before/after; zero/two-parent fixtures are reported and resolved.
+- **LRN-07-T02** — Foreign-course parent, duplicate order/stale reorder and orphan insert rejected.
+- **LRN-07-T03** — Migration rerun and rollback preserve lesson links/progress/previews in Arabic/English catalog/player.
+- **LRN-07-T90 / cross-account** — Execute the positive operation as its permitted actor, then repeat with student B, teacher B, a pending/rejected teacher and guest as applicable; assert the intended safe DTO/denial and no unauthorized durable side effects. For documentation/build-only work, verify no fixture credentials or false capability claims replace this runtime check.
+- **LRN-07-T91 / concurrency and recovery** — Overlap the relevant command/read with retry, stale version, access revocation or process restart; assert final persisted state and one intended effect. Read-only/documentation work instead checks deterministic output and link/contract consistency. Use real PostgreSQL barriers for transaction claims; mocks do not prove them.
+- **LRN-07-T92 / Arabic, English and browser** — Exercise affected views in both interface locales after reload, with correct lang/dir, formatting, keyboard focus and localized failures. For backend-only/config tasks, cover API locale/error keys and the consuming smoke journey; no new UI is required just to satisfy a test label.
+
+Observable acceptance:
+
+- [ ] A21 preservation report contains counts, mappings and anomaly decisions.
+- [ ] Database enforces canonical course-consistent parent.
+- [ ] Applicable positive, negative, cross-account, concurrency/retry and Arabic/English browser tests above pass without skips; mark any genuinely inapplicable dimension with a written rationale.
+- [ ] Migration/compatibility and rollback are rehearsed with preserved historical records, or explicitly recorded as no-data-change.
+- [ ] API/types/docs and dependency consumers agree; owning task is linked and no duplicate engine is introduced.
+- [ ] Attach exact commit, environment, commands, test IDs/results and operational evidence; update backlog status only after review. Existing baseline passes do not complete this task.

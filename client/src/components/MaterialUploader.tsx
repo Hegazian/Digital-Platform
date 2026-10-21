@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { fetchApi } from '@/lib/api';
+import ProtectedFileLink from './ProtectedFileLink';
 import { errorMessage } from '@/lib/apiTypes';
 import { FileUp, FileText, CheckCircle, AlertCircle, Trash2, Download } from 'lucide-react';
 
@@ -114,15 +115,14 @@ export default function MaterialUploader({
               </div>
 
               <div className="flex items-center gap-2">
-                <a
-                  href={item.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <ProtectedFileLink
+                  fileUrl={item.fileUrl}
+                  fileName={item.title}
                   className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
                   title="Download File"
                 >
                   <Download className="w-4 h-4" />
-                </a>
+                </ProtectedFileLink>
                 <button
                   onClick={() => handleDelete(item.id)}
                   className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"

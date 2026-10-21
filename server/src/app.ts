@@ -7,7 +7,6 @@ import crypto from 'crypto';
 import { prisma } from './prisma';
 import { Logger } from './utils/logger';
 import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
-import { getUploadsRoot } from './utils/storage';
 
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
@@ -30,7 +29,6 @@ import boardRoutes from './modules/courses/board.routes';
 import discussionRoutes from './modules/discussions/discussion.routes';
 import podcastRoutes from './modules/podcasts/podcast.routes';
 import collectionRoutes from './modules/collections/collection.routes';
-import aiRoutes from './modules/ai/ai.routes';
 import apiTokenRoutes from './modules/developer/api-token.routes';
 import webhookRoutes from './modules/developer/webhook.routes';
 import mfaRoutes from './modules/auth/mfa.routes';
@@ -69,7 +67,6 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 const allowedOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
-app.use('/uploads', express.static(getUploadsRoot()));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
@@ -179,7 +176,6 @@ app.use('/api/v1/boards', boardRoutes);
 app.use('/api/v1/discussions', discussionRoutes);
 app.use('/api/v1/podcasts', podcastRoutes);
 app.use('/api/v1/collections', collectionRoutes);
-app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/developer', apiTokenRoutes);
 app.use('/api/v1/developer', webhookRoutes);
 app.use('/api/v1/mfa', mfaRoutes);

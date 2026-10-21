@@ -1,0 +1,2114 @@
+{
+  "total": {
+    "lines": {
+      "total": 3628,
+      "covered": 220,
+      "skipped": 0,
+      "pct": 6.06
+    },
+    "statements": {
+      "total": 3937,
+      "covered": 244,
+      "skipped": 0,
+      "pct": 6.19
+    },
+    "functions": {
+      "total": 1145,
+      "covered": 41,
+      "skipped": 0,
+      "pct": 3.58
+    },
+    "branches": {
+      "total": 3577,
+      "covered": 223,
+      "skipped": 0,
+      "pct": 6.23
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "client/src/middleware.ts": {
+    "lines": {
+      "total": 32,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 36,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/layout.tsx": {
+    "lines": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 1,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "client/src/app/page.tsx": {
+    "lines": {
+      "total": 25,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 27,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 43,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/providers.tsx": {
+    "lines": {
+      "total": 15,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 19,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/admin/dashboard/page.tsx": {
+    "lines": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 1,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/courses/page.tsx": {
+    "lines": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/courses/[courseId]/page.tsx": {
+    "lines": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/login/page.tsx": {
+    "lines": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/profile/page.tsx": {
+    "lines": {
+      "total": 48,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 49,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 44,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/register/page.tsx": {
+    "lines": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "client/src/app/student/dashboard/page.tsx": {
+    "lines": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 1,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/app/teacher/dashboard/page.tsx": {
+    "lines": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 1,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/AdminDashboard.tsx": {
+    "lines": {
+      "total": 60,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 30,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 66,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 60,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/AuthModal.tsx": {
+    "lines": {
+      "total": 88,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 91,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 76,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/CourseCatalog.tsx": {
+    "lines": {
+      "total": 60,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 23,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 72,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 77,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/Hero.tsx": {
+    "lines": {
+      "total": 17,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 38,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/LessonMaterialList.tsx": {
+    "lines": {
+      "total": 33,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 35,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 20,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/MaterialUploader.tsx": {
+    "lines": {
+      "total": 42,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 48,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 47,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/Navbar.tsx": {
+    "lines": {
+      "total": 41,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 11,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 43,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 38,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/ProtectedFileLink.tsx": {
+    "lines": {
+      "total": 20,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/StudentDashboard.tsx": {
+    "lines": {
+      "total": 71,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 23,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 80,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 83,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/TeacherDashboard.tsx": {
+    "lines": {
+      "total": 44,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 44,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 35,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/VideoPlayerSection.tsx": {
+    "lines": {
+      "total": 118,
+      "covered": 88,
+      "skipped": 0,
+      "pct": 74.57
+    },
+    "functions": {
+      "total": 25,
+      "covered": 13,
+      "skipped": 0,
+      "pct": 52
+    },
+    "statements": {
+      "total": 127,
+      "covered": 90,
+      "skipped": 0,
+      "pct": 70.86
+    },
+    "branches": {
+      "total": 207,
+      "covered": 129,
+      "skipped": 0,
+      "pct": 62.31
+    }
+  },
+  "client/src/components/VideoUploader.tsx": {
+    "lines": {
+      "total": 40,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 42,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 29,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/VoucherRedeemModal.tsx": {
+    "lines": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/AcademicStructureManager.tsx": {
+    "lines": {
+      "total": 119,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 34,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 123,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 139,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/AuditLogsTable.tsx": {
+    "lines": {
+      "total": 26,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 28,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 42,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/CollectionsManager.tsx": {
+    "lines": {
+      "total": 79,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 34,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 83,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 58,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/CourseApprovalQueue.tsx": {
+    "lines": {
+      "total": 143,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 40,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 155,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 195,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/CoursePricingManager.tsx": {
+    "lines": {
+      "total": 47,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 16,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 50,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 38,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/DeveloperTabs.tsx": {
+    "lines": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/OfflinePaymentQueue.tsx": {
+    "lines": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/PendingOrdersManager.tsx": {
+    "lines": {
+      "total": 27,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 27,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 14,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/PlatformMetrics.tsx": {
+    "lines": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 1,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 26,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/PlatformSettings.tsx": {
+    "lines": {
+      "total": 140,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 95,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 149,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 170,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/TeacherApprovalQueue.tsx": {
+    "lines": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/TokenList.tsx": {
+    "lines": {
+      "total": 42,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 13,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 47,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/UserDirectory.tsx": {
+    "lines": {
+      "total": 67,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 70,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 46,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/VoucherManager.tsx": {
+    "lines": {
+      "total": 75,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 77,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 54,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/admin/WebhookList.tsx": {
+    "lines": {
+      "total": 43,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 16,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 47,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 20,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/brand/Logo.tsx": {
+    "lines": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/collections/CollectionCard.tsx": {
+    "lines": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 4,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/commerce/CheckoutModal.tsx": {
+    "lines": {
+      "total": 48,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 56,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 46,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/discussions/DiscussionForum.tsx": {
+    "lines": {
+      "total": 45,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 14,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 47,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/editor/CodePlaygroundBlock.tsx": {
+    "lines": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 23,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/editor/CollaborativeBoardBlock.tsx": {
+    "lines": {
+      "total": 92,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 20,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 106,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 69,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/editor/TiptapEditor.tsx": {
+    "lines": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 16,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 23,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 19,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/onboarding/CareerPickerModal.tsx": {
+    "lines": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 15,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/AssessmentRunner.tsx": {
+    "lines": {
+      "total": 83,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 26,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 91,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 84,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/AssignmentRunner.tsx": {
+    "lines": {
+      "total": 70,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 74,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 120,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/AttemptHistory.tsx": {
+    "lines": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 11,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/CurriculumSidebar.tsx": {
+    "lines": {
+      "total": 19,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 20,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 58,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/InteractiveQuizRunner.tsx": {
+    "lines": {
+      "total": 111,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 28,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 127,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 152,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/player/LMSPlayerHeader.tsx": {
+    "lines": {
+      "total": 3,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 3,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 6,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 66.66
+    }
+  },
+  "client/src/components/player/PDFDocumentViewer.tsx": {
+    "lines": {
+      "total": 24,
+      "covered": 20,
+      "skipped": 0,
+      "pct": 83.33
+    },
+    "functions": {
+      "total": 13,
+      "covered": 8,
+      "skipped": 0,
+      "pct": 61.53
+    },
+    "statements": {
+      "total": 33,
+      "covered": 25,
+      "skipped": 0,
+      "pct": 75.75
+    },
+    "branches": {
+      "total": 40,
+      "covered": 29,
+      "skipped": 0,
+      "pct": 72.5
+    }
+  },
+  "client/src/components/podcasts/PodcastPlayer.tsx": {
+    "lines": {
+      "total": 32,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 33,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 30,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/settings/MfaSetupModal.tsx": {
+    "lines": {
+      "total": 41,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 43,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 30,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/AnnouncementManager.tsx": {
+    "lines": {
+      "total": 31,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 31,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 8,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/AssessmentBuilder.tsx": {
+    "lines": {
+      "total": 83,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 51,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 87,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 75,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/AssignmentStudio.tsx": {
+    "lines": {
+      "total": 133,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 39,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 146,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 108,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/CourseManager.tsx": {
+    "lines": {
+      "total": 221,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 60,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 236,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 201,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/LiveSessionManager.tsx": {
+    "lines": {
+      "total": 37,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 37,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/PodcastStudio.tsx": {
+    "lines": {
+      "total": 46,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 27,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 48,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 32,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/TeacherAnalytics.tsx": {
+    "lines": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 26,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/CourseCreateModal.tsx": {
+    "lines": {
+      "total": 37,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 10,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 38,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 14,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/CourseEditModal.tsx": {
+    "lines": {
+      "total": 40,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 11,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 41,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 38,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/CreateLessonModal.tsx": {
+    "lines": {
+      "total": 110,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 36,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 113,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 77,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/CreateModuleModal.tsx": {
+    "lines": {
+      "total": 26,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 28,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 13,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/EditLessonModal.tsx": {
+    "lines": {
+      "total": 244,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 80,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 270,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 213,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/EditModuleModal.tsx": {
+    "lines": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 18,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/teacher/modals/EditSectionModal.tsx": {
+    "lines": {
+      "total": 21,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 14,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/components/ui/Modal.tsx": {
+    "lines": {
+      "total": 40,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 46,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 36,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/lib/api.ts": {
+    "lines": {
+      "total": 62,
+      "covered": 44,
+      "skipped": 0,
+      "pct": 70.96
+    },
+    "functions": {
+      "total": 8,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 37.5
+    },
+    "statements": {
+      "total": 67,
+      "covered": 45,
+      "skipped": 0,
+      "pct": 67.16
+    },
+    "branches": {
+      "total": 44,
+      "covered": 24,
+      "skipped": 0,
+      "pct": 54.54
+    }
+  },
+  "client/src/lib/apiTypes.ts": {
+    "lines": {
+      "total": 7,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 9,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 14,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/lib/configStore.ts": {
+    "lines": {
+      "total": 44,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 19,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 59,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 124,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/lib/protected-files.ts": {
+    "lines": {
+      "total": 9,
+      "covered": 9,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 3,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 12,
+      "covered": 12,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 6,
+      "covered": 6,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "client/src/lib/store.ts": {
+    "lines": {
+      "total": 23,
+      "covered": 8,
+      "skipped": 0,
+      "pct": 34.78
+    },
+    "functions": {
+      "total": 10,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 30
+    },
+    "statements": {
+      "total": 25,
+      "covered": 8,
+      "skipped": 0,
+      "pct": 32
+    },
+    "branches": {
+      "total": 15,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 13.33
+    }
+  },
+  "client/src/lib/usePlaybackSource.ts": {
+    "lines": {
+      "total": 48,
+      "covered": 48,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 63,
+      "covered": 61,
+      "skipped": 0,
+      "pct": 96.82
+    },
+    "branches": {
+      "total": 32,
+      "covered": 29,
+      "skipped": 0,
+      "pct": 90.62
+    }
+  },
+  "client/src/lib/useRequireRole.ts": {
+    "lines": {
+      "total": 17,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 6,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 22,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 12,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
+  "client/src/lib/useT.ts": {
+    "lines": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "functions": {
+      "total": 3,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "statements": {
+      "total": 5,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  }
+}
