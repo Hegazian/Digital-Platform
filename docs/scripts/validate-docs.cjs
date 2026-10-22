@@ -89,6 +89,12 @@ for(const a of archives) {
  check(crypto.createHash('sha256').update(b).digest('hex')===a.sha256,'Archived original changed: '+a.archive);
 }
 check(archives.length===13,'Expected 13 exact archived original guides');
+const integrationManifest='docs/archive/integration-main/manifest.json';
+if(fs.existsSync(path.join(root,integrationManifest))) {
+ const integration=JSON.parse(read(integrationManifest));
+ for(const entry of integration.files)check(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,entry.archive))).digest('hex')===entry.sha256,'Archived integration input changed: '+entry.archive);
+ check(!fs.existsSync(path.join(root,'server/prisma/migrations/0001_init/migration.sql')),'Competing initial baseline must remain outside executable migrations');
+}
 const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','ENG05_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,historicalDocMoves['docs/'+p] || 'docs/'+p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>historicalDocMoves['docs/'+p] || 'docs/'+p),...tasks.map(t=>t.documentPath),'README.md','server/README.md','client/README.md','docs/archive/INDEX.md','docs/archive/completed/README.md','docs/archive/reviews/README.md','docs/M0_FINAL_REVIEW.md'];

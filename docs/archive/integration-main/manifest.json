@@ -1,0 +1,50 @@
+{
+  "sourceCommit": "f175fcd0c79041747561859aee9dce741771d02f",
+  "files": [
+    {
+      "source": "docs/00-OVERVIEW.md",
+      "archive": "docs/archive/integration-main/00-OVERVIEW.md",
+      "sha256": "5bb5a04f45d23a25cb0ccc30d386b16430ec6a76f96be2721721b4663cdab44f"
+    },
+    {
+      "source": "docs/01-ARCHITECTURE.md",
+      "archive": "docs/archive/integration-main/01-ARCHITECTURE.md",
+      "sha256": "030e57646695d67edeaef60e2bc9fe964d82d248f542b0c97b439304757eed40"
+    },
+    {
+      "source": "docs/02-SETUP.md",
+      "archive": "docs/archive/integration-main/02-SETUP.md",
+      "sha256": "17aa301b940d22dd2140970b62093321d3ec8fe52e30a01a240141ac741c0b9e"
+    },
+    {
+      "source": "docs/03-DATA-MODEL.md",
+      "archive": "docs/archive/integration-main/03-DATA-MODEL.md",
+      "sha256": "e46a05f1f746f74d05611af013dcf26bb8f3b3de5254a5038dac04dcace316d9"
+    },
+    {
+      "source": "docs/04-AUTH-AND-SECURITY.md",
+      "archive": "docs/archive/integration-main/04-AUTH-AND-SECURITY.md",
+      "sha256": "47c2437fb2d554e2dbe8373f148861f2faa1f34b36e5d145e383e0b631c8701a"
+    },
+    {
+      "source": "docs/05-FEATURES.md",
+      "archive": "docs/archive/integration-main/05-FEATURES.md",
+      "sha256": "009ac58f722d0eeb8c62de9eccafa3f5ac34a955e60cc2ec69c1756677ba05bb"
+    },
+    {
+      "source": "docs/06-API-CATALOG.md",
+      "archive": "docs/archive/integration-main/06-API-CATALOG.md",
+      "sha256": "5f1c748eb13f2f7e4c7a93d15159c98a33ab15eb8b5f5fdcd4bd739bd5cd6316"
+    },
+    {
+      "source": "docs/07-OPERATIONS.md",
+      "archive": "docs/archive/integration-main/07-OPERATIONS.md",
+      "sha256": "ce7054f71c84efcb7c7a03657b24a474f49f05caa2feb64e7124a15e9b29447e"
+    },
+    {
+      "source": "server/prisma/migrations/0001_init/migration.sql",
+      "archive": "server/prisma/fixtures/main-0001-init.sql",
+      "sha256": "feb5a5e25f1bfe6d8bb922f78355bd62a4fea817ccf17f09d5de4f70a14f0a8d"
+    }
+  ]
+}

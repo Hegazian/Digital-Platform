@@ -89,7 +89,6 @@ describe('Config-driven branding & settings round-trip', () => {
       currency: 'EGP',
       requireCourseApproval: false,
       allowTeacherRegistration: false,
-      enableCodePlaygrounds: true,
       primaryColor: '#7c3aed',
       capabilities: { developerIntegrations: true, automatedPaymentGateways: true },
     };
@@ -119,15 +118,21 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(put.body.data.capabilities).toEqual(cfg.capabilities);
   });
 
-  it('PATCH also works and supports partial updates', async () => {
+  it('PATCH also works and supports partial updates and nullable descriptions', async () => {
     const patch = await request(app)
       .patch('/api/v1/config')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ sloganEn: 'Today’s students. Tomorrow’s doctors.' });
+      .send({
+        sloganEn: 'Today’s students. Tomorrow’s doctors.',
+        siteDescriptionEn: null,
+        siteDescriptionAr: null,
+        exchangeRateUsdToEgp: 50,
+      });
     expect(patch.status).toBe(200);
 
     const get = await request(app).get('/api/v1/config');
     expect(get.body.data.sloganEn).toBe('Today’s students. Tomorrow’s doctors.');
+    expect(Number(get.body.data.exchangeRateUsdToEgp)).toBe(50);
     // Partial patch must not have clobbered other fields:
     expect(get.body.data.siteNameEn).toBe('Mawsoaa Academy');
   });

@@ -15,12 +15,12 @@ test.describe('Authentication & Navigation E2E Journey', () => {
     const langBtn = page.locator('#lang-toggle-btn');
     await expect(langBtn).toBeVisible();
 
+    const initialDir = await page.locator('div[dir]').first().getAttribute('dir');
     await langBtn.click();
     await page.waitForTimeout(300);
 
-    const htmlDir = await page.locator('html').getAttribute('dir');
-    const bodyDir = await page.locator('div[dir]').first().getAttribute('dir');
-    expect(htmlDir === 'rtl' || bodyDir === 'rtl' || htmlDir === 'ltr' || bodyDir === 'ltr').toBeTruthy();
+    const toggledDir = await page.locator('div[dir]').first().getAttribute('dir');
+    expect(toggledDir).not.toBe(initialDir);
   });
 
   test('should display Login & Registration authentication form', async ({ page }) => {

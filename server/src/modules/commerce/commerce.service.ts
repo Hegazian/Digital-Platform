@@ -487,7 +487,7 @@ export class CommerceService {
     });
   }
 
-  static async redeemVoucher(studentId: string, code: string) {
+  static async redeemVoucher(studentId: string, code: string, expectedCourseId?: string) {
     if (!code) {
       throw new NotFoundError('Invalid or expired voucher code');
     }
@@ -498,6 +498,15 @@ export class CommerceService {
 
     if (!voucher || !voucher.isActive) {
       throw new NotFoundError('Invalid or expired voucher code');
+    }
+    if (expectedCourseId) {
+      const course = await prisma.course.findUnique({ where: { id: expectedCourseId }, select: { id: true, subjectId: true, gradeId: true } });
+      const applies = course && (
+        voucher.resourceType === 'COURSE' && voucher.resourceId === course.id ||
+        voucher.resourceType === 'SUBJECT' && voucher.resourceId === course.subjectId ||
+        voucher.resourceType === 'GRADE_BUNDLE' && voucher.resourceId === course.gradeId
+      );
+      if (!applies) throw new BadRequestError('This voucher does not apply to the selected course');
     }
 
     const now = new Date();

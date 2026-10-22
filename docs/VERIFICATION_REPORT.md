@@ -10,7 +10,7 @@ Status: **PASSED**.
 | Original finding owners | 58 / 58 |
 | Original acceptance dispositions | 42 / 42 |
 | Dependency edges / cycles | 158 / none |
-| Local links / heading links checked | 2239 / 483 |
+| Local links / heading links checked | 2241 / 483 |
 | Exact archived originals / SHA-256 | 13 / preserved |
 | Required task sections, source paths and tests | passed |
 | Current checkpoint/counts/coverage and M1 wave ownership/order | passed |

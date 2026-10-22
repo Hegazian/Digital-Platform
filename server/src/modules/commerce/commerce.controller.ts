@@ -171,8 +171,8 @@ export class CommerceController {
   static async redeemVoucher(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const studentId = req.user!.userId;
-      const { code } = req.body;
-      const entitlement = await CommerceService.redeemVoucher(studentId, code);
+      const { code, expectedCourseId } = req.body;
+      const entitlement = await CommerceService.redeemVoucher(studentId, code, expectedCourseId);
       res.status(200).json({ success: true, data: entitlement });
     } catch (err) {
       next(err);

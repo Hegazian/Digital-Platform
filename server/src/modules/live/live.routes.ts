@@ -12,6 +12,8 @@ const liveSessionSchema = z.object({
   titleAr: z.string().trim().min(1).max(160),
   startTime: z.string().datetime({ offset: true }),
   durationMinutes: z.number().int().min(1).max(600),
+  joinUrl: z.url().startsWith('https://').optional(),
+  zoomStartUrl: z.url().startsWith('https://').optional(),
 }).strict();
 
 liveRouter.post(

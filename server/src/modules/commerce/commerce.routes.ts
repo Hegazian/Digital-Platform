@@ -5,6 +5,7 @@ import { Role } from '@prisma/client';
 import { validateBody } from '../../utils/validate';
 import { createOrderSchema } from '../../utils/schemas';
 import { requireCapability } from '../../utils/capabilities';
+import { z } from 'zod';
 
 const commerceRouter = Router();
 
@@ -60,6 +61,7 @@ commerceRouter.post(
   '/vouchers/redeem',
   authenticate,
   requireRole([Role.STUDENT], false),
+  validateBody(z.object({ code: z.string().trim().min(1).max(100), expectedCourseId: z.uuid().optional() }).strict()),
   CommerceController.redeemVoucher
 );
 

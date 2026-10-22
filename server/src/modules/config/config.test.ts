@@ -53,7 +53,6 @@ describe('Config API Endpoints', () => {
         supportEmail: 'admin@eduplatform.com',
         currency: 'EGP',
         requireCourseApproval: true,
-        enableCodePlaygrounds: false,
       });
 
     expect(res.status).toBe(200);
@@ -69,7 +68,6 @@ describe('Config API Endpoints', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         siteNameEn: 'Updated EduPlatform',
-        enableCodePlaygrounds: false,
       });
 
     expect(res.status).toBe(200);

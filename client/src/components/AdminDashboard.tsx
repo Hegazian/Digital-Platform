@@ -17,6 +17,7 @@ import CollectionsManager from './admin/CollectionsManager';
 import VoucherManager from './admin/VoucherManager';
 import PlatformSettings from './admin/PlatformSettings';
 import AcademicStructureManager from './admin/AcademicStructureManager';
+import CoursePricingManager from './admin/CoursePricingManager';
 import { GraduationCap } from 'lucide-react';
 
 /** Delays a rapidly-changing value so query keys stay stable while typing. */
@@ -32,7 +33,7 @@ function useDebouncedValue<T>(value: T, delay = 350): T {
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'academic' | 'courses' | 'collections' | 'orders' | 'vouchers' | 'teachers' | 'payments' | 'users' | 'settings' | 'developers' | 'audit'
+    'overview' | 'academic' | 'courses' | 'pricing' | 'collections' | 'orders' | 'vouchers' | 'teachers' | 'payments' | 'users' | 'settings' | 'developers' | 'audit'
   >('overview');
 
   // User directory controls (search is debounced -> no refetch per keystroke)
@@ -157,6 +158,7 @@ export default function AdminDashboard() {
           { id: 'academic', label: 'Academic Structure', icon: GraduationCap },
           { id: 'courses', label: `Course Management (${totalCoursesCount})`, icon: BookOpen },
           { id: 'collections', label: 'Collections', icon: Library },
+          { id: 'pricing', label: 'Pricing & Products', icon: Tag },
           { id: 'orders', label: 'Course Orders', icon: ShoppingBag },
           { id: 'vouchers', label: 'Promo Codes', icon: Tag },
           { id: 'teachers', label: `Teacher Approvals (${pendingTeachers.length})`, icon: Shield },
@@ -205,6 +207,8 @@ export default function AdminDashboard() {
           <CollectionsManager />
         </div>
       )}
+
+      {activeTab === 'pricing' && <CoursePricingManager />}
 
       {activeTab === 'orders' && (
         <div className="glass-panel p-6 rounded-3xl border border-slate-800">

@@ -10,6 +10,8 @@ export class LiveService {
     titleAr: string;
     startTime: string | Date;
     durationMinutes: number;
+    joinUrl?: string;
+    zoomStartUrl?: string;
   }) {
     const subject = await prisma.subject.findUnique({
       where: { id: data.subjectId },
@@ -19,9 +21,9 @@ export class LiveService {
       throw new NotFoundError('Subject not found');
     }
 
-    const meetingId = `zoom-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const zoomJoinUrl = `https://zoom.us/j/${meetingId}`;
-    const zoomStartUrl = `https://zoom.us/s/${meetingId}?role=host`;
+    const meetingId = `meeting-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const zoomJoinUrl = data.joinUrl || `https://zoom.us/j/${meetingId}`;
+    const zoomStartUrl = data.zoomStartUrl || data.joinUrl || `https://zoom.us/s/${meetingId}?role=host`;
 
     return await prisma.liveSession.create({
       data: {

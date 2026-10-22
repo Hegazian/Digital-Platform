@@ -100,6 +100,37 @@ describe('Teacher Studio Facilities Integration Tests', () => {
 
       expect(res.status).toBe(403);
     });
+
+    it('should include students enrolled via individual COURSE entitlement', async () => {
+      const student2 = await prisma.user.create({
+        data: {
+          email: `course-student-${Date.now()}@test.com`,
+          password: 'Password123!',
+          name: 'Course Student',
+          role: 'STUDENT',
+        },
+      });
+
+      await prisma.entitlement.create({
+        data: {
+          studentId: student2.id,
+          resourceType: 'COURSE',
+          resourceId: courseId,
+          status: 'ACTIVE',
+        },
+      });
+
+      const res = await request(app)
+        .get('/api/v1/teacher/students')
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.some((s: any) => s.id === student2.id)).toBe(true);
+
+      // Cleanup student2
+      await prisma.entitlement.deleteMany({ where: { studentId: student2.id } });
+      await prisma.user.delete({ where: { id: student2.id } });
+    });
   });
 
   describe('GET /api/v1/teacher/students/:studentId/progress', () => {
@@ -151,6 +182,42 @@ describe('Teacher Studio Facilities Integration Tests', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(typeof res.body.data.totalStudentsEnrolled).toBe('number');
+    });
+
+    it('should compute real revenue from PAID orders for teacher courses/subjects', async () => {
+      const product = await prisma.product.create({
+        data: {
+          nameEn: 'Quantum Course Product',
+          nameAr: 'منتج فيزياء الكم',
+          productType: 'COURSE',
+          resourceId: courseId,
+          priceEgp: 450,
+          priceUsd: 10,
+        },
+      });
+
+      const order = await prisma.order.create({
+        data: {
+          studentId,
+          productId: product.id,
+          status: 'PAID',
+          totalAmountEgp: 450,
+          totalAmountUsd: 10,
+          paymentMethod: 'MANUAL',
+          idempotencyKey: `order-rev-test-${Date.now()}`,
+        },
+      });
+
+      const res = await request(app)
+        .get('/api/v1/teacher/revenue')
+        .set('Authorization', `Bearer ${teacherToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.revenueEgp).toBe(450);
+
+      // Cleanup order & product
+      await prisma.order.delete({ where: { id: order.id } });
+      await prisma.product.delete({ where: { id: product.id } });
     });
   });
 });

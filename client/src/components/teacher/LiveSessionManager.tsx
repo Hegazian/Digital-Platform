@@ -23,6 +23,7 @@ export default function LiveSessionManager({ subjects, lang }: LiveSessionManage
   const [zoomTitleAr, setZoomTitleAr] = useState('');
   const [zoomStartTime, setZoomStartTime] = useState('');
   const [zoomDuration, setZoomDuration] = useState('60');
+  const [joinUrl, setJoinUrl] = useState('');
   const [zoomStartUrl, setZoomStartUrl] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,8 @@ export default function LiveSessionManager({ subjects, lang }: LiveSessionManage
           titleAr: zoomTitleAr,
           startTime: new Date(zoomStartTime).toISOString(),
           durationMinutes: parseInt(zoomDuration, 10),
-          zoomStartUrl: zoomStartUrl || 'https://zoom.us/s/mock-start-url',
+          joinUrl: joinUrl.trim() || undefined,
+          zoomStartUrl: zoomStartUrl.trim() || undefined,
         }),
       });
 
@@ -52,6 +54,7 @@ export default function LiveSessionManager({ subjects, lang }: LiveSessionManage
       setZoomTitleEn('');
       setZoomTitleAr('');
       setZoomStartTime('');
+      setJoinUrl('');
       setZoomStartUrl('');
       setShowZoomModal(false);
     } catch (err: unknown) {
@@ -180,6 +183,20 @@ export default function LiveSessionManager({ subjects, lang }: LiveSessionManage
                     className="glass-input w-full text-xs"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  Meeting Join URL (Zoom / Google Meet / Teams)
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={joinUrl}
+                  onChange={(e) => setJoinUrl(e.target.value)}
+                  placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+                  className="glass-input w-full text-xs"
+                />
               </div>
 
               <div>

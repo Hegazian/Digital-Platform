@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { useAppStore } from '../../lib/store';
 import { fetchApi } from '../../lib/api';
+import { ShieldCheck } from 'lucide-react';
+import MfaSetupModal from '../../components/settings/MfaSetupModal';
 
 interface GradeOption {
   id: string;
@@ -21,6 +23,8 @@ export default function ProfilePage() {
   const [studentNumber, setStudentNumber] = useState('');
   const [role, setRole] = useState<string>('');
   const [email, setEmail] = useState('');
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [showMfaModal, setShowMfaModal] = useState(false);
   const [grades, setGrades] = useState<GradeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,6 +46,7 @@ export default function ProfilePage() {
         setGradeId(profileRes.data.gradeId || '');
         setStudentNumber(profileRes.data.studentNumber || '');
         setRole(profileRes.data.role || '');
+        setMfaEnabled(Boolean(profileRes.data.mfaEnabled));
 
         const options: GradeOption[] = [];
         for (const stage of stagesRes.data || []) {
@@ -193,8 +198,67 @@ export default function ProfilePage() {
               </button>
             </form>
           )}
+
+          {/* Security & 2FA Section */}
+          <div className="mt-8 pt-8 border-t border-slate-800">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mt-0.5 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-white">
+                    {dir === 'rtl' ? 'المصادقة الثنائية (2FA)' : 'Two-Factor Authentication (2FA)'}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {dir === 'rtl'
+                      ? 'حماية إضافية لحسابك باستخدام رموز المصادقة عبر تطبيق TOTP'
+                      : 'Add an extra layer of security requiring a TOTP authenticator code.'}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        mfaEnabled
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${mfaEnabled ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                      {mfaEnabled
+                        ? (dir === 'rtl' ? 'مفعلة' : '2FA Enabled')
+                        : (dir === 'rtl' ? 'غير مفعلة' : '2FA Disabled')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMfaModal(true)}
+                disabled={mfaEnabled}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 transition shrink-0"
+              >
+                {mfaEnabled
+                  ? (dir === 'rtl' ? 'التحقق بخطوتين مفعّل' : '2FA enabled')
+                  : (dir === 'rtl' ? 'تفعيل 2FA' : 'Configure 2FA')}
+              </button>
+            </div>
+          </div>
         </div>
       </main>
+
+      {showMfaModal && (
+        <MfaSetupModal
+          isOpen={showMfaModal}
+          onClose={() => setShowMfaModal(false)}
+          onSuccess={() => {
+            setMfaEnabled(true);
+            if (user) {
+              setUser({ ...user, mfaEnabled: true }, useAppStore.getState().token);
+            }
+          }}
+          isAlreadyEnabled={mfaEnabled}
+        />
+      )}
     </div>
   );
 }

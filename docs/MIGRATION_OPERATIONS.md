@@ -50,6 +50,8 @@ Legacy flat keys, copied object references and old absolute storage URLs have no
 
 ## Domain migration order
 
+The `f175fcd` integration preserves the chosen model/history architecture and the existing reviewed migration chain. Its competing `0001_init` SQL is retained only as a [historical fixture](../server/prisma/fixtures/main-0001-init.sql). An installation already recording that migration requires a restored-copy schema/history comparison and a reviewed adoption plan; neither baseline is blindly applied or marked as applied. See [integration provenance](archive/integration-main/README.md).
+
 1. **Safety and identity (M0/M1):** remove static upload access and unsafe DTOs before broad rollout, replace seed provisioning, revoke affected/stale sessions, add authVersion/families/current approval checks. Inventory existing MFA secrets, encrypt with verified key access and stage enrollments without disabling old factor. Retain valid account/work history.
 2. **Contracts/taxonomy:** map current stages/grades/years/subjects into coherent editions/terms/tracks/outcomes with stable IDs. Never merge solely on translated/normalized names. Add controlled singleton config and side-effect-free reads.
 3. **Canonical hierarchy:** create section→CourseModule mappings, move lessons while retaining IDs, copy preview/order, resolve ambiguous parents explicitly, dedupe progress by lesson ID, compare counts, switch readers then constrain required/composite parent. Keep original section data until adapter retirement.

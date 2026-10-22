@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const teacherRouter = Router();
 const announcementSchema = z.object({
-  courseId: z.string().min(1).max(100),
+  courseId: z.string().min(1).max(100).optional(),
   titleEn: z.string().trim().min(1).max(160),
   titleAr: z.string().trim().min(1).max(160),
   messageEn: z.string().trim().min(1).max(5000),

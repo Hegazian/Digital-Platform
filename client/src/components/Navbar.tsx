@@ -22,6 +22,7 @@ import {
 import AuthModal from './AuthModal';
 import MfaSetupModal from './settings/MfaSetupModal';
 import { LogoMark } from './brand/Logo';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { lang, setLang, user, setUser, t } = useAppStore();
@@ -126,6 +127,7 @@ export default function Navbar() {
             {/* Auth / User */}
             {user ? (
               <div className="flex items-center gap-1.5 sm:gap-3">
+                <NotificationBell />
                 <button
                   type="button"
                   onClick={() => router.push('/profile')}

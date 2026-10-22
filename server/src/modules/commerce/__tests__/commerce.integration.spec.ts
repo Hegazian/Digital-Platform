@@ -11,6 +11,7 @@ describe('Commerce & Entitlement Integration Tests', () => {
   let subjectId: string;
   let productId: string;
   let voucherCode: string;
+  let checkoutCourseId: string;
 
   beforeAll(async () => {
     // 1. Create Admin
@@ -44,9 +45,12 @@ describe('Commerce & Entitlement Integration Tests', () => {
       },
     });
     subjectId = subject.id;
+    const checkoutCourse = await prisma.course.create({ data: { teacherId: admin.id, subjectId, titleEn: 'Checkout target', titleAr: 'دورة الدفع', description: 'Voucher context fixture' } });
+    checkoutCourseId = checkoutCourse.id;
   });
 
   afterAll(async () => {
+    if (checkoutCourseId) await prisma.course.deleteMany({ where: { id: checkoutCourseId } });
     if (voucherCode) {
       await prisma.voucher.deleteMany({ where: { code: voucherCode } });
     }
@@ -157,6 +161,16 @@ describe('Commerce & Entitlement Integration Tests', () => {
       expect(res.body.data.code).toBe(voucherCode);
     });
 
+    it('rejects a voucher for a different course without consuming it', async () => {
+      const wrong = await prisma.voucher.create({ data: { code: `OTHER-${Date.now()}`, resourceType: 'COURSE', resourceId: '00000000-0000-0000-0000-000000000000', maxUses: 1, durationDays: 30 } });
+      try {
+        const response = await request(app).post('/api/v1/commerce/vouchers/redeem').set('Authorization', `Bearer ${studentToken}`).send({ code: wrong.code, expectedCourseId: checkoutCourseId });
+        expect(response.status).toBe(400);
+        expect((await prisma.voucher.findUniqueOrThrow({ where: { id: wrong.id } })).usedCount).toBe(0);
+        expect(await prisma.entitlement.count({ where: { studentId, resourceId: wrong.resourceId } })).toBe(0);
+      } finally { await prisma.voucher.delete({ where: { id: wrong.id } }); }
+    });
+
     it('should allow student to redeem valid voucher and receive entitlement', async () => {
       // Create student 2
       const student2 = await prisma.user.create({
@@ -172,7 +186,7 @@ describe('Commerce & Entitlement Integration Tests', () => {
       const res = await request(app)
         .post('/api/v1/commerce/vouchers/redeem')
         .set('Authorization', `Bearer ${s2Token}`)
-        .send({ code: voucherCode });
+        .send({ code: voucherCode, expectedCourseId: checkoutCourseId });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
