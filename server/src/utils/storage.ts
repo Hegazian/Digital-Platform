@@ -31,16 +31,38 @@ export function getUploadsRoot(): string {
 }
 
 /**
- * Storage Utility for handling file uploads (Supabase Storage with local fallback).
+ * Storage Utility for handling file uploads through the explicitly selected driver.
  */
 export class StorageService {
-  /** A production process must never expose teaching/submission files from a public bucket. */
-  static async assertPrivateProductionStorage(): Promise<void> {
-    if (process.env.NODE_ENV !== 'production') return;
+  private static driver(): 'filesystem' | 'supabase' {
+    const configured = process.env.STORAGE_DRIVER;
+    if (configured === 'filesystem' || configured === 'supabase') {
+      if (process.env.NODE_ENV === 'production' && configured !== 'supabase') throw new Error('Production requires STORAGE_DRIVER=supabase');
+      return configured;
+    }
+    if (configured) throw new Error('STORAGE_DRIVER must be filesystem or supabase');
+    if (process.env.NODE_ENV === 'production') throw new Error('STORAGE_DRIVER must be explicitly set to supabase in production');
+    return 'filesystem';
+  }
+
+  private static supabaseConfig(): { base: string; key: string } {
     const base = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!base || !key || !base.startsWith('https://')) throw new Error('Production requires private Supabase storage configuration');
-    const response = await fetch(`${base.replace(/\/$/, '')}/storage/v1/bucket`, { headers: { Authorization: `Bearer ${key}`, apikey: key }, signal: AbortSignal.timeout(10_000) });
+    if (!base || !key || !base.startsWith('https://')) throw new Error('Private Supabase storage configuration is required');
+    return { base: base.replace(/\/$/, ''), key };
+  }
+
+  private static async verifyPrivateBuckets(timeoutMs: number): Promise<void> {
+    const { base, key } = this.supabaseConfig();
+    let response: Response;
+    try {
+      response = await fetch(`${base}/storage/v1/bucket`, {
+        headers: { Authorization: `Bearer ${key}`, apikey: key },
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+    } catch {
+      throw new Error('Unable to verify private production storage');
+    }
     if (!response.ok) throw new Error('Unable to verify private production storage');
     const buckets = await response.json();
     if (!Array.isArray(buckets) || ['lesson-videos', 'lesson-materials', 'submission-files'].some((id) => !buckets.some((bucket: any) => bucket.id === id && bucket.public === false))) {
@@ -48,20 +70,48 @@ export class StorageService {
     }
   }
 
+  /** A bounded health probe for the explicitly selected storage backend. */
+  static async checkAvailability(timeoutMs = 3_000): Promise<void> {
+    const driver = this.driver();
+    if (driver === 'supabase') return this.verifyPrivateBuckets(timeoutMs);
+    if (process.env.NODE_ENV === 'production') throw new Error('Production cannot use filesystem storage');
+
+    const root = getUploadsRoot();
+    fs.mkdirSync(root, { recursive: true });
+    const probePath = path.join(root, `.health-${randomUUID()}`);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        fs.promises.writeFile(probePath, 'ok', { flag: 'wx' }),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(() => reject(new Error('Filesystem readiness probe timed out')), timeoutMs);
+          timeout.unref?.();
+        })
+      ]);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+      try { await fs.promises.unlink(probePath); } catch { /* no file was created */ }
+    }
+  }
+
+  /** A production process must never expose teaching/submission files from a public bucket. */
+  static async assertPrivateProductionStorage(): Promise<void> {
+    if (process.env.NODE_ENV !== 'production') return;
+    if (this.driver() !== 'supabase') throw new Error('Production requires STORAGE_DRIVER=supabase');
+    await this.verifyPrivateBuckets(10_000);
+  }
+
   /**
-   * Upload a file buffer to Supabase Storage or local fallback.
+   * Upload a file buffer to the explicitly selected storage backend.
    */
   static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials'): Promise<string> {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (process.env.NODE_ENV === 'production' && (!supabaseUrl || !supabaseKey)) {
-      throw new Error('Private Supabase storage credentials are required in production');
-    }
+    const driver = this.driver();
+    const { base: supabaseUrl, key: supabaseKey } = driver === 'supabase' ? this.supabaseConfig() : { base: '', key: '' };
 
     const extension = path.extname(fileName).toLowerCase().replace(/[^a-z0-9.]/g, '');
     const uniqueFileName = `${randomUUID()}${extension}`;
 
-    if (supabaseUrl && supabaseKey) {
+    if (driver === 'supabase') {
       try {
         const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${uniqueFileName}`;
         const response = await fetch(uploadUrl, {
@@ -75,17 +125,12 @@ export class StorageService {
           body: fileBuffer as any,
         });
 
-        if (response.ok) {
-          // Persist only private bucket paths. Delivery always goes through an authorized adapter.
-          return `${bucketName}/${uniqueFileName}`;
-        }
-      } catch (error) {
-        console.warn('Supabase storage upload failed');
+        if (!response.ok) throw new Error('Storage upload rejected');
+        // Persist only private bucket paths. Delivery always goes through an authorized adapter.
+        return `${bucketName}/${uniqueFileName}`;
+      } catch {
+        throw new Error('Private storage upload failed');
       }
-    }
-
-    if (process.env.NODE_ENV === 'production' && supabaseUrl) {
-      throw new Error('Private storage upload failed; production uploads cannot fall back to local storage');
     }
 
     // Local-only development fallback
@@ -105,11 +150,7 @@ export class StorageService {
    * Expires only for the requested, bounded delivery interval.
    */
   static async getSignedUrl(internalPath: string, expiresIn: number = 120): Promise<string> {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (process.env.NODE_ENV === 'production' && (!supabaseUrl || !supabaseKey)) {
-      throw new Error('Private Supabase storage credentials are required in production');
-    }
+    const driver = this.driver();
 
     if (internalPath.startsWith('/uploads/')) {
       // It's a local file. We return a backend API route that streams the file securely.
@@ -117,7 +158,8 @@ export class StorageService {
       return internalPath;
     }
 
-    if (supabaseUrl && supabaseKey) {
+    if (driver === 'supabase') {
+      const { base: supabaseUrl, key: supabaseKey } = this.supabaseConfig();
       try {
         const boundedExpiry = Math.min(120, Math.max(1, Math.floor(expiresIn)));
         // internalPath format: "lesson-videos/163000000-video.mp4"

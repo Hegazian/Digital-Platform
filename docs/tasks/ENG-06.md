@@ -5,7 +5,7 @@
 | Stable ID | ENG-06 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Reliability and deployment |
 | Dependencies | None; start independently within the milestone gate. |
 | Original finding / request | [ENG-06 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. Implemented process-only /health/live and bounded /health/ready probes for PostgreSQL plus the selected storage backend; database/storage failure returns 503 with safe status-only dependency details, and shutdown marks readiness down before draining. Production requires explicit STORAGE_DRIVER=supabase and refuses local fallback; signal handling stops HTTP admission, drains connections to a deadline, then disconnects Prisma. A 37-test/7-file server suite including existing video/material/assignment behavior passed, along with server typecheck and build. The repository has no durable job dispatcher yet; ENG-07 owns outbox/dispatch, and integration with a dispatcher remains open. Full browser outage UX, real Supabase outage and process-level signal rehearsal remain open. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
@@ -44,7 +44,13 @@ Implementation locations (existing source entry points; new models/modules descr
 
 - [server/src/app.ts](<../../server/src/app.ts>)
 - [server/src/server.ts](<../../server/src/server.ts>)
+- [server/src/modules/health/health.service.ts](<../../server/src/modules/health/health.service.ts>)
+- [server/src/modules/health/__tests__/health.spec.ts](<../../server/src/modules/health/__tests__/health.spec.ts>)
 - [server/src/utils/storage.ts](<../../server/src/utils/storage.ts>)
+- [server/src/utils/graceful-shutdown.ts](<../../server/src/utils/graceful-shutdown.ts>)
+- [server/src/utils/__tests__/graceful-shutdown.spec.ts](<../../server/src/utils/__tests__/graceful-shutdown.spec.ts>)
+- [server/src/utils/__tests__/storage-readiness.spec.ts](<../../server/src/utils/__tests__/storage-readiness.spec.ts>)
+- [server/.env.example](<../../server/.env.example>)
 - [docker-compose.yml](<../../docker-compose.yml>)
 
 ## API, type and schema contract
@@ -52,7 +58,7 @@ Implementation locations (existing source entry points; new models/modules descr
 Concrete intended boundary example (IDs and dates are illustrative, not production fixtures):
 
 ```text
-GET /health/live -> 200 process alive; GET /health/ready with DB down -> 503 {"status":"NOT_READY","dependencies":{"database":"UNAVAILABLE"}}; public response omits connection strings.
+GET /health/live -> 200 {"status":"LIVE"}; GET /health/ready with DB down -> 503 {"status":"NOT_READY","draining":false,"dependencies":{"database":"unavailable","storage":"ready"}}; draining sets the readiness flag and public response omits internal connection details.
 ```
 
 Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.

@@ -1,6 +1,6 @@
 # Educational platform for Egyptian students
 
-**Updated: 22 October 2026**, M0 application checkpoint **d9c720f**. M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [current results and remaining gaps](docs/CURRENT_STATUS.md). ENG-05's migration chain and populated fixture pass locally; **complete remote CI and backup/restore review** before moving to dependent M1 work. See the [ENG-05 evidence and plan](docs/NEXT_STEPS.md#first-implementation-task--eng-05). Previous content is [superseded and preserved](docs/archive/README.md).
+**Updated: 22 October 2026**, M0 application checkpoint **d9c720f**. M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [current results and remaining gaps](docs/CURRENT_STATUS.md). ENG-05's migration chain, populated fixture and remote CI pass; representative backup/restore review remains before dependent schema release. ENG-06 reliability work is underway. See the [ENG-05 evidence and plan](docs/NEXT_STEPS.md#first-implementation-task--eng-05). Previous content is [superseded and preserved](docs/archive/README.md).
 
 A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide content through uploads, structured imports and manual editors. The platform reviews, publishes, protects and presents that content, manages assessments and progress, and controls enrollment and paid access.
 

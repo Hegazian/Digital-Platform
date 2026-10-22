@@ -1,36 +1,37 @@
 # Next implementation steps
 
-Updated **22 October 2026** against the M0 application checkpoint **d9c720f**. M0 internal engineering is complete; ENG-05 is In Progress with a local migration chain and populated-upgrade fixture. This is the remaining M1 handoff. Current verification, caveats and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md). Production migration, remote CI and backup/restore remain open.
+Updated **22 October 2026** against the M0 application checkpoint **d9c720f**. M0 internal engineering is complete; ENG-05's migration chain, populated-upgrade fixture and exact branch CI are green. Representative backup/restore remains open, and ENG-06 is the next independent reliability implementation. Current verification, caveats and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md). Production migration and representative backup/restore remain open.
 
 ## Start here
 
 1. Retain the committed M0 regressions and review the [current status](CURRENT_STATUS.md), [target architecture](TARGET_ARCHITECTURE.md), [contracts](API_DATA_CONTRACTS.md) and [operations holds](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
-2. Complete **[ENG-05](tasks/ENG-05.md) before starting dependent schema features**. The reviewed baseline and disposable populated upgrade fixture now pass locally. Obtain the remote Node 22 run, inspect a restored representative database with a read-only diff, and complete the rollback/restore rehearsal. Never apply generated baseline SQL to existing tables blindly.
+2. Continue **[ENG-05](tasks/ENG-05.md)** with an authorized representative database restore, read-only schema comparison, and rollback/forward-repair rehearsal. Its exact branch Node 22 CI passed. Never apply generated baseline SQL to existing tables blindly.
 3. Continue **[ENG-13](tasks/ENG-13.md)** throughout: keep local gates green, obtain a remote Node 22 CI result, add semantic domain/component/concurrency tests with each task, and work toward the existing release coverage target. Resolve development advisory exceptions before paid release or 19 January 2027.
 4. Follow the M1 waves below; complete each task's own prerequisites and acceptance evidence. Independent work may overlap, but dependent schema/API work must consume the owning implementation.
 5. Review **G1** using real upgrade, private-storage, access, session and outage evidence; then advance to M2 authoring/learning and M3 manual paid pilot. Keep all staged features denied at the API.
 
 ## First implementation task — ENG-05
 
-Owner: database migrations and operations. Status: **In Progress**, priority **P1**. See the [full task](tasks/ENG-05.md), [implementation evidence](ENG05_IMPLEMENTATION.md) and [migration runbook](MIGRATION_OPERATIONS.md). The original missing DIRECT_URL example has already been corrected in M0; do not repeat that as an unresolved defect. The exact pre-M0 baseline, auth-version migration and local fixture are implemented. Remote CI and representative restore/rollback/operator review remain open.
+Owner: database migrations and operations. Status: **In Progress**, priority **P1**. See the [full task](tasks/ENG-05.md), [implementation evidence](ENG05_IMPLEMENTATION.md) and [migration runbook](MIGRATION_OPERATIONS.md). The original missing DIRECT_URL example has already been corrected in M0; do not repeat that as an unresolved defect. The exact pre-M0 baseline, auth-version migration and local fixture are implemented. Remote CI passed; representative restore/rollback/operator review remain open.
 
 1. **Complete:** inventory the pre-M0/current schema difference; check in the immutable 2fbdc8e schema snapshot; generate and verify its baseline SQL; preserve the idempotent M0 authVersion bridge as the next migration. Existing production history is not marked as applied by CI or local tests.
 2. **Complete:** add migrate-deploy/test commands and replace CI's schema-push setup with reviewed migration application. Guard schema push to local development or the dedicated test database.
 3. **Complete locally:** the isolated fixture migrates an empty schema and verifies exact current-schema parity; builds the historical pre-M0 schema in a second unique schema; runs a read-only diff; seeds bilingual courses, grades, lessons, quiz/assessment attempts, assignment work/files, orders and entitlements; resolves the baseline; applies the bridge; and verifies every row and both auth versions survive a repeated deploy.
 4. **Remaining:** verify a restored representative copy using the runbook's read-only diff and practice the migration-history adoption procedure, including code rollback/forward repair and before/after counts/checksums. Do not apply baseline create-table SQL to populated tables.
-5. **Remaining:** obtain successful remote Node 22 CI for this implementation, inspect all migration artifacts and task acceptance evidence, and rehearse an actual database backup/restore before marking the task Complete.
+5. **Complete:** exact branch Node 22 CI passed all five checks in [GitHub Actions run 39781488417](https://github.com/Hegazian/Digital-Platform/actions/runs/39781488417), including the server empty/populated migration fixture and both browser modes.
+6. **Remaining:** restore an authorized representative copy, inspect it with read-only schema diff, rehearse baseline resolution plus rollback/forward repair and backup/restore, then obtain operator review before marking ENG-05 Complete.
 
 First-task exclusions: no taxonomy, canonical course migration, managed asset schema, new commerce model or assessment revision engine in this baseline task. Those owners add their own subsequent ordered migrations. No production database changes are authorized by this planning document.
 
 ## M1 implementation waves
 
-Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. ENG-05 is In Progress and 24 other M1 tasks remain Planned; ENG-13 also remains In Progress. Only wave 1 is ready from the current completed-dependency set.
+Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. ENG-05 remains In Progress pending representative restore/recovery review; ENG-06 is In Progress. 23 other M1 tasks remain Planned; ENG-13 also remains In Progress. Only wave 1 is ready from the current completed-dependency set.
 
 ### Wave 1 — Migration baseline and independent reliability
 
 [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md), [ENG-02](tasks/ENG-02.md).
 
-Finish ENG-05 remote CI and representative restore/recovery evidence. In parallel where capacity permits, make readiness/shutdown honest, bound existing media/range handling, and persist validated configuration with EGP charge semantics.
+Remote CI is green for ENG-05. Continue its representative restore/recovery review while making readiness/shutdown honest, bounding existing media/range handling, and persisting validated configuration with EGP charge semantics.
 
 Exit evidence: ENG-05 remote migration/fixture pass and restored-copy diff/restore rehearsal; outage/shutdown tests; range/disconnect tests; config reload and EGP assertions.
 

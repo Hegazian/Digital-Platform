@@ -56,7 +56,7 @@ Every finding keeps its original ID in exactly one file, has a release milestone
 | ENG-03 | [ENG-03](tasks/ENG-03.md) — Enforce server capability controls for staged features | M0 | Complete | [A14](#a14); required before assigned milestone exit. Tests ENG-03-T01 onward and T90–T92. |
 | ENG-04 | [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | M1 | Planned | [A04](#a04); required before assigned milestone exit. Tests ENG-04-T01 onward and T90–T92. |
 | ENG-05 | [ENG-05](tasks/ENG-05.md) — Introduce versioned migrations and upgrade verification | M1 | In Progress | [A01](#a01), [A39](#a39); required before assigned milestone exit. Tests ENG-05-T01 onward and T90–T92. |
-| ENG-06 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-06-T01 onward and T90–T92. |
+| ENG-06 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | M1 | In Progress | [A38](#a38); required before assigned milestone exit. Tests ENG-06-T01 onward and T90–T92. |
 | ENG-07 | [ENG-07](tasks/ENG-07.md) — Persist actual audit actors and durable outbox events | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-07-T01 onward and T90–T92. |
 | ENG-08 | [ENG-08](tasks/ENG-08.md) — Make public reads side-effect free and reference keys unique | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-08-T01 onward and T90–T92. |
 | ENG-09 | [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | M1 | Planned | [A29](#a29); required before assigned milestone exit. Tests ENG-09-T01 onward and T90–T92. |

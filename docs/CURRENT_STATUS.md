@@ -1,8 +1,8 @@
 # Current implementation status
 
-Documentation refreshed **22 October 2026**. Latest M0 application/browser regression checkpoint: **d9c720f**, on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. ENG-05's schema migration and populated fixture were separately executed against this working tree. This page summarizes [22 October machine-readable M0 evidence](../audit/review-round-2/verification.json); migration results are in [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md).
+Documentation refreshed **22 October 2026**. Latest M0 application/browser regression checkpoint: **d9c720f**, on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. ENG-05's schema migration and populated fixture were separately executed against this working tree; its exact branch CI run is recorded in [migration evidence](ENG05_IMPLEMENTATION.md). This page summarizes [22 October machine-readable M0 evidence](../audit/review-round-2/verification.json).
 
-**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 2 In Progress, 60 Planned**. ENG-05 and ENG-13 are In Progress: the migration fixture passes locally, while remote CI and representative backup/restore rehearsal remain open. See [ENG-05 evidence](ENG05_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
+**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 3 In Progress, 59 Planned**. ENG-05, ENG-06 and ENG-13 are In Progress. ENG-05's exact branch CI passed; representative backup/restore and rollback evidence remain open. See [ENG-05 evidence](ENG05_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
 
 ## Latest local verification — 22 October
 
@@ -43,4 +43,4 @@ Automated Paymob/Fawry, guardian portal, certificates, offline packs, realtime w
 
 ## Current execution frontier
 
-**Continue [ENG-05](tasks/ENG-05.md) through remote CI and restore/recovery evidence**, then start the following ready M1 tasks: [ENG-02](tasks/ENG-02.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md). Readiness means prerequisites permit starting, not that implementation or tests have passed. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining ENG-05 evidence.
+**Continue [ENG-05](tasks/ENG-05.md) through authorized restore/recovery evidence.** Its exact branch CI passed. [ENG-06](tasks/ENG-06.md) is In Progress as the next independent reliability task; other ready M1 work is [ENG-02](tasks/ENG-02.md), [ENG-09](tasks/ENG-09.md). Readiness means prerequisites permit starting, not that implementation or tests have passed. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining ENG-05 evidence.

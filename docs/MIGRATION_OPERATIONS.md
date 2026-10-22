@@ -1,6 +1,6 @@
 # Migration and operations plan
 
-Refreshed **22 October 2026** against M0 application checkpoint **d9c720f**. [Current status](CURRENT_STATUS.md) distinguishes local migration-fixture evidence from external holds. **ENG-05 is In Progress** with the checked-in baseline, bridge and populated test fixture; the remaining work is remote CI, restored-copy inspection and backup/restore rehearsal. This plan records no production operation as completed.
+Refreshed **22 October 2026** against M0 application checkpoint **d9c720f**. [Current status](CURRENT_STATUS.md) distinguishes migration-fixture evidence from external holds. **ENG-05 is In Progress** with the checked-in baseline, bridge, populated test fixture and successful exact-branch Node 22 CI; the remaining work is restored-copy inspection and backup/restore rehearsal. This plan records no production operation as completed.
 
 ## M0 upgrade and production hold
 

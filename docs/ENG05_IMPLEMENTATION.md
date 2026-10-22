@@ -1,6 +1,6 @@
 # ENG-05 migration implementation evidence
 
-Status: **In Progress**. The baseline and synthetic migration tests are implemented. This record covers the current branch's local evidence; remote CI, a representative backup/restore rehearsal and production adoption review remain open. See the [full ENG-05 acceptance criteria](tasks/ENG-05.md), [migration artifacts](../server/prisma/fixtures/migrations-readme.md) and [next steps](NEXT_STEPS.md#first-implementation-task--eng-05).
+Status: **In Progress**. The baseline and synthetic migration tests are implemented. Remote Node 22 CI passed for this branch; an authorized representative backup/restore rehearsal and production adoption review remain open. See the [full ENG-05 acceptance criteria](tasks/ENG-05.md), [migration artifacts](../server/prisma/fixtures/migrations-readme.md) and [next steps](NEXT_STEPS.md#first-implementation-task--eng-05).
 
 ## Migration design
 
@@ -44,7 +44,7 @@ The server CI job now applies reviewed migrations to its fresh PostgreSQL test s
 
 ## Remaining acceptance and release work
 
-- [ ] Obtain and retain a successful remote Node 22 CI run for this branch, including empty migrations and populated fixture jobs.
+- [x] Remote Node 22 CI passed all five checks for commit `96d3c362a81a373ac8cde83dfeaeba4710c7e664`, including API migration/fixture, documentation/advisory, web build/lint, and production/development desktop/mobile jobs. [GitHub Actions run 39781488417](https://github.com/Hegazian/Digital-Platform/actions/runs/39781488417).
 - [ ] Restore a representative authorized database copy; run the read-only pre-M0/current schema comparisons; document drift and anomaly decisions without editing source records.
 - [ ] Rehearse baseline resolution, bridge deployment, interrupted/repeated deployment and compatible code rollback or forward repair on that copy.
 - [ ] Perform and verify a database backup/restore drill; compare counts/checksums for students, curriculum/progress, attempts/submissions, purchases/grants and asset references.

@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
-import { prisma } from './prisma';
 import { Logger } from './utils/logger';
 import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
 
@@ -35,6 +34,7 @@ import mfaRoutes from './modules/auth/mfa.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import assignmentRoutes from './modules/assignments/assignment.routes';
 import careersRoutes from './modules/careers/careers.routes';
+import { checkReadiness } from './modules/health/health.service';
 
 const app: Express = express();
 
@@ -108,32 +108,24 @@ app.use('/api/v1/auth/mfa-login', authLimiter);
 app.use('/api/v1/auth/refresh', authLimiter);
 app.use('/api/v1/mfa', authLimiter);
 
-// 4. Health Check Endpoint
-const handleHealthCheck = async (req: Request, res: Response) => {
-  let dbStatus = 'disconnected';
-  try {
-    await prisma.$queryRawUnsafe('SELECT 1');
-    dbStatus = 'connected';
-  } catch (e) {
-    dbStatus = 'error';
-  }
-
-  const memory = process.memoryUsage();
-
-  res.status(200).json({
-    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
-    database: dbStatus,
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    memory: {
-      heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
-      rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
-    },
+// 4. Liveness is process-only; readiness includes dependencies required to serve safely.
+const handleLiveness = (_req: Request, res: Response) => res.status(200).json({ status: 'LIVE' });
+const handleReadiness = async (_req: Request, res: Response) => {
+  const result = await checkReadiness();
+  res.status(result.ready ? 200 : 503).json({
+    status: result.ready ? 'READY' : 'NOT_READY',
+    draining: result.draining,
+    dependencies: result.dependencies
   });
 };
 
-app.get('/health', handleHealthCheck);
-app.get('/api/v1/health', handleHealthCheck);
+app.get('/health/live', handleLiveness);
+app.get('/health/ready', handleReadiness);
+app.get('/api/v1/health/live', handleLiveness);
+app.get('/api/v1/health/ready', handleReadiness);
+// Preserve existing probe paths as readiness checks so orchestrators fail closed.
+app.get('/health', handleReadiness);
+app.get('/api/v1/health', handleReadiness);
 
 // 5. Welcome Root Route for Browser Visits
 app.get('/', (req: Request, res: Response) => {
