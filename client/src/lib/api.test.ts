@@ -122,6 +122,33 @@ describe('session renewal', () => {
     expect(transport).toHaveBeenCalledTimes(5);
   });
 
+  it.each([undefined, 'blob'] as const)('retries a delayed old-token 401 with the already renewed token (%s)', async (responseType) => {
+    let finishLate!: (response: Response) => void;
+    let refreshes = 0;
+    transport.mockImplementation((url, options) => {
+      if (url.endsWith('/auth/refresh')) {
+        refreshes++;
+        return Promise.resolve(refreshes === 1 ? json({ data: { accessToken: 'renewed-token' } }) : json({ message: 'Rate limited' }, 429));
+      }
+      if (options.headers.get('Authorization') === 'Bearer renewed-token') {
+        return Promise.resolve(responseType === 'blob' && url.endsWith('/materials/late/content')
+          ? new Response('%PDF-1.7', { headers: { 'Content-Type': 'application/pdf' } }) : json({ success: true }));
+      }
+      if (url.endsWith('/materials/late/content')) return new Promise<Response>((resolve) => { finishLate = resolve; });
+      return Promise.resolve(json({ message: 'Expired' }, 401));
+    });
+    const late = fetchApi('/materials/late/content', { responseType, headers: new Headers({ 'X-Request-ID': 'late' }) });
+    expect((await fetchApi('/auth/profile')).success).toBe(true);
+    finishLate(json({ message: 'Expired' }, 401));
+    const result = await late;
+    if (responseType === 'blob') expect(result.type).toBe('application/pdf');
+    else expect(result.success).toBe(true);
+    expect(refreshes).toBe(1);
+    expect(transport.mock.calls.at(-1)?.[1].headers.get('Authorization')).toBe('Bearer renewed-token');
+    expect(transport.mock.calls.at(-1)?.[1].headers.get('X-Request-ID')).toBe('late');
+    expect(warning).not.toHaveBeenCalled();
+  });
+
   it.each(['/auth/login', '/auth/register', '/auth/mfa-login', '/auth/refresh', '/auth/logout'])('never recursively refreshes %s', async (endpoint) => {
     transport.mockResolvedValue(json({ message: 'Invalid credentials' }, 401));
     await expect(fetchApi(endpoint)).rejects.toThrow('Invalid credentials');

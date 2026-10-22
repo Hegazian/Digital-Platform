@@ -118,7 +118,15 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
     // Auto-refresh session on 401 (except auth endpoints themselves)
     const isAuthEndpoint = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/mfa-login', '/auth/logout'].includes(endpoint.split('?')[0]);
     if (res.status === 401 && !isAuthEndpoint && !endpoint.includes('/playgrounds/execute')) {
-      if (!isRefreshing) {
+      const latestToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (token && latestToken && latestToken !== token) {
+        // A delayed response may arrive after a concurrent refresh has finished.
+        res = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...requestOptions,
+          headers: renewedHeaders(latestToken),
+          credentials: 'include',
+        });
+      } else if (!isRefreshing) {
         isRefreshing = true;
         const newToken = await refreshSession();
         isRefreshing = false;
