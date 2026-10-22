@@ -31,6 +31,7 @@ const baseline = '20261022000000_pre_m0_baseline';
 const suffix = `${process.pid}_${crypto.randomBytes(4).toString('hex')}`;
 const emptySchema = `eng05e_${suffix}`;
 const populatedSchema = `eng05p_${suffix}`;
+const driftSchema = `eng05d_${suffix}`;
 const ownedSchemas = [];
 const withSchema = (raw, schema) => {
   const url = new URL(raw);
@@ -176,6 +177,28 @@ async function runFixture() {
     assertSchemaMatches(emptySchema, 'prisma/schema.prisma');
     run(['migrate', 'deploy'], emptySchema);
     console.log('Empty installation matches the current schema; repeated deploy is idempotent.');
+
+    console.log('Verifying schema drift is rejected before any migration history is written.');
+    await admin.$executeRawUnsafe(`CREATE SCHEMA "${driftSchema}"`);
+    ownedSchemas.push(driftSchema);
+    run(['db', 'push', '--schema', 'prisma/fixtures/m0-before.prisma', '--skip-generate'], driftSchema);
+    await admin.$executeRawUnsafe(`CREATE TABLE "${driftSchema}"."eng05_unexpected_table" (id integer PRIMARY KEY)`);
+    const driftEnv = {
+      ...env,
+      DATABASE_URL: withSchema(env.DATABASE_URL, driftSchema),
+      DIRECT_URL: withSchema(env.DIRECT_URL, driftSchema)
+    };
+    const driftCheck = spawnSync(process.execPath, [cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/fixtures/m0-before.prisma', '--to-schema-datamodel', 'prisma/fixtures/m0-before.prisma', '--exit-code'], {
+      cwd: root, env: driftEnv, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024
+    });
+    if (driftCheck.error) throw driftCheck.error;
+    if (driftCheck.status !== 2) throw new Error(`Expected Prisma to reject the drifted schema with exit 2; received ${driftCheck.status ?? 'unknown'}.`);
+    const migrationHistory = await admin.$queryRawUnsafe(
+      'SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2',
+      driftSchema, '_prisma_migrations'
+    );
+    if (migrationHistory.length !== 0) throw new Error('Drift check wrote migration history before baseline review.');
+    console.log('Drift was detected by a read-only diff; no migration history was created.');
 
     console.log('Creating an isolated populated database schema at the exact pre-M0 Prisma snapshot.');
     await admin.$executeRawUnsafe(`CREATE SCHEMA "${populatedSchema}"`);

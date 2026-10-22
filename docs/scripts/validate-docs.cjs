@@ -124,6 +124,7 @@ const authMigration=read('server/prisma/migrations/20261022000100_m0_auth_versio
 const authBridge=read('server/prisma/upgrades/m0-auth-version.sql');
 const ci=read('.github/workflows/ci.yml');
 const dbEnv=read('server/scripts/db-env.js');
+const migrationFixture=read('server/scripts/migration-upgrade-fixture.cjs');
 check(crypto.createHash('sha256').update(migrationSnapshot).digest('hex')==='4624dde7a2fcf50ee5821ced56e1c350d993b81790cdf62fbc43a327c0b9a940','Pre-M0 snapshot changed without explicit baseline review');
 check(crypto.createHash('sha256').update(baselineMigration).digest('hex')==='b31ee33d831fa30d881e286b63bf3d23aa01751818b2479837edcf69f1893f22','Baseline SQL changed without explicit baseline review');
 check(crypto.createHash('sha256').update(authMigration).digest('hex')==='aaca9f315695f6f689142f6668f9ad2f073350f7ccdd6da031e651c00ce8b1ae','Auth migration changed without explicit review');
@@ -131,6 +132,7 @@ check(authMigration===authBridge,'Versioned auth bridge differs from its reviewe
 check(!/^\s*(?:DROP|TRUNCATE|DELETE FROM)\b/im.test(baselineMigration),'Create-only initial baseline contains a destructive statement');
 check(ci.includes('npm run db:migrate:test') && ci.includes('npm run db:migrate:fixture') && !ci.includes('npx prisma db push --skip-generate'),'CI must use reviewed migrations and the populated-upgrade fixture');
 check(dbEnv.includes('isDedicatedTestTarget') && dbEnv.includes('isDedicatedDevelopmentTarget') && dbEnv.includes('Refusing prisma db push'),'Schema-push command lacks local-target guards');
+check(migrationFixture.includes('eng05d_') && migrationFixture.includes('driftCheck.status !== 2') && migrationFixture.includes("'_prisma_migrations'"),'Migration fixture must reject drift before writing migration history');
 for(const id of ['C01','C02','C03','C04','C05','C06','C07','C08','C09','C10']) check(contract.includes('## '+id+' —'),'Missing normative contract '+id);
 for(const owner of ['ENH-02','LRN-07','COM-01','ENH-03','LRN-05','LRN-02','ENH-04','COM-06','ENG-07','ENG-03'])check(architecture.includes(`[${owner}](tasks/${owner}.md)`),'Missing owning shared concern '+owner);
 for(const name of ['Paymob / Fawry','Realtime whiteboard','Code execution','Developer tokens/webhooks','Guardian portal','Certificates','Offline packs'])check(gates.includes('| '+name+' |'),'Missing API disabled matrix row '+name);
