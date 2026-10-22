@@ -43,6 +43,16 @@ The last command builds both apps, creates unique fixtures and private files, us
 
 Browser evidence is in `client/playwright-report/m0/`; failures also retain traces/screenshots in `client/test-results/`. For a visible, step-by-step replay use `npm run test:m0:browser -- --headed --debug --project=chromium` and Playwright Inspector. The legacy future-feature browser suite is separate and is not counted as M0 evidence.
 
+The [22 October review round](M0_REVIEW_ROUND_2.md) adds admin/teacher tab coverage, profile renewal/editing, mobile logout, malformed-cookie redirects and interrupted document loads. To run the same suite against `next dev`, including React Strict Mode cleanup:
+
+```powershell
+$env:M0_WEB_MODE='dev'
+npm run test:m0:browser
+Remove-Item Env:M0_WEB_MODE
+```
+
+Run production and development browser modes sequentially: both use ports 3100/5100 and the same dedicated test database. Restart any already running client/server after pulling code changes so the capability snapshot and `proxy.ts` migration take effect.
+
 ## 2. Prepare your own manual development session
 
 Use `docker compose up -d postgres-dev` for `localhost:5434/eduplatform_dev`. Configure the ignored `server/.env` with both development URLs, separate random signing keys, blank Supabase configuration for protected local storage, and the intended client URL. Never overwrite an existing environment file without checking its target.
@@ -65,6 +75,9 @@ The command refuses existing emails and never resets an existing account. Start 
 2. Sign in as a teacher, retain the access token in a separate test client, then reject/deactivate that account from the admin session. The old token must fail on its next protected request. Role/password/approval changes also revoke refresh tokens and advance `authVersion`.
 3. In a local teacher announcement/live request, add another account's `teacherId`. Expect 400 and no announcement/session side effect. Valid requests take their actor from authentication.
 4. Initial administrator provisioning without its explicit opt-in must fail; rerunning it with the same email must leave the account unchanged.
+5. Open every admin and teacher dashboard tab. API & Webhooks / API & Docs shows a bilingual unavailable notice and sends no `/developer/tokens` or `/developer/webhooks` requests. Direct API calls remain denied by the server. Inspect a course as an admin: its actual modules/lessons must load, with an explicit error and retry if the detail request fails.
+6. At a mobile width (393px or narrower), verify profile, language and logout controls remain individually clickable. Log out and revisit a dashboard; it must reach login. An invalid or expired refresh cookie must also reach login without a redirect loop.
+7. With a valid refresh cookie, replace only the local access token with a disposable invalid value and open My Profile. Its request must refresh once, load the profile, save an edit and retain that edit after reload. A refresh 429/503 must preserve local session state; a definitive 401/403 ends the session.
 
 ## 4. Check protected content and assignments
 
@@ -81,6 +94,8 @@ The command refuses existing emails and never resets an existing account. Start 
 1. Select an uploaded video, play, pause partway through and change speed. Leave it paused longer than two minutes, then resume/seek. The client renews the delivery URL about 30 seconds before expiry; its position, paused state and speed survive renewal. Network responses include an `expiresAt` instant. A revoked entitlement prevents subsequent renewal.
 2. Switch lessons while a playback request is slow. A late response from the first lesson must not replace the newly selected lesson.
 3. Switch to Arabic, hard-reload the course page, and repeat enrollment/material/assignment checks. The root element must have `lang="ar" dir="rtl"`; switching back restores English/ltr. The console must have no hydration error. Uploaded content translations remain the uploader's responsibility.
+4. Throttle one course response, switch to a second course, then allow the first response to finish. The second course's curriculum and selected lesson must remain selected. After a failed playback renewal, retry once connectivity returns; pause, position and speed must survive.
+5. Start loading one PDF and select another before it finishes. The new document must remain selected, with no `API Error … aborted` warning. Genuine server failures must still show an error. Staged code blocks must show the exact uploaded code sample as inert text, without a Run button or execution request.
 
 ## 6. Check removed and staged capabilities
 

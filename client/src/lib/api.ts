@@ -70,10 +70,12 @@ async function refreshSession(): Promise<string | null | undefined> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
-    if (!res.ok) return SESSION_DEAD;
+    // Only an authentication denial proves the session is gone. Rate limits,
+    // rotation conflicts and server outages must preserve the local session.
+    if (!res.ok) return res.status === 401 || res.status === 403 ? SESSION_DEAD : NETWORK_ERROR;
     const data = await res.json();
     const accessToken = data?.data?.accessToken;
-    if (!accessToken) return SESSION_DEAD;
+    if (typeof accessToken !== 'string' || !accessToken) return NETWORK_ERROR;
     if (typeof window !== 'undefined') {
       localStorage.setItem('accessToken', accessToken);
     }
@@ -97,10 +99,13 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const isFormData = options.body instanceof FormData;
 
-  const headers: Record<string, string> = {
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...((options.headers as Record<string, string>) || {}),
+  const headers = new Headers(isFormData ? {} : { 'Content-Type': 'application/json' });
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  new Headers(options.headers).forEach((value, key) => headers.set(key, value));
+  const renewedHeaders = (newToken: string) => {
+    const value = new Headers(headers);
+    value.set('Authorization', `Bearer ${newToken}`);
+    return value;
   };
 
   try {
@@ -111,7 +116,7 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
     });
 
     // Auto-refresh session on 401 (except auth endpoints themselves)
-    const isAuthEndpoint = endpoint.startsWith('/auth/');
+    const isAuthEndpoint = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/mfa-login', '/auth/logout'].includes(endpoint.split('?')[0]);
     if (res.status === 401 && !isAuthEndpoint && !endpoint.includes('/playgrounds/execute')) {
       if (!isRefreshing) {
         isRefreshing = true;
@@ -122,7 +127,7 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
           onRefreshed(newToken);
           res = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...requestOptions,
-            headers: { ...headers, Authorization: `Bearer ${newToken}` },
+            headers: renewedHeaders(newToken),
             credentials: 'include',
           });
         } else if (newToken === NETWORK_ERROR) {
@@ -146,7 +151,7 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
         if (newToken) {
           res = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...requestOptions,
-            headers: { ...headers, Authorization: `Bearer ${newToken}` },
+            headers: renewedHeaders(newToken),
             credentials: 'include',
           });
         }
@@ -157,7 +162,6 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
     const text = await res.text();
     // Single untyped boundary: raw JSON is parsed once here; all consumers
     // above this layer work with concrete types.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     try {
       data = JSON.parse(text);
@@ -171,7 +175,11 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
     return data;
   } catch (err: unknown) {
     const errorObj = err as { message?: string };
-    console.warn(`API Error [${endpoint}]:`, errorObj.message);
+    // Effect cleanup/lesson navigation intentionally cancels document fetches.
+    // Propagate cancellation for callers to settle, without an API warning.
+    if (!requestOptions.signal?.aborted && !(err instanceof Error && err.name === 'AbortError')) {
+      console.warn(`API Error [${endpoint}]:`, errorObj?.message);
+    }
     throw err;
   }
 }

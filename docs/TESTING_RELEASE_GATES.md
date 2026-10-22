@@ -2,6 +2,8 @@
 
 ## Current M0 implementation verification (21 October 2026)
 
+The [22 October review round](M0_REVIEW_ROUND_2.md) supersedes the checkpoint counts below with expanded dashboard, session, mobile and development-mode evidence. The following paragraphs retain the original checkpoint results and their limits.
+
 The M0 internal engineering/G0 checkpoint is finalized. Server typecheck/build and full-source coverage passed: **77 files / 397 tests**. Client typecheck/build, lint (0 errors, 26 warnings) and **4 files / 17 component/hook tests** passed. The production-build browser suite passed **10 desktop/mobile tests with zero skips** against the real API and dedicated PostgreSQL database, including English/Arabic enrollment, authenticated PDFs, assignment upload/submission, role denials and WebM renewal. Local browser: Chrome 155 through Playwright; CI installs its matching Chromium build. [Review resolutions](M0_REVIEW_RESOLUTION.md) identify all five follow-up fixes.
 
 Fresh advisory scans and the explicit exception policy passed: no runtime advisory packages in either application, no total server advisories, and nine narrowly scoped development-only client exceptions. See the [dependency decision record](M0_DEPENDENCY_REVIEW.md) and [verification evidence](../audit/m0/verification.json). Deployed private-bucket/real-scanner checks, production credential remediation and representative restore rehearsals remain traffic holds. Remote GitHub Actions execution is not claimed.

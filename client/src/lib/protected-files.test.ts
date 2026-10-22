@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveDocumentUrl } from './protected-files';
 
 describe('authenticated document delivery', () => {
+  afterEach(() => vi.restoreAllMocks());
   beforeEach(() => {
     URL.createObjectURL = vi.fn(() => 'blob:document');
     URL.revokeObjectURL = vi.fn();
@@ -12,7 +13,8 @@ describe('authenticated document delivery', () => {
     'authenticates %s before producing a blob URL', async (url) => {
       const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('%PDF-1.7', { headers: { 'Content-Type': 'application/pdf' } }));
       const resolved = await resolveDocumentUrl(url);
-      expect(fetch).toHaveBeenCalledWith(url, expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer current-access' }), credentials: 'include' }));
+      expect(fetch).toHaveBeenCalledWith(url, expect.objectContaining({ credentials: 'include' }));
+      expect(new Headers(fetch.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer current-access');
       expect(resolved.url).toBe('blob:document');
       resolved.revoke();
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:document');
@@ -26,7 +28,7 @@ describe('authenticated document delivery', () => {
       .mockResolvedValueOnce(new Response('{"data":{"accessToken":"renewed-access"}}'))
       .mockResolvedValueOnce(new Response('%PDF-1.7'));
     expect((await resolveDocumentUrl('/api/v1/materials/m1/content')).url).toBe('blob:document');
-    expect(fetch.mock.calls[2][1]).toEqual(expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer renewed-access' }) }));
+    expect(new Headers(fetch.mock.calls[2][1]?.headers).get('Authorization')).toBe('Bearer renewed-access');
     fetch.mockRestore();
   });
 

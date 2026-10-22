@@ -74,6 +74,7 @@ export default function VideoPlayerSection() {
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const courseRequest = useRef(0);
   const playback = usePlaybackSource(videoRef, activeLesson?.videoId || undefined, activeLesson?.video?.videoUrl);
   const videoUrl = playback.url;
 
@@ -103,15 +104,21 @@ export default function VideoPlayerSection() {
 
   // Fetch Course & Curriculum Tree
   const loadCourseData = useCallback(async () => {
-    if (!selectedCourseId) return;
+    const selection = useAppStore.getState();
+    if (!selectedCourseId || selection.selectedCourseId !== selectedCourseId || selection.user?.id !== user?.id) return;
+    const request = ++courseRequest.current;
+    const current = () => request === courseRequest.current;
     setError(null);
 
     try {
       const res = await fetchApi(`/courses/${selectedCourseId}`);
+      if (!current()) return;
       let courseData = res.data || res;
       const allowed = await computeAccess(courseData);
+      if (!current()) return;
       if (allowed) {
         const learning = await fetchApi(`/courses/${selectedCourseId}/learning`);
+        if (!current()) return;
         courseData = learning.data || learning;
       }
       setCourse(courseData);
@@ -170,6 +177,7 @@ export default function VideoPlayerSection() {
       if (allowed && user) {
         try {
           const prog = await fetchApi(`/progress/course/${courseData.id}`);
+          if (!current()) return;
           setCompletedLessonIds(new Set(prog.data?.completedLessonIds || []));
         } catch {
           // Progress hydration is best-effort
@@ -177,17 +185,29 @@ export default function VideoPlayerSection() {
       }
 
       // Select first lesson by default
+      if (!current()) return;
       if (allowed && extractedModules.length > 0 && extractedModules[0].lessons.length > 0) {
         const firstLesson = extractedModules[0].lessons[0];
         setActiveLesson(firstLesson);
       }
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to load course curriculum'));
+      if (current()) setError(errorMessage(err, 'Failed to load course curriculum'));
     }
   }, [selectedCourseId, user, computeAccess]);
 
   useEffect(() => {
-    loadCourseData();
+    setCourse(null);
+    setModules([]);
+    setActiveLesson(null);
+    setCompletedLessonIds(new Set());
+    setHasAccess(false);
+    setAccessChecked(false);
+    setActiveTab('video');
+    setShowCheckout(false);
+    setEnrolling(false);
+    setMessage(null);
+    void loadCourseData();
+    return () => { courseRequest.current += 1; };
   }, [loadCourseData]);
 
   const handleEnroll = async () => {
@@ -204,14 +224,16 @@ export default function VideoPlayerSection() {
 
     setEnrolling(true);
     setError(null);
+    const current = () => useAppStore.getState().selectedCourseId === selectedCourseId && useAppStore.getState().user?.id === user.id;
     try {
       await fetchApi(`/courses/${selectedCourseId}/enroll`, { method: 'POST' });
+      if (!current()) return;
       await loadCourseData();
-      setMessage('Enrolled successfully — start learning below!');
+      if (current()) setMessage('Enrolled successfully — start learning below!');
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to enroll'));
+      if (current()) setError(errorMessage(err, 'Failed to enroll'));
     } finally {
-      setEnrolling(false);
+      if (current()) setEnrolling(false);
     }
   };
 

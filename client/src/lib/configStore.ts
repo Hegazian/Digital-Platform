@@ -144,6 +144,12 @@ export interface AppConfig {
   allowTeacherRegistration: boolean;
   enableCodePlaygrounds: boolean;
   enableCollaborativeBoards: boolean;
+  capabilities?: Readonly<{
+    codeExecution: boolean;
+    collaborativeBoards: boolean;
+    developerIntegrations: boolean;
+    automatedPaymentGateways: boolean;
+  }>;
   primaryColor: string;
   homeContent?: HomeContentConfig | null;
 }

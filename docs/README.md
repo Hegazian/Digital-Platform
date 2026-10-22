@@ -28,10 +28,11 @@ Version: **21 October 2026**. Baseline code: **2fbdc8e**. The M0 internal engine
 | [M0 implementation status](M0_IMPLEMENTATION_STATUS.md) | Final internal checkpoint, exact results, task dispositions and production holds |
 | [M0 manual testing](M0_MANUAL_TESTING.md) | Local setup, step-by-step checks and visible browser replay |
 | [M0 review resolution](M0_REVIEW_RESOLUTION.md) | All five follow-up findings and regression evidence |
+| [Second M0 review](M0_REVIEW_ROUND_2.md) | 22 October fixes, dashboard/session/mobile testing and remaining gaps |
 | [M0 dependency review](M0_DEPENDENCY_REVIEW.md) | Patched runtime paths and bounded development-only exceptions |
 | [Migration and operations](MIGRATION_OPERATIONS.md) | Data/asset preservation, deployment, rollback, recovery and monitoring |
 | [Task template](TASK_TEMPLATE.md) | Required task detail and completion checklist |
 | [Documentation verification](VERIFICATION_REPORT.md) | Task/finding/case coverage, links, dependencies and archived hash checks |
 | [Archived documents](archive/INDEX.md) | Exact previous guides/FR/TC identifiers, superseded status and hashes |
 
-Task source is maintained in [documentation authoring scripts](scripts/build-docs.cjs); [task-manifest.json](task-manifest.json) is machine-readable output. Run 'node docs/scripts/build-docs.cjs' to rebuild generated task/index/entry docs, then 'node docs/scripts/validate-docs.cjs'. Shared hand-written specifications are not overwritten by the generator. No script connects to the application, database or external services.
+Task source is maintained in [documentation authoring scripts](scripts/build-docs.cjs); [task-manifest.json](task-manifest.json) is machine-readable output. Run 'node docs/scripts/build-docs.cjs' to rebuild generated task/index/entry docs, then 'node docs/scripts/validate-docs.cjs'. Shared hand-written specifications are not overwritten by the generator. The generator and validator do not connect to the application or database; the separate advisory script contacts the NPM advisory service.

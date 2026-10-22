@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Edge route protection.
+ * Optimistic route navigation guard. API authorization remains authoritative.
  *
  * The httpOnly refresh cookie (`eduplat_rt`) is first-party thanks to the
- * /api/v1 rewrite proxy, so the middleware can gate dashboard routes by
- * session presence AND role claims WITHOUT trusting any client-editable
- * state (the old localStorage role check).
- *
- * NOTE: We decode (not cryptographically verify) the JWT here because the
- * signing secret is not available at the edge. This is acceptable because:
- * 1. The cookie is httpOnly and cannot be modified by client-side JS.
- * 2. Fine-grained authorization is always enforced by the API itself.
- * 3. This is purely a UX guard to prevent navigation to wrong dashboards.
+ * /api/v1 rewrite proxy. The decoded cookie is an unverified navigation hint;
+ * it never authorizes data access. Malformed/expired hints go to sign-in,
+ * instead of redirecting an unknown role back to the same dashboard forever.
  */
 const PROTECTED_PREFIXES = ['/admin', '/teacher', '/student', '/profile'];
 
@@ -38,7 +32,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const needsAuth = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
@@ -47,16 +41,17 @@ export function middleware(req: NextRequest) {
   if (!needsAuth) return NextResponse.next();
 
   const refreshCookie = req.cookies.get('eduplat_rt')?.value;
-  if (!refreshCookie) {
+  const payload = refreshCookie ? decodeJwtPayload(refreshCookie) : null;
+  const role = typeof payload?.role === 'string' ? payload.role : '';
+  const validHint = ['ADMIN', 'TEACHER', 'STUDENT'].includes(role)
+    && typeof payload?.exp === 'number' && Number.isFinite(payload.exp)
+    && payload.exp > Date.now() / 1000;
+  if (!validHint) {
     const url = req.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = '/login';
     url.searchParams.set('auth', 'required');
     return NextResponse.redirect(url);
   }
-
-  // Decode JWT to extract role for UX-level route gating.
-  const payload = decodeJwtPayload(refreshCookie);
-  const role = (payload?.role as string) ?? '';
 
   // Find which prefix matches and check the required roles.
   const matchedPrefix = PROTECTED_PREFIXES.find(

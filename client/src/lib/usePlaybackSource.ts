@@ -26,12 +26,19 @@ export function usePlaybackSource(video: RefObject<HTMLVideoElement | null>, vid
       if (pending || cancelled) return;
       pending = true;
       clearTimeout(timer);
+      const element = video.current;
+      // Keep the last usable position even if a failed renewal removes the
+      // video element before the student's subsequent retry succeeds.
+      if (!preserve) restore.current = null;
+      else if (element) restore.current = { time: element.currentTime, paused: element.paused, rate: element.playbackRate };
       try {
         const response = await fetchApi(`/videos/${videoId}/playback-url`);
         if (cancelled) return;
         if (!response.data?.playbackUrl) throw new Error('Playback URL unavailable');
-        const element = video.current;
-        restore.current = preserve && element ? { time: element.currentTime, paused: element.paused, rate: element.playbackRate } : null;
+        if (preserve && video.current) {
+          const latest = video.current;
+          restore.current = { time: latest.currentTime, paused: latest.paused, rate: latest.playbackRate };
+        }
         setUrl(response.data.playbackUrl);
         setError(null);
         const expiresAt = Date.parse(response.data.expiresAt) || Date.now() + 120_000;
@@ -39,6 +46,10 @@ export function usePlaybackSource(video: RefObject<HTMLVideoElement | null>, vid
         timer = setTimeout(() => { void load(true); }, Math.max(5_000, refreshAt - Date.now()));
       } catch {
         if (!cancelled) {
+          if (preserve && video.current) {
+            const latest = video.current;
+            restore.current = { time: latest.currentTime, paused: latest.paused, rate: latest.playbackRate };
+          }
           setUrl(null);
           setError('Playback access could not be renewed. Select the lesson again to retry.');
         }

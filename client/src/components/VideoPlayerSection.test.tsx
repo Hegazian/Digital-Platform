@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { fetchApi } from '@/lib/api';
 import { useAppStore } from '@/lib/store';
 import VideoPlayerSection from './VideoPlayerSection';
@@ -47,5 +47,44 @@ describe('curriculum after a new access grant', () => {
     allowed = true;
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm access' }));
     expect(await screen.findByText('Newly accessible lesson', { selector: 'aside span' })).toBeVisible();
+  });
+
+  it('ignores a delayed curriculum response after the user switches courses', async () => {
+    allowed = true;
+    let finishOld!: (data: any) => void;
+    const general = vi.mocked(fetchApi).getMockImplementation()!;
+    vi.mocked(fetchApi).mockImplementation(async (path, options) => {
+      if (path === '/courses/course-1') return new Promise((resolve) => { finishOld = resolve; });
+      if (path === '/courses/course-2') return { data: { id: 'course-2', titleEn: 'Second course', teacherId: 'teacher-1' } };
+      if (path === '/courses/course-2/learning') return { data: { id: 'course-2', titleEn: 'Second course', modules: [{ id: 'unit-2', lessons: [{ id: 'lesson-2', titleEn: 'Second course lesson' }] }] } };
+      return general(path, options);
+    });
+    render(<VideoPlayerSection />);
+    await waitFor(() => expect(finishOld).toBeDefined());
+    act(() => useAppStore.setState({ selectedCourseId: 'course-2' }));
+    expect(await screen.findByText('Second course lesson', { selector: 'aside span' })).toBeVisible();
+    await act(async () => { finishOld({ data: { id: 'course-1', titleEn: 'Old course', teacherId: 'teacher-1' } }); });
+    expect(screen.getByText('Second course lesson', { selector: 'aside span' })).toBeVisible();
+    expect(screen.queryByText('Newly accessible lesson', { selector: 'aside span' })).not.toBeInTheDocument();
+  });
+
+  it('does not reopen the previous course when its enrollment finishes after navigation', async () => {
+    let finishEnrollment!: (value: any) => void;
+    const general = vi.mocked(fetchApi).getMockImplementation()!;
+    vi.mocked(fetchApi).mockImplementation(async (path, options) => {
+      if (path === '/courses/course-1/enroll') return new Promise((resolve) => { finishEnrollment = resolve; });
+      if (path === '/courses/course-2') return { data: { id: 'course-2', titleEn: 'Second course', teacherId: 'teacher-1' } };
+      if (path === '/courses/course-2/learning') return { data: { id: 'course-2', titleEn: 'Second course', modules: [{ id: 'unit-2', lessons: [{ id: 'lesson-2', titleEn: 'Second course lesson' }] }] } };
+      return general(path, options);
+    });
+    render(<VideoPlayerSection />);
+    fireEvent.click(await screen.findByRole('button', { name: /Enroll Now/ }));
+    await waitFor(() => expect(finishEnrollment).toBeDefined());
+    allowed = true;
+    act(() => useAppStore.setState({ selectedCourseId: 'course-2' }));
+    expect(await screen.findByText('Second course lesson', { selector: 'aside span' })).toBeVisible();
+    await act(async () => { finishEnrollment({ success: true }); });
+    expect(screen.getByText('Second course lesson', { selector: 'aside span' })).toBeVisible();
+    expect(screen.queryByText(/Enrolled successfully/)).not.toBeInTheDocument();
   });
 });

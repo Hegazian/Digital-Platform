@@ -9,7 +9,7 @@ async function login(page: Page, email: string) {
   await page.locator('#auth-email-input').fill(email);
   await page.locator('#auth-password-input').fill(fixture.password);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await expect(page).toHaveURL(/student\/dashboard/);
+  await expect(page).toHaveURL(/student\/dashboard/, { timeout: process.env.M0_WEB_MODE === 'dev' ? 30_000 : 10_000 });
   const onboarding = page.getByRole('dialog', { name: 'Choose your target faculty' });
   await expect(onboarding).toBeVisible();
   await page.keyboard.press('Escape');
@@ -58,6 +58,11 @@ test('guest APIs omit curriculum and keep staged capabilities unavailable', asyn
   expect((await request.get(`/api/v1/materials/${fixture.courses.en.materialId}/content`)).status()).toBe(401);
   expect((await request.post('/api/v1/playgrounds/execute', { data: { code: 'print(1)', language: 'python' } })).status()).toBe(503);
   expect((await request.get('/api/v1/boards/unknown')).status()).toBe(503);
+  for (const endpoint of ['/developer/tokens', '/developer/webhooks']) {
+    const unavailable = await request.get(`/api/v1${endpoint}`);
+    expect(unavailable.status()).toBe(503);
+    expect((await unavailable.json()).code).toBe('FEATURE_DISABLED');
+  }
   expect((await request.post('/api/v1/commerce/webhooks/paymob', { data: {} })).status()).toBe(503);
   expect((await request.post('/api/v1/ai/tutor', { data: { prompt: 'test' } })).status()).toBe(404);
 });

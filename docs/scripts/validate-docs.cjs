@@ -72,7 +72,7 @@ for(const a of archives) {
  check(crypto.createHash('sha256').update(b).digest('hex')===a.sha256,'Archived original changed: '+a.archive);
 }
 check(archives.length===13,'Expected 13 exact archived original guides');
-const shared=['README.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md'];
+const shared=['README.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,'docs',p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>'docs/'+p),...files.map(p=>'docs/tasks/'+p),...archives.map(a=>a.path),'docs/archive/INDEX.md'];
 let links=0,anchors=0;

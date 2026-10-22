@@ -6,4 +6,4 @@ Next.js/React application with student, teacher and admin views. Existing comman
 
 Use [scope](../docs/PRODUCT_SCOPE.md), [architecture](../docs/TARGET_ARCHITECTURE.md), [typed contracts](../docs/API_DATA_CONTRACTS.md), [backlog](../docs/ROADMAP_BACKLOG.md) and [browser gates](../docs/TESTING_RELEASE_GATES.md). Arabic/English interface completion, ordered uploaded block rendering, exact review revisions, resumable media and reliable manual checkout are planned. UI flags do not authorize API features. The tutor UI is removed under SCOPE-02.
 
-The M0 production-build API/database browser suite passed 10 desktop/mobile tests without skips; full-product feature acceptance remains G1–G3. No claim of implemented HLS, sandbox isolation, guardian portal or developer delivery is made.
+The expanded dashboard/session/delivery suites and development-mode checks are recorded in [review round 2](../docs/M0_REVIEW_ROUND_2.md); full-product feature acceptance remains G1–G3. No claim of implemented HLS, sandbox isolation, guardian portal or developer delivery is made.

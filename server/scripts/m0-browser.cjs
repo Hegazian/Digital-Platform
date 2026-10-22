@@ -32,7 +32,7 @@ async function main() {
   const password = `M0-${crypto.randomUUID()}!`;
   const hash = await bcrypt.hash(password, 10);
   const fixture = { password, users: {}, courses: {}, uploadRoot: env.UPLOADS_DIR };
-  for (const [name, role] of Object.entries({ teacher: 'TEACHER', chromium: 'STUDENT', 'mobile-chrome': 'STUDENT', outsider: 'STUDENT', pending: 'TEACHER', rejected: 'TEACHER', admin: 'ADMIN' })) {
+  for (const [name, role] of Object.entries({ teacher: 'TEACHER', chromium: 'STUDENT', 'mobile-chrome': 'STUDENT', outsider: 'STUDENT', 'outsider-chromium': 'STUDENT', 'outsider-mobile-chrome': 'STUDENT', pending: 'TEACHER', rejected: 'TEACHER', admin: 'ADMIN' })) {
     const user = await db.user.create({ data: { name: `M0 ${name}`, email: `m0-${runId}-${name}@test.invalid`, password: hash, role,
       teacherStatus: role === 'TEACHER' ? name === 'pending' ? 'PENDING' : name === 'rejected' ? 'REJECTED' : 'APPROVED' : null } });
     ids.users.push(user.id);
@@ -48,12 +48,13 @@ async function main() {
     const file = `${crypto.randomUUID()}.pdf`;
     fs.writeFileSync(path.join(env.UPLOADS_DIR, 'lesson-materials', file), '%PDF-1.7\nM0 study fixture\n%%EOF');
     const material = await db.material.create({ data: { lessonId: lesson.id, title: 'M0 study PDF', fileType: 'application/pdf', fileUrl: `/uploads/lesson-materials/${file}`, sizeBytes: 40 } });
+    const secondMaterial = await db.material.create({ data: { lessonId: lesson.id, title: 'M0 second PDF', fileType: 'application/pdf', fileUrl: `/uploads/lesson-materials/${file}`, sizeBytes: 40 } });
     const assignment = await db.assignment.create({ data: { lessonId: lesson.id, createdById: fixture.users.teacher.id, titleEn: 'M0 assignment', titleAr: 'واجب الاختبار', maxAttempts: 3 } });
-    fixture.courses[locale] = { id: course.id, lessonId: lesson.id, materialId: material.id, assignmentId: assignment.id };
+    fixture.courses[locale] = { id: course.id, lessonId: lesson.id, materialId: material.id, secondMaterialId: secondMaterial.id, assignmentId: assignment.id };
   }
   fs.writeFileSync(env.M0_FIXTURE_PATH, JSON.stringify(fixture));
   npm(['run', 'build'], server);
-  npm(['run', 'build'], client, { NODE_ENV: 'production' });
+  if (env.M0_WEB_MODE !== 'dev') npm(['run', 'build'], client, { NODE_ENV: 'production' });
   const cli = path.join(path.dirname(require.resolve('@playwright/test/package.json', { paths: [client] })), 'cli.js');
   const result = spawnSync(process.execPath, [cli, 'test', '--config=playwright.m0.config.ts', ...process.argv.slice(2)], { cwd: client, env, stdio: 'inherit' });
   if (result.status !== 0) process.exitCode = result.status ?? 1;

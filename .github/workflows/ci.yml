@@ -135,7 +135,11 @@ jobs:
           path: audit/m0/*audit.json
 
   browser-m0:
-    name: M0 English and Arabic desktop/mobile journeys
+    name: M0 ${{ matrix.mode }} desktop/mobile journeys
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [production, development]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -151,6 +155,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
+      M0_WEB_MODE: ${{ matrix.mode == 'development' && 'dev' || 'production' }}
       DATABASE_URL: postgresql://testuser:testpassword@localhost:5433/eduplatform_test?schema=public
       DIRECT_URL: postgresql://testuser:testpassword@localhost:5433/eduplatform_test?schema=public
     steps:
@@ -175,7 +180,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: m0-browser-evidence
+          name: m0-browser-evidence-${{ matrix.mode }}
           path: |
             client/playwright-report/m0/
             client/test-results/

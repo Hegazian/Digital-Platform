@@ -2,6 +2,8 @@
 
 Reviewed **21 October 2026**. Exact lockfile hashes, counts, paths and expiry are in [dependency verification](../audit/m0/dependency-verification.json), with [server](../audit/m0/server-audit.json) and [client](../audit/m0/client-audit.json) reports. Reproduce using `node docs/scripts/audit-dependencies.cjs` from the repository root; an unavailable advisory service is an error.
 
+Refreshed **22 October 2026** during the [second review round](M0_REVIEW_ROUND_2.md), with explicit user authorization for NPM metadata transfer. Lockfiles are unchanged; the policy still passes with zero runtime advisory packages and the same nine development-only exceptions.
+
 ## Runtime remediation
 
 - Next.js **14.2.35 → 16.4.2**, React/React DOM **19.3.1**, and Tiptap **3.32.0** address the runtime framework/editor advisories. Existing lesson content is preserved; the editor uses explicit deferred browser rendering. The migration follows the official [Next 16 upgrade guide](https://nextjs.org/docs/app/guides/upgrading/version-16) and [Tiptap v2-to-v3 guide](https://tiptap.dev/docs/guides/upgrade-tiptap-v2).

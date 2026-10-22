@@ -4,6 +4,8 @@ Finalized **21 October 2026** on `codex/finalize-milestone-0`. **The M0 engineer
 
 All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_RESOLUTION.md) and the [step-by-step manual guide](M0_MANUAL_TESTING.md).
 
+**Latest review: 22 October 2026.** The [second review round](M0_REVIEW_ROUND_2.md) records additional confirmed fixes, expanded dashboard/session/cancellation coverage and the latest results. The counts below preserve the original 21 October checkpoint evidence; use the second-round record for the current branch.
+
 ## Implemented in this working tree
 
 - The agreed product direction is uploader-driven. AI tutoring endpoints/UI and provider wiring were removed; the remaining AI-named integration test verifies that legacy AI and raw upload endpoints are unavailable.
@@ -17,7 +19,7 @@ All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_
 - Assignment handlers call their static helpers through the class; schema/service upload references agree and require an uploader-bound signed token. Client links/PDFs use authenticated blob delivery. Enrollment/verified-checkout reload protected curriculum. Playback credentials renew before expiry and preserve pause/position/speed. Arabic state restores after hydration without a mismatch.
 - Production startup refuses missing/public/unverifiable educational storage buckets. Disabled gateways no longer require production secrets. Framework/editor/runtime dependencies were patched and the source distribution metadata is private/UNLICENSED.
 
-## Verification completed
+## Original checkpoint verification — 21 October
 
 - Server: `npm run typecheck` and `npm run build` passed.
 - Client: `npm run typecheck` and `npm run build` passed.

@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-22",
+  "baseCommit": "fbe5fbf",
+  "status": "Passed local regression gates; full-product release gates remain open",
+  "server": {
+    "files": 77,
+    "tests": 397,
+    "coverage": {
+      "lines": {
+        "total": 3517,
+        "covered": 2562,
+        "skipped": 0,
+        "pct": 72.84
+      },
+      "statements": {
+        "total": 3707,
+        "covered": 2669,
+        "skipped": 0,
+        "pct": 71.99
+      },
+      "functions": {
+        "total": 603,
+        "covered": 554,
+        "skipped": 0,
+        "pct": 91.87
+      },
+      "branches": {
+        "total": 2434,
+        "covered": 1538,
+        "skipped": 0,
+        "pct": 63.18
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "commands": {
+      "npm run typecheck": "passed",
+      "npm run build": "passed",
+      "npm run test:coverage": "passed"
+    }
+  },
+  "client": {
+    "files": 9,
+    "tests": 63,
+    "coverage": {
+      "lines": {
+        "total": 3685,
+        "covered": 401,
+        "skipped": 0,
+        "pct": 10.88
+      },
+      "statements": {
+        "total": 4018,
+        "covered": 454,
+        "skipped": 0,
+        "pct": 11.29
+      },
+      "functions": {
+        "total": 1156,
+        "covered": 76,
+        "skipped": 0,
+        "pct": 6.57
+      },
+      "branches": {
+        "total": 3652,
+        "covered": 414,
+        "skipped": 0,
+        "pct": 11.33
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 25
+    },
+    "coverageGates": "Passed: explicit API, proxy, protected-file and playback thresholds",
+    "commands": {
+      "npm run typecheck": "passed",
+      "npm run build": "passed",
+      "npm run test:coverage": "passed",
+      "npm run lint": "passed (0 errors, 25 warnings)"
+    }
+  },
+  "browser": {
+    "production": {
+      "result": "passed",
+      "tests": 24,
+      "skipped": 0,
+      "browser": "Playwright Chromium 156.0.8078.4",
+      "projects": [
+        "Desktop Chrome",
+        "Pixel 5 emulation"
+      ],
+      "api": "real isolated local server",
+      "database": "dedicated eduplatform_test",
+      "command": "npm run test:m0:browser",
+      "duration": "1.6 minutes"
+    },
+    "development": {
+      "result": "passed",
+      "tests": 24,
+      "skipped": 0,
+      "browser": "Playwright Chromium 156.0.8078.4",
+      "projects": [
+        "Desktop Chrome",
+        "Pixel 5 emulation"
+      ],
+      "api": "real isolated local server",
+      "database": "dedicated eduplatform_test",
+      "command": "M0_WEB_MODE=dev npm run test:m0:browser",
+      "duration": "3.2 minutes",
+      "coldNavigationBudgetSeconds": 30
+    }
+  },
+  "dependencies": {
+    "checkedAt": "2026-10-22T08:30:48.126Z",
+    "liveRefresh": "passed after explicit user authorization",
+    "runtimeAdvisoryPackages": 0,
+    "serverTotal": 0,
+    "clientDevExceptions": 9,
+    "locks": [
+      {
+        "package": "server",
+        "sha256": "2b0810fab3257fe4ef16da1314bcbff201fafd46772b30e671639165a4cfb347"
+      },
+      {
+        "package": "client",
+        "sha256": "1dea396cc0109f451585f840d674fed65274433cb4f72601177db2bf3203f4ed"
+      }
+    ]
+  },
+  "limits": "Local M0 regression evidence only; full-product coverage and G1-G3 remain open.",
+  "environment": {
+    "os": "Windows",
+    "node": "v26.7.0",
+    "ciNode": "22 (configured; remote workflow not executed)"
+  },
+  "documentation": {
+    "command": "node docs/scripts/validate-docs.cjs",
+    "tasks": 77,
+    "findings": 58,
+    "acceptanceCases": 42,
+    "archivedOriginals": 13,
+    "result": "passed"
+  },
+  "workflowYaml": "Parsed locally; separate production/development browser matrix jobs configured",
+  "releaseTargets": {
+    "statements": 80,
+    "branches": 75,
+    "functions": 80,
+    "lines": 80,
+    "wholeSourceTargetMet": false
+  }
+}

@@ -61,8 +61,8 @@ export default function PlatformSettings() {
     exchangeRateUsdToEgp: 48,
     requireCourseApproval: true,
     allowTeacherRegistration: true,
-    enableCodePlaygrounds: true,
-    enableCollaborativeBoards: true,
+    enableCodePlaygrounds: false,
+    enableCollaborativeBoards: false,
     primaryColor: '#4f46e5',
     homeContent: DEFAULT_HOME_CONTENT,
   });

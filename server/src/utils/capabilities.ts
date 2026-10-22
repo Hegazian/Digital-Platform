@@ -19,6 +19,16 @@ export function isCapabilityEnabled(capability: PlatformCapability): boolean {
   return RELEASED_CAPABILITIES[capability];
 }
 
+/** Read-only presentation snapshot; guards above remain the authority. */
+export function getPublicCapabilities() {
+  return {
+    codeExecution: isCapabilityEnabled('CODE_EXECUTION'),
+    collaborativeBoards: isCapabilityEnabled('COLLABORATIVE_BOARDS'),
+    developerIntegrations: isCapabilityEnabled('DEVELOPER_INTEGRATIONS'),
+    automatedPaymentGateways: isCapabilityEnabled('AUTOMATED_PAYMENT_GATEWAYS'),
+  };
+}
+
 export function requireCapability(capability: PlatformCapability) {
   return (_req: Request, res: Response, next: NextFunction) => {
     if (!isCapabilityEnabled(capability)) {

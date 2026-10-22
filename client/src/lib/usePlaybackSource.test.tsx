@@ -40,6 +40,27 @@ describe('renewable playback', () => {
     expect(result.current.error).toContain('renewed');
   });
 
+  it('restores the playback position after a failed renewal and a manual retry', async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetchApi).mockResolvedValueOnce({ data: { playbackUrl: '/stream/one' } })
+      .mockRejectedValueOnce(new Error('Temporary outage'))
+      .mockResolvedValueOnce({ data: { playbackUrl: '/stream/recovered' } });
+    const element = { currentTime: 41, paused: true, playbackRate: 1.5, play: vi.fn().mockResolvedValue(undefined) };
+    const ref = { current: element as unknown as HTMLVideoElement | null };
+    const { result } = renderHook(() => usePlaybackSource(ref, 'video-1'));
+    await tick();
+    await act(async () => { await vi.advanceTimersByTimeAsync(90_000); });
+    expect(result.current.url).toBeNull();
+    ref.current = null; // The error UI has removed the failed video element.
+    await act(async () => { result.current.retry(); });
+    expect(result.current.url).toBe('/stream/recovered');
+    const recovered = { ...element, currentTime: 0, playbackRate: 1 };
+    act(() => result.current.onLoadedMetadata({ currentTarget: recovered } as any));
+    expect(recovered.currentTime).toBe(41);
+    expect(recovered.playbackRate).toBe(1.5);
+    expect(recovered.play).not.toHaveBeenCalled();
+  });
+
   it('ignores a late response from a previously selected lesson', async () => {
     let finishOld: (data: any) => void = () => {};
     vi.mocked(fetchApi).mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; }))

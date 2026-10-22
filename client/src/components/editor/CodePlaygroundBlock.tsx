@@ -6,6 +6,7 @@ import { python } from '@codemirror/lang-python';
 import { Play, Loader2, AlertCircle } from 'lucide-react';
 import { fetchApi } from '../../lib/api';
 import { errorMessage } from '../../lib/apiTypes';
+import { useAppStore } from '@/lib/store';
 
 interface CodePlaygroundBlockProps {
   initialCode?: string;
@@ -14,6 +15,7 @@ interface CodePlaygroundBlockProps {
 const CODE_EXECUTION_AVAILABLE = false;
 
 export default function CodePlaygroundBlock({ initialCode = 'print("Hello, EduPlatform!")', language = 'python' }: CodePlaygroundBlockProps) {
+  const lang = useAppStore((state) => state.lang);
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -45,9 +47,12 @@ export default function CodePlaygroundBlock({ initialCode = 'print("Hello, EduPl
 
   if (!CODE_EXECUTION_AVAILABLE) {
     return (
-      <div className="p-4 bg-slate-100 border border-slate-200 rounded-md text-slate-500 text-sm flex items-center gap-2">
-        <AlertCircle size={16} />
-        Code execution is not available yet. The lesson code sample remains available for reading.
+      <div className="p-4 bg-slate-900 border border-slate-700 rounded-xl text-slate-300 text-sm space-y-3">
+        <p role="status" className="flex items-center gap-2">
+          <AlertCircle size={16} />
+          {lang === 'ar' ? 'تشغيل الكود غير متاح حالياً. يمكنك قراءة مثال الدرس.' : 'Code execution is not available yet. You can read the lesson code sample.'}
+        </p>
+        <pre dir="ltr" className="overflow-x-auto rounded-lg bg-slate-950 p-3"><code>{initialCode}</code></pre>
       </div>
     );
   }

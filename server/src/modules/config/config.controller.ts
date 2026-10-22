@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../prisma";
+import { getPublicCapabilities } from "../../utils/capabilities";
 
 export const getAppConfig = async (req: Request, res: Response) => {
   try {
@@ -13,7 +14,7 @@ export const getAppConfig = async (req: Request, res: Response) => {
 
     // Never advertise staged capabilities as enabled, even if an old row or
     // forged admin setting stored true.
-    res.status(200).json({ success: true, data: config ? { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false } : {} });
+    res.status(200).json({ success: true, data: { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false, capabilities: getPublicCapabilities() } });
   } catch (error) {
     res.status(200).json({
       success: true,
@@ -31,6 +32,7 @@ export const getAppConfig = async (req: Request, res: Response) => {
         enableCodePlaygrounds: false,
         enableCollaborativeBoards: false,
         primaryColor: "#4f46e5",
+        capabilities: getPublicCapabilities(),
       },
     });
   }
@@ -101,7 +103,7 @@ export const updateAppConfig = async (req: Request, res: Response) => {
     }
 
     // The row already contains exactly what was provided + prior values.
-    res.status(200).json({ success: true, data: config ? { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false } : {} });
+    res.status(200).json({ success: true, data: { ...config, requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false, capabilities: getPublicCapabilities() } });
   } catch (error: any) {
     console.error("Failed to update config:", error);
     res.status(500).json({ success: false, message: error?.message || "Failed to update config" });

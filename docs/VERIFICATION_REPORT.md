@@ -10,7 +10,7 @@ Status: **PASSED**.
 | Original finding owners | 58 / 58 |
 | Original acceptance dispositions | 42 / 42 |
 | Dependency edges / cycles | 158 / none |
-| Local links / heading links checked | 1963 / 478 |
+| Local links / heading links checked | 1987 / 480 |
 | Exact archived originals / SHA-256 | 13 / preserved |
 | Required task sections, source paths and tests | passed |
 | Contract-owner register / disabled API matrix | passed |
