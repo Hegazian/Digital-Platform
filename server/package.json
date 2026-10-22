@@ -11,9 +11,12 @@
     "test:coverage": "node scripts/test-env.cjs --coverage",
     "test:coverage:release": "node scripts/test-env.cjs --coverage --release-coverage",
     "typecheck": "tsc --noEmit",
-    "db:push": "prisma db push",
+    "db:push": "node scripts/db-env.js .env db push",
     "db:push:test": "node scripts/db-env.js .env.test db push",
     "db:reset:test": "node scripts/db-env.js .env.test db push --force-reset",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:test": "node scripts/db-env.js .env.test migrate deploy",
+    "db:migrate:fixture": "node scripts/migration-upgrade-fixture.cjs",
     "db:seed": "npx prisma db seed",
     "create:admin": "node create-admin.js"
   },

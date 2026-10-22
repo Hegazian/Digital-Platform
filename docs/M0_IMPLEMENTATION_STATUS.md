@@ -56,7 +56,7 @@ The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with
 2. In the deployment environment, rotate any previously used or exposed credentials; verify the deployed secrets and remove bootstrap credentials.
 3. Provision the production private storage bucket and test that its origin denies anonymous reads; verify object migration and authorized playback/download end to end.
 4. Provision ClamAV, run clean/infected/unavailable/timeout upload checks through the production upload route, and ensure the reverse proxy enforces upload size limits.
-5. Run a migration/rollback rehearsal against a representative copy and record asset/user/history counts. The local `db:push:test` check only validated the dedicated test database.
+5. Run the remaining ENG-05 migration/rollback and full backup/restore rehearsal against a representative copy; record asset/user/history counts. The passing fixture builds historical and empty schemas only inside unique namespaces of the dedicated test database.
 6. Resolve the public source-distribution license before public distribution, and capture an operational release owner’s sign-off. Current private/UNLICENSED metadata grants no public distribution license.
 
 These checks remain mandatory before real traffic under the [operations hold](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold). They are not silently waived by the internal M0 checkpoint or the branch commit.

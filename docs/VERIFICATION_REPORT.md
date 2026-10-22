@@ -6,11 +6,11 @@ Status: **PASSED**.
 
 | Check | Result |
 |---|---|
-| Individual task files / status counts | 77 / 15 complete, 1 in progress, 61 planned |
+| Individual task files / status counts | 77 / 15 complete, 2 in progress, 60 planned |
 | Original finding owners | 58 / 58 |
 | Original acceptance dispositions | 42 / 42 |
 | Dependency edges / cycles | 158 / none |
-| Local links / heading links checked | 2293 / 500 |
+| Local links / heading links checked | 2307 / 500 |
 | Exact archived originals / SHA-256 | 13 / preserved |
 | Required task sections, source paths and tests | passed |
 | Current checkpoint/counts/coverage and M1 wave ownership/order | passed |

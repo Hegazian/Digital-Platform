@@ -32,7 +32,7 @@ const statusOverrides = {
   'SEC-01': 'Complete', 'SEC-02': 'Complete', 'SEC-03': 'Complete',
   'SEC-04': 'Complete', 'SEC-05': 'Complete', 'SEC-08': 'Complete',
   'SEC-09': 'Complete', 'SEC-10': 'Complete', 'SEC-11': 'Complete',
-  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-13': 'In Progress',
+  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-05': 'In Progress', 'ENG-13': 'In Progress',
   'ENG-15': 'Complete'
 };
 
@@ -234,7 +234,7 @@ function taskText(t) {
 | Acceptance links | ${acceptance.length ? acceptance.map(c => `[${c.id}](../AUDIT_TRACEABILITY.md#${c.id.toLowerCase()})`).join(', ') : 'Task-specific cases below; also the shared release protocol.'} |
 | Release disposition | ${t.id === 'ENG-13' ? 'M0 harness/dependency subgate Complete; full-product coverage and production CI evidence remain In Progress through G3.' : t.milestone === 'M4' ? 'Post-launch; disabled at the API until this task and its enablement gate pass.' : (['SEC-15','LRN-08'].includes(t.id) ? 'Required launch containment; future enablement has a separate owning task.' : 'Required before completing this milestone; no release credit for documentation alone.')} |
 
-${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.\n' : ''}
+${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.\n' : ''}
 
 ## Current delivery and next action
 

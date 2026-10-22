@@ -1,14 +1,14 @@
 # Migration and operations plan
 
-Refreshed **22 October 2026** against application checkpoint **d9c720f**. [Current status](CURRENT_STATUS.md) distinguishes local evidence from external holds. **Next implementation is [ENG-05](NEXT_STEPS.md#first-implementation-task--eng-05)**: reviewed migration history, populated upgrade and restore verification. This plan does not record a production operation as completed.
+Refreshed **22 October 2026** against M0 application checkpoint **d9c720f**. [Current status](CURRENT_STATUS.md) distinguishes local migration-fixture evidence from external holds. **ENG-05 is In Progress** with the checked-in baseline, bridge and populated test fixture; the remaining work is remote CI, restored-copy inspection and backup/restore rehearsal. This plan records no production operation as completed.
 
 ## M0 upgrade and production hold
 
 M0 is an internal synthetic-data safety checkpoint. Production configuration, live credential rotation, object checksums/cutover and representative backup/restore sign-off remain mandatory before real traffic. Local tests and CI configuration do not certify those external systems.
 
-The prototype has no baseline Prisma migration chain yet. M0 supplies the small, additive [auth-version SQL bridge](../server/prisma/upgrades/m0-auth-version.sql); ENG-05 owns the full verified baseline and ordered migrations in M1. On an existing deployment, take a backup, verify the direct migration connection, apply the bridge through the approved migration runner, compare user counts/IDs, and require a new sign-in. It adds the column if absent, advances early version-0 accounts to 1, and retains higher versions. The automated upgrade rehearsal uses a disposable prior-schema user table and confirms preservation/idempotency. It does not replace a full production-copy rehearsal.
+ENG-05 checks in an immutable create-only baseline generated from the exact pre-M0 schema at `2fbdc8e`, followed by the existing additive [auth-version SQL bridge](../server/prisma/upgrades/m0-auth-version.sql). A new database applies both migrations. For an existing database, never run that create-only baseline on populated tables. Take and verify a backup, stop schema writers, compare a restorable copy with the exact pre-M0 or current schema using read-only Prisma diff, and resolve the baseline as applied only after an empty diff confirms the actual starting point. Then deploy the idempotent bridge. It adds the column if absent, advances early version-0 accounts to 1, and retains higher versions. An unexpected schema diff or unknown migration history blocks resolution pending an explicit reviewed migration plan. The synthetic populated rehearsal verifies pre-M0 schema match and preserves IDs/values; it does not replace a full representative backup/restore rehearsal.
 
-For local test databases, `npm run db:push:test` is allowlisted for `localhost/eduplatform_test`; production `db push` and force-reset are prohibited. Keep `authVersion` and the patched security boundaries during rollback. Never restore public files, the tutor, or host execution as a rollback path. Historical accounts, scores, progress, submissions and financial records must remain intact.
+For new databases, use `npm run db:migrate`. The server and browser CI jobs use `npm run db:migrate:test` on their fresh isolated PostgreSQL service. `npm run db:migrate:fixture` creates and cleans up run-unique schemas in the dedicated local test database. `npm run db:push` is guarded to local `eduplatform_dev`; `npm run db:push:test` is guarded to local `eduplatform_test`. Production `db push` and force-reset are prohibited. Keep `authVersion` and the patched security boundaries during rollback. Never restore public files, the tutor, or host execution as a rollback path. Historical accounts, scores, progress, submissions and financial records must remain intact.
 
 Before traffic, operators must:
 
@@ -20,7 +20,7 @@ Before traffic, operators must:
 
 No production deployment, credential rotation or bucket mutation was performed during this M0 implementation. The [manual guide](M0_MANUAL_TESTING.md) covers local verification.
 
-Version **1.1 — planned operations**, 22 October 2026. This document defines work to implement and rehearse; no production migration, deployment, secret rotation or data deletion is authorized by merely generating this package. Domain task details and C01–C10 govern exact commands and schemas. CI is configured for Node 22 and separate production/development browser jobs; preserve a successful remote run for the actual release commit before onboarding.
+Version **1.2 — planned operations**, 22 October 2026. This document defines work to implement and rehearse; no production migration, deployment, secret rotation or data deletion is authorized by merely generating this package. Domain task details and C01–C10 govern exact commands and schemas. CI is configured for Node 22 and separate production/development browser jobs; preserve a successful remote run for the actual release commit before onboarding.
 
 ## Preflight and preservation inventory
 

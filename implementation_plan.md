@@ -1,10 +1,10 @@
 # Implementation plan
 
-**Updated: 22 October 2026**, application checkpoint **d9c720f**. M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [current results and remaining gaps](docs/CURRENT_STATUS.md). **Next: [ENG-05 migration baseline](docs/NEXT_STEPS.md#first-implementation-task--eng-05)**, then the ordered M1 waves while ENG-13 continues testing. Previous content is [superseded and preserved](docs/archive/implementation_plan.md).
+**Updated: 22 October 2026**, M0 application checkpoint **d9c720f**. M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [current results and remaining gaps](docs/CURRENT_STATUS.md). ENG-05's migration chain and populated fixture pass locally; **complete remote CI and backup/restore review** before moving to dependent M1 work. See the [ENG-05 evidence and plan](docs/NEXT_STEPS.md#first-implementation-task--eng-05). Previous content is [superseded and preserved](docs/archive/implementation_plan.md).
 
 The former parity/microservice/AI schedule is **superseded**. The current plan is [five milestones and ordered dependencies](docs/ROADMAP_BACKLOG.md). **M0 is complete for internal engineering; M1 is next.** The [detailed handoff](docs/NEXT_STEPS.md) contains all 25 M1 tasks, their dependencies, the first implementation scope and exit evidence.
 
-1. **ENG-05 first:** reviewed Prisma migration history, empty/populated upgrade preservation, disposable prior-schema fixtures and restore/rollback verification.
+1. **Complete ENG-05 validation:** reviewed Prisma migration history, empty/populated upgrade preservation, disposable prior-schema fixtures and restore/rollback verification.
 2. **M1 foundation:** shared contracts and Egyptian academic metadata; canonical modules; common access and effective dates; managed private assets; audit/outbox; atomic sessions/MFA and recoverable commerce primitives. Use the five dependency waves in the handoff.
 3. **ENG-13 throughout:** retain M0 regressions, add domain/component/concurrency/migration evidence, obtain remote Node 22 CI results and meet the existing G3 coverage target. Resolve development advisory exceptions before paid release or 19 January 2027.
 4. **M2 authoring/learning:** manual editing and import preview, exact-revision teacher approval, accessible ordered content, versioned assessments, assignments, progress and complete Arabic/English journeys.

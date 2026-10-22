@@ -1,39 +1,38 @@
 # Next implementation steps
 
-Updated **22 October 2026** against verified application commit **d9c720f**. M0 internal engineering is complete; this is the implementation handoff for **M1 — Foundation and content delivery**. Current verification, caveats and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md). No application migration, deployment or M1 implementation was performed by this documentation update.
+Updated **22 October 2026** against the M0 application checkpoint **d9c720f**. M0 internal engineering is complete; ENG-05 is In Progress with a local migration chain and populated-upgrade fixture. This is the remaining M1 handoff. Current verification, caveats and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md). Production migration, remote CI and backup/restore remain open.
 
 ## Start here
 
 1. Retain the committed M0 regressions and review the [current status](CURRENT_STATUS.md), [target architecture](TARGET_ARCHITECTURE.md), [contracts](API_DATA_CONTRACTS.md) and [operations holds](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
-2. Implement **[ENG-05](tasks/ENG-05.md) first**. Prepare a reviewed migration baseline and disposable populated upgrade fixture before adding the next schema-dependent feature. Do not apply generated baseline SQL to existing tables blindly.
+2. Complete **[ENG-05](tasks/ENG-05.md) before starting dependent schema features**. The reviewed baseline and disposable populated upgrade fixture now pass locally. Obtain the remote Node 22 run, inspect a restored representative database with a read-only diff, and complete the rollback/restore rehearsal. Never apply generated baseline SQL to existing tables blindly.
 3. Continue **[ENG-13](tasks/ENG-13.md)** throughout: keep local gates green, obtain a remote Node 22 CI result, add semantic domain/component/concurrency tests with each task, and work toward the existing release coverage target. Resolve development advisory exceptions before paid release or 19 January 2027.
 4. Follow the M1 waves below; complete each task's own prerequisites and acceptance evidence. Independent work may overlap, but dependent schema/API work must consume the owning implementation.
 5. Review **G1** using real upgrade, private-storage, access, session and outage evidence; then advance to M2 authoring/learning and M3 manual paid pilot. Keep all staged features denied at the API.
 
 ## First implementation task — ENG-05
 
-Owner: database migrations and operations. Status: **Planned**, priority **P1**. See the [full task](tasks/ENG-05.md) and [migration runbook](MIGRATION_OPERATIONS.md). The original missing DIRECT_URL example has already been corrected in M0; do not repeat that as an unresolved defect. The additive auth-version bridge and its limited prior-schema user-table test do not establish a full migration chain.
+Owner: database migrations and operations. Status: **In Progress**, priority **P1**. See the [full task](tasks/ENG-05.md), [implementation evidence](ENG05_IMPLEMENTATION.md) and [migration runbook](MIGRATION_OPERATIONS.md). The original missing DIRECT_URL example has already been corrected in M0; do not repeat that as an unresolved defect. The exact pre-M0 baseline, auth-version migration and local fixture are implemented. Remote CI and representative restore/rollback/operator review remain open.
 
-1. Inventory the checked-in Prisma schema, the pre-M0 and current database shapes, existing IDs/FKs, SQL bridge and fixture/reset scripts. Identify drift, orphan records and unsupported variants explicitly. Keep the existing authVersion values and security guards.
-2. Create reviewed initial migration history, migration lock metadata and package commands for deployment. On an existing verified matching database, baseline using the documented resolve procedure; on an empty database, apply the initial migration. Never run an initial create-tables migration against populated tables or force-reset a non-test database.
-3. Add a deterministic, synthetic populated prior-schema fixture with users, lessons, progress, assessment/assignment history, grants/subscriptions, orders/payments and private-file references. Prove empty installation and populated upgrade converge to the expected schema while retaining original IDs, relationships and values. Validate the M0 auth-version transition without resetting versions above 1.
-4. Replace release/CI schema push with reviewed migration deployment after tests prove the baseline. Preserve the current explicit host/database test safety checks before any write. Separate runtime and direct migration credentials; document schema-drift and interrupted-migration recovery.
-5. Rehearse backup/restore and compatible code rollback or forward repair against disposable representative data and asset references. Compare counts/checksums and historical scores/access before and after; capture failures rather than silently repairing or deleting anomalies.
-6. Run ENG-05-T01–T03 and applicable T90–T92, migration rerun/interrupt/drift tests, then impacted server/client and production/development browser regressions. Record exact commit, commands, schema diff, preservation report and recovery evidence. Mark ENG-05 Complete only after review; a local fixture does not substitute for later deployment-specific restore sign-off.
+1. **Complete:** inventory the pre-M0/current schema difference; check in the immutable 2fbdc8e schema snapshot; generate and verify its baseline SQL; preserve the idempotent M0 authVersion bridge as the next migration. Existing production history is not marked as applied by CI or local tests.
+2. **Complete:** add migrate-deploy/test commands and replace CI's schema-push setup with reviewed migration application. Guard schema push to local development or the dedicated test database.
+3. **Complete locally:** the isolated fixture migrates an empty schema and verifies exact current-schema parity; builds the historical pre-M0 schema in a second unique schema; runs a read-only diff; seeds bilingual courses, grades, lessons, quiz/assessment attempts, assignment work/files, orders and entitlements; resolves the baseline; applies the bridge; and verifies every row and both auth versions survive a repeated deploy.
+4. **Remaining:** verify a restored representative copy using the runbook's read-only diff and practice the migration-history adoption procedure, including code rollback/forward repair and before/after counts/checksums. Do not apply baseline create-table SQL to populated tables.
+5. **Remaining:** obtain successful remote Node 22 CI for this implementation, inspect all migration artifacts and task acceptance evidence, and rehearse an actual database backup/restore before marking the task Complete.
 
 First-task exclusions: no taxonomy, canonical course migration, managed asset schema, new commerce model or assessment revision engine in this baseline task. Those owners add their own subsequent ordered migrations. No production database changes are authorized by this planning document.
 
 ## M1 implementation waves
 
-Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. All 25 M1 tasks remain Planned; ENG-13 is the continuing M0 task and is tracked separately. Only wave 1 is fully ready from the current completed-dependency set.
+Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. ENG-05 is In Progress and 24 other M1 tasks remain Planned; ENG-13 also remains In Progress. Only wave 1 is ready from the current completed-dependency set.
 
 ### Wave 1 — Migration baseline and independent reliability
 
 [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md), [ENG-02](tasks/ENG-02.md).
 
-Start ENG-05 first. In parallel where capacity permits, make readiness/shutdown honest, bound existing media/range handling, and persist validated configuration with EGP charge semantics.
+Finish ENG-05 remote CI and representative restore/recovery evidence. In parallel where capacity permits, make readiness/shutdown honest, bound existing media/range handling, and persist validated configuration with EGP charge semantics.
 
-Exit evidence: Empty and populated upgrade/restore evidence; outage/shutdown tests; range/disconnect tests; config reload and EGP assertions.
+Exit evidence: ENG-05 remote migration/fixture pass and restored-copy diff/restore rehearsal; outage/shutdown tests; range/disconnect tests; config reload and EGP assertions.
 
 ### Wave 2 — Shared data, identity and commerce primitives
 
@@ -71,7 +70,7 @@ Exit evidence: Concurrent price edits/purchases preserve snapshots; all M1 task 
 
 - Every implemented task adds meaningful positive/negative, cross-account, real database concurrency/recovery, migration and Arabic/English tests as applicable. Keep the 397-server/63-client and 24-per-mode browser checkpoint as historical regression evidence; record new counts for the new commit instead of treating them as a fixed test quota.
 - Use [M0 manual steps](M0_MANUAL_TESTING.md) for current flows. Recheck disabled developer tabs with no requests, malformed cookies, transient refresh failures, protected course inspection, rapid PDF/course switches, failed video renewal retry, mobile profile/logout, enrollment and assignment delivery in both locales.
-- Before local integration tests, verify the dedicated test target. Existing schema push is limited to disposable tests until ENG-05 replaces it. Never use destructive fixture cleanup on a shared or real-student database.
+- Before local integration tests, verify the dedicated test target. Existing schema push is limited to local development and disposable test fixtures; install/upgrade workflows use reviewed migrations. Never use destructive fixture cleanup on a shared or real-student database.
 - Preserve exact CI artifacts and coverage denominators. The [coverage inventory](../audit/review-round-2/coverage-gaps.json) and [domain ownership table](TESTING_RELEASE_GATES.md#untested-and-incompletely-tested-domain-ownership) identify what still needs tests. Do not claim every feature tested because every dashboard tab opened.
 - Regenerate docs using 'node docs/scripts/build-docs.cjs', validate using 'node docs/scripts/validate-docs.cjs', and update current evidence only when new checks actually run. Keep the 58 finding IDs, 42 acceptance dispositions and immutable archived originals.
 

@@ -1,8 +1,8 @@
 # Current implementation status
 
-Documentation refreshed **22 October 2026**. Latest locally verified application commit: **d9c720f**, on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. This page summarizes [22 October machine-readable evidence](../audit/review-round-2/verification.json), not a new application test run performed by the documentation refresh.
+Documentation refreshed **22 October 2026**. Latest M0 application/browser regression checkpoint: **d9c720f**, on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. ENG-05's schema migration and populated fixture were separately executed against this working tree. This page summarizes [22 October machine-readable M0 evidence](../audit/review-round-2/verification.json); migration results are in [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md).
 
-**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 1 In Progress, 61 Planned**. ENG-13 owns the continuing release-test obligation. No new task is marked complete by this update.
+**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 2 In Progress, 60 Planned**. ENG-05 and ENG-13 are In Progress: the migration fixture passes locally, while remote CI and representative backup/restore rehearsal remain open. See [ENG-05 evidence](ENG05_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
 
 ## Latest local verification — 22 October
 
@@ -18,6 +18,7 @@ Documentation refreshed **22 October 2026**. Latest locally verified application
 | Server whole-source coverage, statements / branches / functions / lines | 71.99% / 63.18% / 91.87% / 72.84% |
 | Client whole-source coverage, statements / branches / functions / lines | 11.29% / 11.33% / 6.57% / 10.88% |
 | NPM audit, both runtime trees | 0 reported advisory packages; server 0 total; client 9 development-only exceptions |
+| Migration install / populated-upgrade fixture | Passed locally in unique schemas in dedicated PostgreSQL test database; schemas cleaned up |
 | Remote CI / production deployment | Configured, not verified remotely / not performed |
 
 Local environment: Windows, Node 26.7.0; CI is configured for Node 22. Browser runs use Chromium 156.0.8078.4, desktop and Pixel 5 emulation. These runs do not establish Firefox/WebKit or actual Android/iOS device acceptance. The two browser modes execute the same 24 checks; they are not 48 distinct feature cases.
@@ -28,7 +29,7 @@ Local environment: Windows, Node 26.7.0; CI is configured for Node 22. Browser r
 - Current database-backed role/approval/activation/session-version enforcement; public catalog/protected curriculum separation; student-safe assessment serialization; authenticated teacher actor binding.
 - Protected local files, signed uploader-bound submission references, signature/scanner checks and private-Supabase startup validation. Short-lived playback renewal and authenticated PDF/download delivery are covered locally.
 - Dashboard capability presentation, admin curriculum inspection, cancellation handling, Next proxy convention, refresh recovery, mobile logout and stale-course/playback retry regressions are fixed. See the [second review](M0_REVIEW_ROUND_2.md) and [first review](M0_REVIEW_RESOLUTION.md).
-- Safe isolated tests and CI definitions are present. A small [auth-version bridge](../server/prisma/upgrades/m0-auth-version.sql) exists; the full migration baseline does not yet exist.
+- Safe isolated tests and CI definitions are present. ENG-05 adds a full exact pre-M0 schema baseline and the idempotent [auth-version bridge](../server/prisma/upgrades/m0-auth-version.sql) as a versioned migration. Empty installs and a populated synthetic prior-schema upgrade pass inside disposable schemas. Existing production databases have not been baselined; operators must verify a restored-copy diff before resolving history.
 
 ## Remaining evidence and release holds
 
@@ -42,4 +43,4 @@ Automated Paymob/Fawry, guardian portal, certificates, offline packs, realtime w
 
 ## Current execution frontier
 
-**Start with [ENG-05](tasks/ENG-05.md).** Other M1 tasks with all recorded dependencies Complete are [ENG-02](tasks/ENG-02.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md). Readiness means prerequisites permit starting, not that implementation or tests have passed. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves, exact first-task scope and release evidence.
+**Continue [ENG-05](tasks/ENG-05.md) through remote CI and restore/recovery evidence**, then start the following ready M1 tasks: [ENG-02](tasks/ENG-02.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md). Readiness means prerequisites permit starting, not that implementation or tests have passed. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining ENG-05 evidence.

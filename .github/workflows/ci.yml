@@ -59,8 +59,11 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Sync database schema
-        run: npx prisma db push --skip-generate
+      - name: Apply reviewed migrations to the empty test database
+        run: npm run db:migrate:test
+
+      - name: Verify populated pre-M0 upgrade and preservation
+        run: npm run db:migrate:fixture
 
       - name: Typecheck
         run: npm run typecheck
@@ -169,7 +172,7 @@ jobs:
         working-directory: server
       - run: npx prisma generate
         working-directory: server
-      - run: npm run db:push:test
+      - run: npm run db:migrate:test
         working-directory: server
       - run: npm ci
         working-directory: client
