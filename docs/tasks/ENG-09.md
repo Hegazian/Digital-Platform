@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **In Progress** |
 | Implementation owner | Media transport containment; ENH-03 owns processing |
-| Dependencies | [SEC-03](SEC-03.md) |
+| Dependencies | [SEC-03](../archive/completed/M0/SEC-03.md) |
 | Original finding / request | [ENG-09 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S/C |
 | Acceptance links | [A29](../AUDIT_TRACEABILITY.md#a29) |

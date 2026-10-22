@@ -1,6 +1,6 @@
 # M0 follow-up review resolution
 
-The first read-only review against baseline `2fbdc8e65a5bd5c33f749ed04b65155e9e06e1e2` identified five introduced regressions, resolved at **fbe5fbf**. These remain fixed at the **22 October d9c720f** checkpoint. This document preserves that first review's evidence; the [second review](M0_REVIEW_ROUND_2.md) records twelve additional fixes. [Current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md) are the active handoff. Findings extend existing owning tasks instead of creating duplicate task engines.
+The first read-only review against baseline `2fbdc8e65a5bd5c33f749ed04b65155e9e06e1e2` identified five introduced regressions, resolved at **fbe5fbf**. These remain fixed at the **22 October d9c720f** checkpoint. This document preserves that first review's evidence; the [second review](M0_REVIEW_ROUND_2.md) records twelve additional fixes. [Current status](../../CURRENT_STATUS.md) and [next steps](../../NEXT_STEPS.md) are the active handoff. Findings extend existing owning tasks instead of creating duplicate task engines.
 
 | Review finding | Implementation / owner | Regression evidence |
 |---|---|---|
@@ -12,4 +12,4 @@ The first read-only review against baseline `2fbdc8e65a5bd5c33f749ed04b65155e9e0
 
 Related verification also repaired production startup's unnecessary gateway-secret requirement, rejected weak dedicated stream keys, added a private-bucket startup gate, corrected hidden-directory protected downloads and WebM delivery MIME, stripped arbitrary answer flags from assessment option JSON, and restored persisted Arabic state after hydration. These are included in the M0 evidence; no application-host code runner or AI feature was enabled.
 
-The final commands, coverage limits and deployment holds are recorded in [M0 implementation status](M0_IMPLEMENTATION_STATUS.md). The [manual testing guide](M0_MANUAL_TESTING.md) provides the reproduction steps.
+The final commands, coverage limits and deployment holds are recorded in [M0 implementation status](M0_IMPLEMENTATION_STATUS.md). The [manual testing guide](../../M0_MANUAL_TESTING.md) provides the reproduction steps.

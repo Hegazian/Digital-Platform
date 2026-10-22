@@ -2,9 +2,9 @@
 
 Initial checkpoint finalized **21 October 2026** at **fbe5fbf**, with follow-up fixes verified **22 October** at **d9c720f**, on `codex/finalize-milestone-0`. **The M0 engineering/G0 checkpoint is complete for internal synthetic-data work.** G1–G3 and production onboarding remain gated. ENG-13 retains its broader release-coverage obligation as In Progress; its M0 harness/dependency subgate is complete. No production deployment, secret rotation or cloud-object migration is claimed.
 
-All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_RESOLUTION.md) and the [step-by-step manual guide](M0_MANUAL_TESTING.md).
+All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_RESOLUTION.md) and the [step-by-step manual guide](../../M0_MANUAL_TESTING.md).
 
-**Latest review: 22 October 2026.** The [second review round](M0_REVIEW_ROUND_2.md) records twelve additional confirmed fixes and expanded dashboard/session/cancellation coverage. [Current status](CURRENT_STATUS.md) summarizes 397 server tests, 63 client tests and 24 browser checks in each of production/development modes. Only the explicitly labeled original-checkpoint section below preserves the earlier counts. **Next: [ENG-05 and the M1 handoff](NEXT_STEPS.md)**.
+**Latest review: 22 October 2026.** The [second review round](M0_REVIEW_ROUND_2.md) records twelve additional confirmed fixes and expanded dashboard/session/cancellation coverage. [Current status](../../CURRENT_STATUS.md) summarizes 397 server tests, 63 client tests and 24 browser checks in each of production/development modes. Only the explicitly labeled original-checkpoint section below preserves the earlier counts. **Next: [ENG-05 and the M1 handoff](../../NEXT_STEPS.md)**.
 
 ## Implemented in this working tree
 
@@ -26,7 +26,7 @@ All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_
 - Server full-source coverage run: `npm run test:coverage` passed, **77 files / 397 tests**, including HTTP byte delivery/denials, safe provisioning, scanner protocol, prior-schema upgrade and current authorization checks.
 - Client: **4 files / 17 component/hook tests** passed with the delivery/playback coverage gates; lint passed with 0 errors and 26 reported warnings.
 - Actual production-build API/DB Playwright suite: **10 desktop/mobile tests passed, 0 skipped**, including English/Arabic enrollment, PDFs, uploaded assignments, staged API denials, teacher approval policy and real WebM renewal. Local browser: Chrome 155 through Playwright; CI installs the matching Chromium build.
-- Fresh dependency policy passed: **0 runtime advisory packages** in either app, 0 total server advisories, and 9 precisely scoped development-only client exceptions expiring 19 January 2027. [Report and decisions](M0_DEPENDENCY_REVIEW.md).
+- Fresh dependency policy passed: **0 runtime advisory packages** in either app, 0 total server advisories, and 9 precisely scoped development-only client exceptions expiring 19 January 2027. [Report and decisions](../../M0_DEPENDENCY_REVIEW.md).
 - Documentation links/IDs/dependencies/archive hashes are validated separately by `node docs/scripts/validate-docs.cjs`. GitHub Actions is configured with API coverage, client lint/component/build, documentation/advisory and M0 browser jobs; remote Actions execution is not claimed by local results.
 
 ## Task disposition
@@ -44,7 +44,7 @@ All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_
 
 ## Coverage and release limits
 
-Latest 22 October results include all production TS/TSX files; tests are excluded deliberately. Backend: **71.99% statements, 63.18% branches, 91.87% functions, 72.84% lines**. Client: **11.29% statements, 11.33% branches, 6.57% functions, 10.88% lines**. These are whole-source unit/component results, not feature-completeness percentages. The [portable evidence](../audit/review-round-2/verification.json) and [gap inventory](../audit/review-round-2/coverage-gaps.json) retain denominators and uncovered paths.
+Latest 22 October results include all production TS/TSX files; tests are excluded deliberately. Backend: **71.99% statements, 63.18% branches, 91.87% functions, 72.84% lines**. Client: **11.29% statements, 11.33% branches, 6.57% functions, 10.88% lines**. These are whole-source unit/component results, not feature-completeness percentages. The [portable evidence](../../../audit/review-round-2/verification.json) and [gap inventory](../../../audit/review-round-2/coverage-gaps.json) retain denominators and uncovered paths.
 
 The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with stricter per-file guards for current authorization, uploader token validation and scanning/signatures. Client protected-file, renewal, API transport and proxy paths have explicit gates. Exact current per-file results are in the [second review](M0_REVIEW_ROUND_2.md) and its reports. These narrow gates do not replace full-product coverage.
 
@@ -59,4 +59,4 @@ The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with
 5. Run the remaining ENG-05 migration/rollback and full backup/restore rehearsal against a representative copy; record asset/user/history counts. The passing fixture builds historical and empty schemas only inside unique namespaces of the dedicated test database.
 6. Resolve the public source-distribution license before public distribution, and capture an operational release owner’s sign-off. Current private/UNLICENSED metadata grants no public distribution license.
 
-These checks remain mandatory before real traffic under the [operations hold](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold). They are not silently waived by the internal M0 checkpoint or the branch commit.
+These checks remain mandatory before real traffic under the [operations hold](../../MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold). They are not silently waived by the internal M0 checkpoint or the branch commit.

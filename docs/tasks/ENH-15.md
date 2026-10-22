@@ -7,7 +7,7 @@
 | Release milestone | M4 — Post-launch enhancements |
 | Status | **Planned** |
 | Implementation owner | Isolated executor security owner |
-| Dependencies | [SEC-15](SEC-15.md), [ENG-07](ENG-07.md), [COM-01](COM-01.md) |
+| Dependencies | [SEC-15](../archive/completed/M0/SEC-15.md), [ENG-07](ENG-07.md), [COM-01](COM-01.md) |
 | Original finding / request | [Revised enhancement scope](../PRODUCT_SCOPE.md) |
 | Original evidence classification | Agreed scope/enhancement request; no defect reproduction claimed. |
 | Acceptance links | [A20](../AUDIT_TRACEABILITY.md#a20) |

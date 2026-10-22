@@ -45,7 +45,7 @@ The last command builds both apps, creates unique fixtures and private files, us
 
 Browser evidence is in `client/playwright-report/m0/`; failures also retain traces/screenshots in `client/test-results/`. For a visible, step-by-step replay use `npm run test:m0:browser -- --headed --debug --project=chromium` and Playwright Inspector. The legacy future-feature browser suite is separate and is not counted as M0 evidence.
 
-The [22 October review round](M0_REVIEW_ROUND_2.md) adds admin/teacher tab coverage, profile renewal/editing, mobile logout, malformed-cookie redirects and interrupted document loads. To run the same suite against `next dev`, including React Strict Mode cleanup:
+The [22 October review round](archive/reviews/M0_REVIEW_ROUND_2.md) adds admin/teacher tab coverage, profile renewal/editing, mobile logout, malformed-cookie redirects and interrupted document loads. To run the same suite against `next dev`, including React Strict Mode cleanup:
 
 ```powershell
 $env:M0_WEB_MODE='dev'

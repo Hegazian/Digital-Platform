@@ -8,31 +8,31 @@
 | Status | **Complete** |
 | Implementation owner | Platform security; ENH-15 owns future enablement |
 | Dependencies | [ENG-03](ENG-03.md) |
-| Original finding / request | [SEC-15 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original finding / request | [SEC-15 original finding](../../../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 if enabled: code execution runs on the API host [C] |
-| Acceptance links | [A40](../AUDIT_TRACEABILITY.md#a40) |
+| Acceptance links | [A40](../../../AUDIT_TRACEABILITY.md#a40) |
 | Release disposition | Required launch containment; future enablement has a separate owning task. |
 
-**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../../../CURRENT_STATUS.md), [implementation results and task disposition](../../reviews/M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../../reviews/M0_REVIEW_ROUND_2.md), and [manual checks](../../../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../../../CURRENT_STATUS.md), [first review](../../reviews/M0_REVIEW_RESOLUTION.md) and [second review](../../reviews/M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../../../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
 **Original audit/request context; later implementation is recorded above.**
 
-[playground.controller.ts](<../../server/src/modules/courses/playground.controller.ts>) is correctly disabled by default, but enabling one environment flag starts Python under the API's OS identity. Isolated Python mode, a scrubbed environment, output limits, and a timeout do not prevent filesystem access, network access, memory exhaustion, or descendant processes. CI enables the flag on a runner with application secrets. Move execution to a separately sandboxed worker with no API secrets, resource quotas, network denial, and process-tree termination. Keep the feature disabled until this exists.
+[playground.controller.ts](<../../../../server/src/modules/courses/playground.controller.ts>) is correctly disabled by default, but enabling one environment flag starts Python under the API's OS identity. Isolated Python mode, a scrubbed environment, output limits, and a timeout do not prevent filesystem access, network access, memory exhaustion, or descendant processes. CI enables the flag on a runner with application secrets. Move execution to a separately sandboxed worker with no API secrets, resource quotas, network denial, and process-tree termination. Keep the feature disabled until this exists.
 
-The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../../../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
 Launch API and CI cannot execute uploaded/student code on the application host; later enablement belongs only to ENH-15.
 
-Platform security; ENH-15 owns future enablement owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+Platform security; ENH-15 owns future enablement owns this change. Shared implementation must use the owning tasks in the [ownership register](../../../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../../../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
@@ -43,10 +43,10 @@ Platform security; ENH-15 owns future enablement owns this change. Shared implem
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
-- [server/src/modules/courses/playground.controller.ts](<../../server/src/modules/courses/playground.controller.ts>)
-- [server/src/modules/courses/playground.routes.ts](<../../server/src/modules/courses/playground.routes.ts>)
-- [.github/workflows/ci.yml](<../../.github/workflows/ci.yml>)
-- [client/src/components/editor/CodePlaygroundBlock.tsx](<../../client/src/components/editor/CodePlaygroundBlock.tsx>)
+- [server/src/modules/courses/playground.controller.ts](<../../../../server/src/modules/courses/playground.controller.ts>)
+- [server/src/modules/courses/playground.routes.ts](<../../../../server/src/modules/courses/playground.routes.ts>)
+- [.github/workflows/ci.yml](<../../../../.github/workflows/ci.yml>)
+- [client/src/components/editor/CodePlaygroundBlock.tsx](<../../../../client/src/components/editor/CodePlaygroundBlock.tsx>)
 
 ## API, type and schema contract
 
@@ -56,7 +56,7 @@ Concrete intended boundary example (IDs and dates are illustrative, not producti
 POST /api/v1/playground/:id/execute -> 503 FEATURE_DISABLED regardless of teacher/admin role while the isolated executor is unapproved.
 ```
 
-Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../../../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
@@ -68,7 +68,7 @@ Commands validate the current actor at execution time. Repeated mutations use th
 
 Do not delete saved exercises. Disable first and audit prior deployments/jobs. Rollback of unrelated changes keeps execution off; emergency capability kill switch is server-side.
 
-Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+Follow [expand/backfill/verify/cutover](../../../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 

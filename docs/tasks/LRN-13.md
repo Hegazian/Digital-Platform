@@ -7,7 +7,7 @@
 | Release milestone | M2 — Authoring and learning |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [SEC-09](SEC-09.md), [COM-10](COM-10.md), [ENH-10](ENH-10.md) |
+| Dependencies | [SEC-09](../archive/completed/M0/SEC-09.md), [COM-10](COM-10.md), [ENH-10](ENH-10.md) |
 | Original finding / request | [LRN-13 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A07](../AUDIT_TRACEABILITY.md#a07), [A30](../AUDIT_TRACEABILITY.md#a30) |

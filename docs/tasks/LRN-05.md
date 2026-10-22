@@ -7,7 +7,7 @@
 | Release milestone | M2 — Authoring and learning |
 | Status | **Planned** |
 | Implementation owner | Publication/revision owner |
-| Dependencies | [LRN-07](LRN-07.md), [ENH-02](ENH-02.md), [SEC-10](SEC-10.md), [LRN-02](LRN-02.md), [ENH-03](ENH-03.md), [ENG-07](ENG-07.md) |
+| Dependencies | [LRN-07](LRN-07.md), [ENH-02](ENH-02.md), [SEC-10](../archive/completed/M0/SEC-10.md), [LRN-02](LRN-02.md), [ENH-03](ENH-03.md), [ENG-07](ENG-07.md) |
 | Original finding / request | [LRN-05 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A19](../AUDIT_TRACEABILITY.md#a19), [A35](../AUDIT_TRACEABILITY.md#a35) |

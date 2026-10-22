@@ -7,7 +7,7 @@
 | Release milestone | M2 — Authoring and learning |
 | Status | **Planned** |
 | Implementation owner | Board containment; ENH-14 owns enablement |
-| Dependencies | [LRN-06](LRN-06.md), [ENG-03](ENG-03.md) |
+| Dependencies | [LRN-06](LRN-06.md), [ENG-03](../archive/completed/M0/ENG-03.md) |
 | Original finding / request | [LRN-08 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A20](../AUDIT_TRACEABILITY.md#a20) |

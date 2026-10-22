@@ -8,33 +8,33 @@
 | Status | **Complete** |
 | Implementation owner | Identity |
 | Dependencies | None; start independently within the milestone gate. |
-| Original finding / request | [SEC-10 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original finding / request | [SEC-10 original finding](../../../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1: role, approval, and password changes do not revoke authorization consistently [R: F12; S] |
-| Acceptance links | [A08](../AUDIT_TRACEABILITY.md#a08) |
+| Acceptance links | [A08](../../../AUDIT_TRACEABILITY.md#a08) |
 | Release disposition | Required before completing this milestone; no release credit for documentation alone. |
 
-**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../../../CURRENT_STATUS.md), [implementation results and task disposition](../../reviews/M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../../reviews/M0_REVIEW_ROUND_2.md), and [manual checks](../../../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../../../CURRENT_STATUS.md), [first review](../../reviews/M0_REVIEW_RESOLUTION.md) and [second review](../../reviews/M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../../../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
 **Original audit/request context; later implementation is recorded above.**
 
-[auth.middleware.ts](<../../server/src/modules/auth/auth.middleware.ts>) checks current activation but trusts JWT role and teacher approval. A token carrying ADMIN was still authorized as ADMIN when the database double reported STUDENT. [admin.service.ts:276](<../../server/src/modules/admin/admin.service.ts>) updates roles, activation, and password without the cache invalidation/session revocation performed by its separate activation method. Rejected approval does not invalidate already issued approved-teacher claims.
+[auth.middleware.ts](<../../../../server/src/modules/auth/auth.middleware.ts>) checks current activation but trusts JWT role and teacher approval. A token carrying ADMIN was still authorized as ADMIN when the database double reported STUDENT. [admin.service.ts:276](<../../../../server/src/modules/admin/admin.service.ts>) updates roles, activation, and password without the cache invalidation/session revocation performed by its separate activation method. Rejected approval does not invalidate already issued approved-teacher claims.
 
 Use a session/token version or a current user authorization record. Route every security-sensitive mutation through one revocation path. Verify the next request after demotion, rejection, deactivation, and password reset. Across multiple API processes, process-local invalidation alone is insufficient.
 
-The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../../../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
 Role, password, approval and activation changes invalidate old authorization on the next protected request across all API instances.
 
-Identity owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+Identity owns this change. Shared implementation must use the owning tasks in the [ownership register](../../../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../../../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
@@ -45,10 +45,10 @@ Identity owns this change. Shared implementation must use the owning tasks in th
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
-- [server/src/modules/auth/auth.middleware.ts](<../../server/src/modules/auth/auth.middleware.ts>)
-- [server/src/modules/auth/auth.service.ts](<../../server/src/modules/auth/auth.service.ts>)
-- [server/src/modules/admin/admin.service.ts](<../../server/src/modules/admin/admin.service.ts>)
-- [server/prisma/schema.prisma](<../../server/prisma/schema.prisma>)
+- [server/src/modules/auth/auth.middleware.ts](<../../../../server/src/modules/auth/auth.middleware.ts>)
+- [server/src/modules/auth/auth.service.ts](<../../../../server/src/modules/auth/auth.service.ts>)
+- [server/src/modules/admin/admin.service.ts](<../../../../server/src/modules/admin/admin.service.ts>)
+- [server/prisma/schema.prisma](<../../../../server/prisma/schema.prisma>)
 
 ## API, type and schema contract
 
@@ -58,7 +58,7 @@ Concrete intended boundary example (IDs and dates are illustrative, not producti
 JWT includes sub, sessionId, authVersion; PATCH /api/v1/admin/users/u_1 {"role":"STUDENT"} increments version and revokes relevant families in the same transaction.
 ```
 
-Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../../../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
@@ -70,7 +70,7 @@ Commands validate the current actor at execution time. Repeated mutations use th
 
 Backfill authVersion=1, invalidate old tokens without version at cutover, retain session audit history. No automatic elevation from legacy JWTs. Rollback requires session invalidation, not accepting old claims.
 
-Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+Follow [expand/backfill/verify/cutover](../../../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 

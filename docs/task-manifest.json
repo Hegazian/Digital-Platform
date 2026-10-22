@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "date": "2026-10-22",
   "baseline": "2fbdc8e",
   "implementationCommit": "d9c720f",
@@ -20,11 +20,11 @@
       "dependencies": [],
       "paths": [
         "README.md",
-        "task.md",
-        "implementation_plan.md",
-        "Educational_Platform_Requirements_and_Test_Plan.md",
-        "Educational_Platform_System_Design_Document.md",
-        "project_overview_and_usage_guide.md"
+        "docs/ROADMAP_BACKLOG.md",
+        "docs/NEXT_STEPS.md",
+        "docs/TESTING_RELEASE_GATES.md",
+        "docs/TARGET_ARCHITECTURE.md",
+        "docs/README.md"
       ],
       "target": "Make human-supplied content and Arabic/English presentation the authoritative product direction, covering every school stage through configuration.",
       "steps": [
@@ -47,6 +47,7 @@
         "Historical evidence remains accessible and withdrawn recommendations are labeled."
       ],
       "owner": "Product owner and documentation maintainer",
+      "documentPath": "docs/archive/completed/M0/SCOPE-01.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -93,6 +94,7 @@
         "Historical AI recommendations are explicitly withdrawn and A34–A37 replacements pass."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/archive/completed/M0/SCOPE-02.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -133,6 +135,7 @@
         "Operator records credential remediation and safe repeated seeding evidence."
       ],
       "owner": "Identity and operations",
+      "documentPath": "docs/archive/completed/M0/SEC-01.md",
       "originalFinding": "SEC-01",
       "originalEvidence": "P0: known privileged seed credential and password reset on every seed [S]",
       "acceptanceCases": [
@@ -175,6 +178,7 @@
         "Cross-account file tests and direct-origin canary pass."
       ],
       "owner": "Asset security; ENH-03 owns the final media library",
+      "documentPath": "docs/archive/completed/M0/SEC-02.md",
       "originalFinding": "SEC-02",
       "originalEvidence": "P0: private and paid files bypass authorization through static hosting [R: F01]",
       "acceptanceCases": [
@@ -217,6 +221,7 @@
         "Scanner failure and historical-file remediation are observable."
       ],
       "owner": "Upload security; ENH-03 owns worker scheduling",
+      "documentPath": "docs/archive/completed/M0/SEC-03.md",
       "originalFinding": "SEC-03",
       "originalEvidence": "P0: allowed upload MIME can host active HTML/JavaScript on the app origin [R: F15]",
       "acceptanceCases": [
@@ -257,6 +262,7 @@
         "Direct API calls cannot bypass the visual paywall."
       ],
       "owner": "Learning access; COM-01 owns the final shared policy",
+      "documentPath": "docs/archive/completed/M0/SEC-04.md",
       "originalFinding": "SEC-04",
       "originalEvidence": "P0: public course payload includes paid lesson content and storage paths [R: F02-F03]",
       "acceptanceCases": [
@@ -297,6 +303,7 @@
         "No object-spread serializer can accidentally expose new grading fields."
       ],
       "owner": "Assessment serialization",
+      "documentPath": "docs/archive/completed/M0/SEC-05.md",
       "originalFinding": "SEC-05",
       "originalEvidence": "P0: short-answer keys survive course sanitization [R: F02-F03]",
       "acceptanceCases": [
@@ -338,6 +345,7 @@
         "Reproduced anonymous PRIVATE fixture is denied."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/SEC-06.md",
       "originalFinding": "SEC-06",
       "originalEvidence": "P1: PRIVATE/UNLISTED visibility is not enforced [R: F02-F03]",
       "acceptanceCases": [
@@ -381,6 +389,7 @@
         "Every legacy standalone record has a documented owner or admin quarantine."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/SEC-07.md",
       "originalFinding": "SEC-07",
       "originalEvidence": "P1: any teacher receives any quiz's answer key [R: F04]",
       "acceptanceCases": [
@@ -421,6 +430,7 @@
         "Client does not depend on private snapshots."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/archive/completed/M0/SEC-08.md",
       "originalFinding": "SEC-08",
       "originalEvidence": "P1: submitted and expired exams return internal answer snapshots [R: F05]",
       "acceptanceCases": [
@@ -459,6 +469,7 @@
         "Audit records distinguish acting user from content owner."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/archive/completed/M0/SEC-09.md",
       "originalFinding": "SEC-09",
       "originalEvidence": "P1: request body can impersonate another teacher [R: F07/F08]",
       "acceptanceCases": [
@@ -498,6 +509,7 @@
         "Cross-instance next-request tests pass for every mutation entry point."
       ],
       "owner": "Identity",
+      "documentPath": "docs/archive/completed/M0/SEC-10.md",
       "originalFinding": "SEC-10",
       "originalEvidence": "P1: role, approval, and password changes do not revoke authorization consistently [R: F12; S]",
       "acceptanceCases": [
@@ -538,6 +550,7 @@
         "All authentication entry points use the same account-state policy."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/archive/completed/M0/SEC-11.md",
       "originalFinding": "SEC-11",
       "originalEvidence": "P1: rejected teachers can log in [R: F11]",
       "acceptanceCases": [
@@ -579,6 +592,7 @@
         "No assignment or question-pool endpoint relies only on authenticated role."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/SEC-12.md",
       "originalFinding": "SEC-12",
       "originalEvidence": "P1: course discussions and assignment reads bypass learning access [S]",
       "acceptanceCases": [
@@ -621,6 +635,7 @@
         "Family replay and benign tab races have distinct tested behavior."
       ],
       "owner": "Identity concurrency",
+      "documentPath": "docs/tasks/SEC-13.md",
       "originalFinding": "SEC-13",
       "originalEvidence": "P1: refresh-token consumption is not atomic [C]",
       "acceptanceCases": [
@@ -664,6 +679,7 @@
         "Enrollment and one-use replay invariants survive restart and concurrent requests."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/SEC-14.md",
       "originalFinding": "SEC-14",
       "originalEvidence": "P2: MFA enrollment, storage, recovery, and replay handling are incomplete [S/C/G]",
       "acceptanceCases": [
@@ -705,6 +721,7 @@
         "No claim of a fully isolated playground remains in active documentation."
       ],
       "owner": "Platform security; ENH-15 owns future enablement",
+      "documentPath": "docs/archive/completed/M0/SEC-15.md",
       "originalFinding": "SEC-15",
       "originalEvidence": "P1 if enabled: code execution runs on the API host [C]",
       "acceptanceCases": [
@@ -749,6 +766,7 @@
         "No domain reimplements effective membership independently."
       ],
       "owner": "Commerce/access policy owner",
+      "documentPath": "docs/tasks/COM-01.md",
       "originalFinding": "COM-01",
       "originalEvidence": "P1 / R:F06",
       "acceptanceCases": [
@@ -790,6 +808,7 @@
         "Reconciliation is repeatable and auditable."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-02.md",
       "originalFinding": "COM-02",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -830,6 +849,7 @@
         "Review state and entitlement transition commit together."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-03.md",
       "originalFinding": "COM-03",
       "originalEvidence": "P2 / S",
       "acceptanceCases": [
@@ -876,6 +896,7 @@
         "Paymob enablement and Fawry enablement each have separate M4 evidence before the corresponding API flag is enabled."
       ],
       "owner": "Commerce provider adapters; staged subdeliverables",
+      "documentPath": "docs/tasks/COM-04.md",
       "originalFinding": "COM-04",
       "originalEvidence": "P1 / S/G",
       "acceptanceCases": [
@@ -917,6 +938,7 @@
         "Client and API use the same payload identity definition."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-05.md",
       "originalFinding": "COM-05",
       "originalEvidence": "P1 / R:F09",
       "acceptanceCases": [
@@ -961,6 +983,7 @@
         "Ledger, manual verification and refund/reconciliation drills pass."
       ],
       "owner": "Commerce state machine and financial ledger owner",
+      "documentPath": "docs/tasks/COM-06.md",
       "originalFinding": "COM-06",
       "originalEvidence": "P1 / S/G",
       "acceptanceCases": [
@@ -1003,6 +1026,7 @@
         "Every paid-but-unfulfilled legacy record is visible to reconciliation."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-07.md",
       "originalFinding": "COM-07",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1046,6 +1070,7 @@
         "No voucher code or full redemption history leaks through logs."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-08.md",
       "originalFinding": "COM-08",
       "originalEvidence": "P1 / C",
       "acceptanceCases": [
@@ -1086,6 +1111,7 @@
         "Archive and retraction are separate auditable operations."
       ],
       "owner": "Access lifecycle primitives",
+      "documentPath": "docs/tasks/COM-09.md",
       "originalFinding": "COM-09",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1127,6 +1153,7 @@
         "Displayed revenue reconciles to ledger or is explicitly unavailable."
       ],
       "owner": "Audience projection; ENH-17 owns analytics expansion",
+      "documentPath": "docs/tasks/COM-10.md",
       "originalFinding": "COM-10",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1168,6 +1195,7 @@
         "Course and product display state commit atomically."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/COM-11.md",
       "originalFinding": "COM-11",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1211,6 +1239,7 @@
         "Manual payment pilot reconciles receipt, actual transfer, ledger and granted duration."
       ],
       "owner": "Commerce UI and reconciliation operations",
+      "documentPath": "docs/tasks/COM-12.md",
       "originalFinding": "COM-12",
       "originalEvidence": "P2 / S",
       "acceptanceCases": [
@@ -1251,6 +1280,7 @@
         "Transaction control flow cannot roll back the intended expiry."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-01.md",
       "originalFinding": "LRN-01",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1294,6 +1324,7 @@
         "One canonical engine owns new delivery; adapters retain legacy identity/history."
       ],
       "owner": "Assessment engine owner",
+      "documentPath": "docs/tasks/LRN-02.md",
       "originalFinding": "LRN-02",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1336,6 +1367,7 @@
         "No essay is automatically graded by text equality."
       ],
       "owner": "Assessment grading owner",
+      "documentPath": "docs/tasks/LRN-03.md",
       "originalFinding": "LRN-03",
       "originalEvidence": "P1 / G/S",
       "acceptanceCases": [
@@ -1378,6 +1410,7 @@
         "No count-then-create window remains unprotected."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-04.md",
       "originalFinding": "LRN-04",
       "originalEvidence": "P1 / C",
       "acceptanceCases": [
@@ -1426,6 +1459,7 @@
         "No alternate reviewCourseStatus endpoint bypasses completeness/state transitions."
       ],
       "owner": "Publication/revision owner",
+      "documentPath": "docs/tasks/LRN-05.md",
       "originalFinding": "LRN-05",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1470,6 +1504,7 @@
         "Required-block completion semantics and unsupported states are explicit."
       ],
       "owner": "Player block registry",
+      "documentPath": "docs/tasks/LRN-06.md",
       "originalFinding": "LRN-06",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1514,6 +1549,7 @@
         "Database enforces canonical course-consistent parent."
       ],
       "owner": "Canonical curriculum migration owner",
+      "documentPath": "docs/tasks/LRN-07.md",
       "originalFinding": "LRN-07",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1555,6 +1591,7 @@
         "Future realtime implementation has one owner, ENH-14."
       ],
       "owner": "Board containment; ENH-14 owns enablement",
+      "documentPath": "docs/tasks/LRN-08.md",
       "originalFinding": "LRN-08",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1597,6 +1634,7 @@
         "Module and migrated section lessons share preview behavior."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-09.md",
       "originalFinding": "LRN-09",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1638,6 +1676,7 @@
         "Unsynced answers are visible and recoverable within deadline."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-10.md",
       "originalFinding": "LRN-10",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1674,6 +1713,7 @@
         "No uninitialized interval access or duplicate terminal side effect remains."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-11.md",
       "originalFinding": "LRN-11",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1715,6 +1755,7 @@
         "Progress totals use canonical unique lesson IDs."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-12.md",
       "originalFinding": "LRN-12",
       "originalEvidence": "P1 / S/G",
       "acceptanceCases": [
@@ -1757,6 +1798,7 @@
         "No undefined unique lookup or false immediate-delivery claim remains."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-13.md",
       "originalFinding": "LRN-13",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -1801,6 +1843,7 @@
         "No random Zoom identifier is represented as a real meeting."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-14.md",
       "originalFinding": "LRN-14",
       "originalEvidence": "P1 / S/G",
       "acceptanceCases": [
@@ -1844,6 +1887,7 @@
         "All-school taxonomy replaces hardcoded two-career discovery assumptions."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/LRN-15.md",
       "originalFinding": "LRN-15",
       "originalEvidence": "P2 / S/G",
       "acceptanceCases": [
@@ -1889,6 +1933,7 @@
         "No active task assumes generated translations or captions."
       ],
       "owner": "Internationalization and content locale owner",
+      "documentPath": "docs/tasks/LRN-16.md",
       "originalFinding": "LRN-16",
       "originalEvidence": "P1 / S/G",
       "acceptanceCases": [
@@ -1928,6 +1973,7 @@
         "A01 includes real clean generation/build evidence."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/archive/completed/M0/ENG-01.md",
       "originalFinding": "ENG-01",
       "originalEvidence": "P0 / compiler",
       "acceptanceCases": [
@@ -1969,6 +2015,7 @@
         "Rate changes cannot alter an existing charge."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENG-02.md",
       "originalFinding": "ENG-02",
       "originalEvidence": "P1 / R:F10",
       "acceptanceCases": [
@@ -2010,6 +2057,7 @@
         "A flag cannot enable an unimplemented or unsafe runtime path."
       ],
       "owner": "Capability policy owner",
+      "documentPath": "docs/archive/completed/M0/ENG-03.md",
       "originalFinding": "ENG-03",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2053,6 +2101,7 @@
         "Contract and HTTP validation tests cover high-risk routes."
       ],
       "owner": "Validation adoption; ENH-02 owns shared schemas",
+      "documentPath": "docs/tasks/ENG-04.md",
       "originalFinding": "ENG-04",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2102,6 +2151,7 @@
         "Remote CI, restored-copy schema review, backup/restore and compatible rollback/forward-repair evidence are attached before completion."
       ],
       "owner": "Database migrations and operations",
+      "documentPath": "docs/tasks/ENG-05.md",
       "originalFinding": "ENG-05",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2148,6 +2198,7 @@
         "Production cannot enter implicit filesystem mode."
       ],
       "owner": "Reliability and deployment",
+      "documentPath": "docs/tasks/ENG-06.md",
       "originalFinding": "ENG-06",
       "originalEvidence": "P1 / R:F14/S",
       "acceptanceCases": [
@@ -2189,6 +2240,7 @@
         "No persistent-operation service returns success from process memory."
       ],
       "owner": "Durable audit/outbox owner",
+      "documentPath": "docs/tasks/ENG-07.md",
       "originalFinding": "ENG-07",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2231,6 +2283,7 @@
         "All find-or-create paths have actual unique backing keys."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENG-08.md",
       "originalFinding": "ENG-08",
       "originalEvidence": "P2 / S",
       "acceptanceCases": [
@@ -2272,6 +2325,7 @@
         "Immediate fixes do not claim unimplemented HLS/encryption/transcoding capabilities."
       ],
       "owner": "Media transport containment; ENH-03 owns processing",
+      "documentPath": "docs/tasks/ENG-09.md",
       "originalFinding": "ENG-09",
       "originalEvidence": "P1 / S/C",
       "acceptanceCases": [
@@ -2315,6 +2369,7 @@
         "Sensitive capabilities never appear in application/access logs."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENG-10.md",
       "originalFinding": "ENG-10",
       "originalEvidence": "P2 / S",
       "acceptanceCases": [
@@ -2361,6 +2416,7 @@
         "A33 cookie/proxy session behavior and recovery negative cases pass."
       ],
       "owner": "Identity recovery",
+      "documentPath": "docs/tasks/ENG-11.md",
       "originalFinding": "ENG-11",
       "originalEvidence": "P1 / G",
       "acceptanceCases": [
@@ -2406,6 +2462,7 @@
         "No API feature is advertised while registry-only implementation remains."
       ],
       "owner": "Developer integrations",
+      "documentPath": "docs/tasks/ENG-12.md",
       "originalFinding": "ENG-12",
       "originalEvidence": "P2 / G",
       "acceptanceCases": [
@@ -2448,6 +2505,7 @@
         "A01/A39/A40 and all launch acceptance cases have named required CI jobs."
       ],
       "owner": "Quality engineering and dependency remediation",
+      "documentPath": "docs/tasks/ENG-13.md",
       "originalFinding": "ENG-13",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2490,6 +2548,7 @@
         "Transient infrastructure errors are distinct from invalid sessions."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENG-14.md",
       "originalFinding": "ENG-14",
       "originalEvidence": "P1 / S",
       "acceptanceCases": [
@@ -2511,8 +2570,8 @@
         "README.md",
         "server/README.md",
         "client/README.md",
-        "project_overview_and_usage_guide.md",
-        "manual_testing_guide.md",
+        "docs/README.md",
+        "docs/M0_MANUAL_TESTING.md",
         "server/package.json"
       ],
       "target": "Documentation clearly separates prototype, planned launch and staged capabilities and does not claim a software license that the repository does not establish.",
@@ -2536,6 +2595,7 @@
         "License ownership decision is explicit and pending until actually resolved."
       ],
       "owner": "Documentation and product owner",
+      "documentPath": "docs/archive/completed/M0/ENG-15.md",
       "originalFinding": "ENG-15",
       "originalEvidence": "P2 / S",
       "acceptanceCases": [
@@ -2578,6 +2638,7 @@
         "Curriculum metadata is educator-reviewed, versioned and traceable."
       ],
       "owner": "Academic registry owner",
+      "documentPath": "docs/tasks/ENH-01.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2624,6 +2685,7 @@
         "CI catches DTO drift and secret-field leakage."
       ],
       "owner": "Shared contract package owner",
+      "documentPath": "docs/tasks/ENH-02.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2675,6 +2737,7 @@
         "No READY or published asset exists before verified processing; source educational content remains uploader-provided."
       ],
       "owner": "Assets, uploads and processing owner",
+      "documentPath": "docs/tasks/ENH-03.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2724,6 +2787,7 @@
         "Atomic commit and no-auto-publish proved by API/database tests."
       ],
       "owner": "Structured import owner",
+      "documentPath": "docs/tasks/ENH-04.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2767,6 +2831,7 @@
         "Correction workflow never mutates a published revision in place."
       ],
       "owner": "Content provenance and issue owner",
+      "documentPath": "docs/tasks/ENH-05.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2814,6 +2879,7 @@
         "Review UI displays exact version and failures preserve draft work."
       ],
       "owner": "Authoring UX orchestration",
+      "documentPath": "docs/tasks/ENH-06.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2860,6 +2926,7 @@
         "No automated narration or caption creation is required or invoked."
       ],
       "owner": "Accessibility and uploaded text tracks",
+      "documentPath": "docs/tasks/ENH-07.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2903,6 +2970,7 @@
         "Personal annotations survive course revisions and export."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENH-08.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2946,6 +3014,7 @@
         "M4 launch flag enabled only after deterministic replay tests."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENH-09.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -2989,6 +3058,7 @@
         "A30 notification recipient/delivery evidence replaces best-effort sends."
       ],
       "owner": "Durable notification delivery owner",
+      "documentPath": "docs/tasks/ENH-10.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3033,6 +3103,7 @@
         "M4 guardian portal stays API-disabled until independent acceptance passes."
       ],
       "owner": "Product privacy and identity",
+      "documentPath": "docs/tasks/ENH-11.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3074,6 +3145,7 @@
         "Public verification exposes only consented minimal data."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENH-12.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3116,6 +3188,7 @@
         "No permanent public URL or unbounded entitlement is created."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENH-13.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3159,6 +3232,7 @@
         "No demo ID fallback or process-memory-only drawing durability remains."
       ],
       "owner": "Platform engineering",
+      "documentPath": "docs/tasks/ENH-14.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3203,6 +3277,7 @@
         "General API/CI processes never execute untrusted source."
       ],
       "owner": "Isolated executor security owner",
+      "documentPath": "docs/tasks/ENH-15.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3246,6 +3321,7 @@
         "Export/deletion/retention/recovery drills have exact evidence and no invented legal guarantees."
       ],
       "owner": "Support and privacy operations",
+      "documentPath": "docs/tasks/ENH-16.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [
@@ -3292,6 +3368,7 @@
         "No AI-production cost/generation metric remains in active product requirements."
       ],
       "owner": "Analytics definitions and projections",
+      "documentPath": "docs/tasks/ENH-17.md",
       "originalFinding": null,
       "originalEvidence": null,
       "acceptanceCases": [

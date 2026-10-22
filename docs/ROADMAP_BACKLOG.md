@@ -2,7 +2,7 @@
 
 Tasks begin **Planned**. Priorities P0=immediate blocker, P1=required correctness/security, P2=important completeness/quality. Milestones are dependency gates, not calendar estimates. Status changes require exact implementation/test evidence; the documentation delivery does not complete engineering tasks.
 
-Updated **22 October 2026** against verified application commit **d9c720f**: **15 Complete / 1 In Progress / 61 Planned**. See [current evidence](CURRENT_STATUS.md) and [the actionable next-steps handoff](NEXT_STEPS.md); completed M0 tasks are retained for traceability, not queued for reimplementation.
+Updated **22 October 2026**: **15 archived Complete / 4 In Progress / 58 Planned**. See [current evidence](CURRENT_STATUS.md), [the final review](M0_FINAL_REVIEW.md), and [the next-steps handoff](NEXT_STEPS.md). Completed task specifications are [archived](archive/completed/README.md) and excluded from this execution queue.
 
 ## Milestones and release assignment
 
@@ -16,33 +16,21 @@ Updated **22 October 2026** against verified application commit **d9c720f**: **1
 
 M0 ENG-13 establishes the harness and resolves/triages dependency exposure. Later tasks add their regression evidence; G3 reruns complete CI. COM-04 is assigned M3 for launch containment, with **Paymob and Fawry enablement in M4**. ENH-11 is assigned M3 for minimal consent, with **guardian portal in M4**. ENG-03 disables incomplete integrations from M0. A task with a staged subdeliverable is not globally Completed merely because containment passed; track each subgate in its evidence checklist.
 
-M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 remains In Progress for its later full-product coverage obligation; its M0 harness/dependency subgate passed. Production holds are explicit in [M0 status](M0_IMPLEMENTATION_STATUS.md).
+M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 remains In Progress for its later full-product coverage obligation; its M0 harness/dependency subgate passed. Production holds are explicit in [M0 status](archive/reviews/M0_IMPLEMENTATION_STATUS.md).
 
-## Indexed backlog (77 tasks)
+## Active backlog (62 tasks)
 
 | ID / title | Priority | Milestone | Status | Dependencies |
 |---|---|---|---|---|
-| [SCOPE-01](tasks/SCOPE-01.md) — Establish the uploader-driven product specification | P0 | M0 | Complete | None |
-| [SCOPE-02](tasks/SCOPE-02.md) — Remove AI tutoring, generation and provider dependencies | P0 | M0 | Complete | [SCOPE-01](tasks/SCOPE-01.md), [ENG-03](tasks/ENG-03.md) |
-| [SEC-01](tasks/SEC-01.md) — Replace known privileged seeds with safe provisioning | P0 | M0 | Complete | [SCOPE-01](tasks/SCOPE-01.md) |
-| [SEC-02](tasks/SEC-02.md) — Close raw-file bypasses with authorized private delivery | P0 | M0 | Complete | [SEC-04](tasks/SEC-04.md) |
-| [SEC-03](tasks/SEC-03.md) — Reject disguised active content and quarantine uploads | P0 | M0 | Complete | [SEC-02](tasks/SEC-02.md) |
-| [SEC-04](tasks/SEC-04.md) — Separate public catalog DTOs from protected learning DTOs | P0 | M0 | Complete | None |
-| [SEC-05](tasks/SEC-05.md) — Eliminate answer-key leaks through explicit question DTOs | P0 | M0 | Complete | [SEC-04](tasks/SEC-04.md) |
-| [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | P1 | M1 | Planned | [SEC-04](tasks/SEC-04.md), [COM-01](tasks/COM-01.md) |
-| [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | P1 | M1 | Planned | [SEC-05](tasks/SEC-05.md), [ENG-05](tasks/ENG-05.md) |
-| [SEC-08](tasks/SEC-08.md) — Use safe assessment result and expiry responses | P1 | M0 | Complete | [SEC-05](tasks/SEC-05.md) |
-| [SEC-09](tasks/SEC-09.md) — Bind teacher actions to the authenticated actor | P1 | M0 | Complete | None |
-| [SEC-10](tasks/SEC-10.md) — Revoke authorization on every security-sensitive account change | P1 | M0 | Complete | None |
-| [SEC-11](tasks/SEC-11.md) — Apply a consistent pending and rejected teacher policy | P1 | M0 | Complete | [SEC-10](tasks/SEC-10.md) |
+| [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | P1 | M1 | Planned | [SEC-04](archive/completed/M0/SEC-04.md), [COM-01](tasks/COM-01.md) |
+| [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | P1 | M1 | Planned | [SEC-05](archive/completed/M0/SEC-05.md), [ENG-05](tasks/ENG-05.md) |
 | [SEC-12](tasks/SEC-12.md) — Apply learning access to discussions, assignments and banks | P1 | M1 | Planned | [COM-01](tasks/COM-01.md), [SEC-07](tasks/SEC-07.md) |
-| [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | P1 | M1 | Planned | [SEC-10](tasks/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
-| [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | P2 | M1 | Planned | [SEC-10](tasks/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
-| [SEC-15](tasks/SEC-15.md) — Keep unisolated code execution unavailable at launch | P1 | M0 | Complete | [ENG-03](tasks/ENG-03.md) |
-| [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | P1 | M1 | Planned | [SEC-04](tasks/SEC-04.md), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md) |
+| [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | P1 | M1 | Planned | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
+| [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | P2 | M1 | Planned | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
+| [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | P1 | M1 | Planned | [SEC-04](archive/completed/M0/SEC-04.md), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md) |
 | [COM-02](tasks/COM-02.md) — Allow renewal after effective subscription expiry | P1 | M1 | Planned | [COM-03](tasks/COM-03.md), [COM-09](tasks/COM-09.md) |
 | [COM-03](tasks/COM-03.md) — Define calendar durations and atomic subscription review | P2 | M1 | Planned | [ENG-05](tasks/ENG-05.md) |
-| [COM-04](tasks/COM-04.md) — Disable simulated gateways and implement official adapters later | P1 | M3 | Planned | [ENG-03](tasks/ENG-03.md), [COM-06](tasks/COM-06.md), [COM-07](tasks/COM-07.md) |
+| [COM-04](tasks/COM-04.md) — Disable simulated gateways and implement official adapters later | P1 | M3 | Planned | [ENG-03](archive/completed/M0/ENG-03.md), [COM-06](tasks/COM-06.md), [COM-07](tasks/COM-07.md) |
 | [COM-05](tasks/COM-05.md) — Scope checkout idempotency by actor and payload | P1 | M1 | Planned | [ENG-05](tasks/ENG-05.md) |
 | [COM-06](tasks/COM-06.md) — Make payment transitions auditable and fulfillment recoverable | P1 | M1 | Planned | [COM-05](tasks/COM-05.md), [ENG-05](tasks/ENG-05.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md) |
 | [COM-07](tasks/COM-07.md) — Validate products and snapshot explicit access durations | P1 | M1 | Planned | [COM-06](tasks/COM-06.md), [COM-03](tasks/COM-03.md) |
@@ -53,38 +41,35 @@ M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 
 | [COM-12](tasks/COM-12.md) — Complete resumable manual checkout and receipt review | P2 | M3 | Planned | [COM-05](tasks/COM-05.md), [COM-06](tasks/COM-06.md), [COM-07](tasks/COM-07.md), [ENH-03](tasks/ENH-03.md) |
 | [LRN-01](tasks/LRN-01.md) — Persist expiry before returning a quiz error | P1 | M2 | Planned | [ENG-05](tasks/ENG-05.md) |
 | [LRN-02](tasks/LRN-02.md) — Unify versioned assessment definitions and frozen attempts | P1 | M2 | Planned | [SEC-07](tasks/SEC-07.md), [ENH-02](tasks/ENH-02.md) |
-| [LRN-03](tasks/LRN-03.md) — Implement per-type grading and human rubric review | P1 | M2 | Planned | [LRN-02](tasks/LRN-02.md), [SEC-08](tasks/SEC-08.md) |
+| [LRN-03](tasks/LRN-03.md) — Implement per-type grading and human rubric review | P1 | M2 | Planned | [LRN-02](tasks/LRN-02.md), [SEC-08](archive/completed/M0/SEC-08.md) |
 | [LRN-04](tasks/LRN-04.md) — Serialize assignment attempts and assessment submission | P1 | M2 | Planned | [LRN-02](tasks/LRN-02.md), [ENH-03](tasks/ENH-03.md) |
-| [LRN-05](tasks/LRN-05.md) — Publish only exact reviewed immutable content revisions | P1 | M2 | Planned | [LRN-07](tasks/LRN-07.md), [ENH-02](tasks/ENH-02.md), [SEC-10](tasks/SEC-10.md), [LRN-02](tasks/LRN-02.md), [ENH-03](tasks/ENH-03.md), [ENG-07](tasks/ENG-07.md) |
-| [LRN-06](tasks/LRN-06.md) — Render every supported ordered lesson block | P1 | M2 | Planned | [LRN-05](tasks/LRN-05.md), [SEC-04](tasks/SEC-04.md), [ENH-03](tasks/ENH-03.md) |
+| [LRN-05](tasks/LRN-05.md) — Publish only exact reviewed immutable content revisions | P1 | M2 | Planned | [LRN-07](tasks/LRN-07.md), [ENH-02](tasks/ENH-02.md), [SEC-10](archive/completed/M0/SEC-10.md), [LRN-02](tasks/LRN-02.md), [ENH-03](tasks/ENH-03.md), [ENG-07](tasks/ENG-07.md) |
+| [LRN-06](tasks/LRN-06.md) — Render every supported ordered lesson block | P1 | M2 | Planned | [LRN-05](tasks/LRN-05.md), [SEC-04](archive/completed/M0/SEC-04.md), [ENH-03](tasks/ENH-03.md) |
 | [LRN-07](tasks/LRN-07.md) — Migrate sections to one canonical module hierarchy | P1 | M1 | Planned | [ENG-05](tasks/ENG-05.md), [ENH-02](tasks/ENH-02.md) |
-| [LRN-08](tasks/LRN-08.md) — Contain incomplete boards and preserve block identity | P1 | M2 | Planned | [LRN-06](tasks/LRN-06.md), [ENG-03](tasks/ENG-03.md) |
-| [LRN-09](tasks/LRN-09.md) — Authorize previews per lesson | P1 | M2 | Planned | [COM-01](tasks/COM-01.md), [LRN-07](tasks/LRN-07.md), [SEC-02](tasks/SEC-02.md) |
+| [LRN-08](tasks/LRN-08.md) — Contain incomplete boards and preserve block identity | P1 | M2 | Planned | [LRN-06](tasks/LRN-06.md), [ENG-03](archive/completed/M0/ENG-03.md) |
+| [LRN-09](tasks/LRN-09.md) — Authorize previews per lesson | P1 | M2 | Planned | [COM-01](tasks/COM-01.md), [LRN-07](tasks/LRN-07.md), [SEC-02](archive/completed/M0/SEC-02.md) |
 | [LRN-10](tasks/LRN-10.md) — Resume attempts from server deadlines and saved answers | P1 | M2 | Planned | [LRN-02](tasks/LRN-02.md), [LRN-04](tasks/LRN-04.md) |
 | [LRN-11](tasks/LRN-11.md) — Handle already-expired assessment timer responses safely | P1 | M2 | Planned | None |
 | [LRN-12](tasks/LRN-12.md) — Persist bounded watch progress and reliable completion | P1 | M2 | Planned | [LRN-07](tasks/LRN-07.md), [COM-01](tasks/COM-01.md) |
-| [LRN-13](tasks/LRN-13.md) — Send validated announcements to owned-course audiences | P1 | M2 | Planned | [SEC-09](tasks/SEC-09.md), [COM-10](tasks/COM-10.md), [ENH-10](tasks/ENH-10.md) |
-| [LRN-14](tasks/LRN-14.md) — Use validated teacher-provided live meeting links | P1 | M2 | Planned | [SEC-09](tasks/SEC-09.md), [ENH-02](tasks/ENH-02.md), [COM-01](tasks/COM-01.md) |
+| [LRN-13](tasks/LRN-13.md) — Send validated announcements to owned-course audiences | P1 | M2 | Planned | [SEC-09](archive/completed/M0/SEC-09.md), [COM-10](tasks/COM-10.md), [ENH-10](tasks/ENH-10.md) |
+| [LRN-14](tasks/LRN-14.md) — Use validated teacher-provided live meeting links | P1 | M2 | Planned | [SEC-09](archive/completed/M0/SEC-09.md), [ENH-02](tasks/ENH-02.md), [COM-01](tasks/COM-01.md) |
 | [LRN-15](tasks/LRN-15.md) — Repair catalog routing, search, filters and pagination | P2 | M2 | Planned | [SEC-06](tasks/SEC-06.md), [ENH-01](tasks/ENH-01.md), [ENH-02](tasks/ENH-02.md) |
 | [LRN-16](tasks/LRN-16.md) — Complete Arabic/English interface and uploader-supplied locales | P1 | M2 | Planned | [ENH-02](tasks/ENH-02.md), [ENH-01](tasks/ENH-01.md) |
-| [ENG-01](tasks/ENG-01.md) — Repair the Zod 4 build blocker and nested config schema | P0 | M0 | Complete | None |
-| [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | P1 | M1 | Planned | [ENG-01](tasks/ENG-01.md) |
-| [ENG-03](tasks/ENG-03.md) — Enforce server capability controls for staged features | P1 | M0 | Complete | None |
-| [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | P1 | M1 | Planned | [ENH-02](tasks/ENH-02.md), [ENG-01](tasks/ENG-01.md) |
+| [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | P1 | M1 | Planned | [ENG-01](archive/completed/M0/ENG-01.md) |
+| [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | P1 | M1 | Planned | [ENH-02](tasks/ENH-02.md), [ENG-01](archive/completed/M0/ENG-01.md) |
 | [ENG-05](tasks/ENG-05.md) — Introduce versioned migrations and upgrade verification | P1 | M1 | In Progress | None |
 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | P1 | M1 | In Progress | None |
 | [ENG-07](tasks/ENG-07.md) — Persist actual audit actors and durable outbox events | P1 | M1 | Planned | [ENG-05](tasks/ENG-05.md) |
 | [ENG-08](tasks/ENG-08.md) — Make public reads side-effect free and reference keys unique | P2 | M1 | Planned | [ENG-05](tasks/ENG-05.md), [ENH-01](tasks/ENH-01.md) |
-| [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | P1 | M1 | In Progress | [SEC-03](tasks/SEC-03.md) |
-| [ENG-10](tasks/ENG-10.md) — Bound queries, shared rate limits and sensitive logging | P2 | M3 | Planned | [SEC-04](tasks/SEC-04.md), [LRN-15](tasks/LRN-15.md), [ENG-07](tasks/ENG-07.md) |
-| [ENG-11](tasks/ENG-11.md) — Add verification, password recovery and secure account changes | P1 | M3 | Planned | [SEC-10](tasks/SEC-10.md), [SEC-13](tasks/SEC-13.md), [ENG-07](tasks/ENG-07.md), [ENH-10](tasks/ENH-10.md) |
-| [ENG-12](tasks/ENG-12.md) — Gate developer integrations and specify complete later enablement | P2 | M4 | Planned | [ENG-03](tasks/ENG-03.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md) |
+| [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | P1 | M1 | In Progress | [SEC-03](archive/completed/M0/SEC-03.md) |
+| [ENG-10](tasks/ENG-10.md) — Bound queries, shared rate limits and sensitive logging | P2 | M3 | Planned | [SEC-04](archive/completed/M0/SEC-04.md), [LRN-15](tasks/LRN-15.md), [ENG-07](tasks/ENG-07.md) |
+| [ENG-11](tasks/ENG-11.md) — Add verification, password recovery and secure account changes | P1 | M3 | Planned | [SEC-10](archive/completed/M0/SEC-10.md), [SEC-13](tasks/SEC-13.md), [ENG-07](tasks/ENG-07.md), [ENH-10](tasks/ENH-10.md) |
+| [ENG-12](tasks/ENG-12.md) — Gate developer integrations and specify complete later enablement | P2 | M4 | Planned | [ENG-03](archive/completed/M0/ENG-03.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md) |
 | [ENG-13](tasks/ENG-13.md) — Build trustworthy isolated tests and production CI gates | P1 | M0 | In Progress | None |
 | [ENG-14](tasks/ENG-14.md) — Recover client sessions without discarding retryable failures | P1 | M1 | Planned | [SEC-13](tasks/SEC-13.md) |
-| [ENG-15](tasks/ENG-15.md) — Align capability claims, runbooks and software-license status | P2 | M0 | Complete | [SCOPE-01](tasks/SCOPE-01.md) |
 | [ENH-01](tasks/ENH-01.md) — Model all Egyptian stages and versioned curriculum metadata | P1 | M1 | Planned | [ENG-05](tasks/ENG-05.md) |
 | [ENH-02](tasks/ENH-02.md) — Publish shared typed contracts and executable validation | P1 | M1 | Planned | [ENG-05](tasks/ENG-05.md) |
-| [ENH-03](tasks/ENH-03.md) — Build private managed media with resumable uploads and processing | P1 | M1 | Planned | [SEC-02](tasks/SEC-02.md), [SEC-03](tasks/SEC-03.md), [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md), [ENG-09](tasks/ENG-09.md) |
+| [ENH-03](tasks/ENH-03.md) — Build private managed media with resumable uploads and processing | P1 | M1 | Planned | [SEC-02](archive/completed/M0/SEC-02.md), [SEC-03](archive/completed/M0/SEC-03.md), [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md), [ENG-09](tasks/ENG-09.md) |
 | [ENH-04](tasks/ENH-04.md) — Import versioned assessments and assignments safely | P1 | M2 | Planned | [LRN-02](tasks/LRN-02.md), [LRN-03](tasks/LRN-03.md), [LRN-05](tasks/LRN-05.md), [ENH-03](tasks/ENH-03.md), [ENH-02](tasks/ENH-02.md) |
 | [ENH-05](tasks/ENH-05.md) — Track content provenance, permissions and correction reports | P1 | M2 | Planned | [LRN-05](tasks/LRN-05.md), [ENH-01](tasks/ENH-01.md), [ENH-03](tasks/ENH-03.md) |
 | [ENH-06](tasks/ENH-06.md) — Complete teacher/admin manual authoring from draft to publication | P1 | M2 | Planned | [LRN-05](tasks/LRN-05.md), [LRN-06](tasks/LRN-06.md), [ENH-03](tasks/ENH-03.md), [ENH-04](tasks/ENH-04.md), [ENH-05](tasks/ENH-05.md), [LRN-16](tasks/LRN-16.md) |
@@ -96,7 +81,7 @@ M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 
 | [ENH-12](tasks/ENH-12.md) — Issue auditable certificates with privacy-safe verification | P2 | M4 | Planned | [LRN-03](tasks/LRN-03.md), [LRN-12](tasks/LRN-12.md), [ENG-07](tasks/ENG-07.md) |
 | [ENH-13](tasks/ENH-13.md) — Offer rights-controlled expiring offline study packs | P2 | M4 | Planned | [ENH-03](tasks/ENH-03.md), [COM-01](tasks/COM-01.md), [LRN-05](tasks/LRN-05.md), [ENH-16](tasks/ENH-16.md) |
 | [ENH-14](tasks/ENH-14.md) — Implement scoped realtime collaborative whiteboards | P2 | M4 | Planned | [LRN-08](tasks/LRN-08.md), [COM-01](tasks/COM-01.md), [ENG-07](tasks/ENG-07.md) |
-| [ENH-15](tasks/ENH-15.md) — Move untrusted code to a separate isolated executor | P1 | M4 | Planned | [SEC-15](tasks/SEC-15.md), [ENG-07](tasks/ENG-07.md), [COM-01](tasks/COM-01.md) |
+| [ENH-15](tasks/ENH-15.md) — Move untrusted code to a separate isolated executor | P1 | M4 | Planned | [SEC-15](archive/completed/M0/SEC-15.md), [ENG-07](tasks/ENG-07.md), [COM-01](tasks/COM-01.md) |
 | [ENH-16](tasks/ENH-16.md) — Provide support and operational privacy/retention workflows | P1 | M3 | Planned | [ENG-07](tasks/ENG-07.md), [ENH-05](tasks/ENH-05.md) |
 | [ENH-17](tasks/ENH-17.md) — Measure real educational, editorial and commercial outcomes | P2 | M3 | Planned | [COM-10](tasks/COM-10.md), [LRN-03](tasks/LRN-03.md), [LRN-12](tasks/LRN-12.md), [LRN-05](tasks/LRN-05.md), [ENG-07](tasks/ENG-07.md) |
 
@@ -116,22 +101,7 @@ This is one valid dependency-respecting sequence. Tasks with satisfied dependenc
 
 ### M0 — Scope and immediate safety
 
-1. [SCOPE-01](tasks/SCOPE-01.md) — Establish the uploader-driven product specification
-2. [ENG-03](tasks/ENG-03.md) — Enforce server capability controls for staged features
-3. [SCOPE-02](tasks/SCOPE-02.md) — Remove AI tutoring, generation and provider dependencies
-4. [SEC-01](tasks/SEC-01.md) — Replace known privileged seeds with safe provisioning
-5. [SEC-04](tasks/SEC-04.md) — Separate public catalog DTOs from protected learning DTOs
-6. [SEC-02](tasks/SEC-02.md) — Close raw-file bypasses with authorized private delivery
-7. [SEC-03](tasks/SEC-03.md) — Reject disguised active content and quarantine uploads
-8. [SEC-05](tasks/SEC-05.md) — Eliminate answer-key leaks through explicit question DTOs
-9. [SEC-08](tasks/SEC-08.md) — Use safe assessment result and expiry responses
-10. [SEC-09](tasks/SEC-09.md) — Bind teacher actions to the authenticated actor
-11. [SEC-10](tasks/SEC-10.md) — Revoke authorization on every security-sensitive account change
-12. [SEC-11](tasks/SEC-11.md) — Apply a consistent pending and rejected teacher policy
-13. [SEC-15](tasks/SEC-15.md) — Keep unisolated code execution unavailable at launch
-14. [ENG-01](tasks/ENG-01.md) — Repair the Zod 4 build blocker and nested config schema
-15. [ENG-13](tasks/ENG-13.md) — Build trustworthy isolated tests and production CI gates
-16. [ENG-15](tasks/ENG-15.md) — Align capability claims, runbooks and software-license status
+1. [ENG-13](tasks/ENG-13.md) — Build trustworthy isolated tests and production CI gates
 
 ### M1 — Foundation and content delivery
 

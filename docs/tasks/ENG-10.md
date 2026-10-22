@@ -7,7 +7,7 @@
 | Release milestone | M3 — Paid release and operations |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [SEC-04](SEC-04.md), [LRN-15](LRN-15.md), [ENG-07](ENG-07.md) |
+| Dependencies | [SEC-04](../archive/completed/M0/SEC-04.md), [LRN-15](LRN-15.md), [ENG-07](ENG-07.md) |
 | Original finding / request | [ENG-10 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P2 / S |
 | Acceptance links | [A04](../AUDIT_TRACEABILITY.md#a04), [A38](../AUDIT_TRACEABILITY.md#a38) |

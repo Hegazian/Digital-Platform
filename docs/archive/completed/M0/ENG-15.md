@@ -8,17 +8,17 @@
 | Status | **Complete** |
 | Implementation owner | Documentation and product owner |
 | Dependencies | [SCOPE-01](SCOPE-01.md) |
-| Original finding / request | [ENG-15 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original finding / request | [ENG-15 original finding](../../../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P2 / S |
-| Acceptance links | [A36](../AUDIT_TRACEABILITY.md#a36) |
+| Acceptance links | [A36](../../../AUDIT_TRACEABILITY.md#a36) |
 | Release disposition | Required before completing this milestone; no release credit for documentation alone. |
 
-**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../../../CURRENT_STATUS.md), [implementation results and task disposition](../../reviews/M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../../reviews/M0_REVIEW_ROUND_2.md), and [manual checks](../../../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../../../CURRENT_STATUS.md), [first review](../../reviews/M0_REVIEW_RESOLUTION.md) and [second review](../../reviews/M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../../../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
@@ -26,13 +26,13 @@ Updated **22 October 2026** against application commit **d9c720f**. The M0 engin
 
 README claims include encrypted HLS, a fully isolated playground, parent accounts, usable developer tokens/webhook delivery, and other capabilities absent from the implemented flows. The root MIT badge has no corresponding LICENSE file, while the server package declares ISC.
 
-The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../../../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
 Documentation clearly separates prototype, planned launch and staged capabilities and does not claim a software license that the repository does not establish.
 
-Documentation and product owner owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+Documentation and product owner owns this change. Shared implementation must use the owning tasks in the [ownership register](../../../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../../../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
@@ -44,12 +44,12 @@ Documentation and product owner owns this change. Shared implementation must use
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
-- [README.md](<../../README.md>)
-- [server/README.md](<../../server/README.md>)
-- [client/README.md](<../../client/README.md>)
-- [project_overview_and_usage_guide.md](<../../project_overview_and_usage_guide.md>)
-- [manual_testing_guide.md](<../../manual_testing_guide.md>)
-- [server/package.json](<../../server/package.json>)
+- [README.md](<../../../../README.md>)
+- [server/README.md](<../../../../server/README.md>)
+- [client/README.md](<../../../../client/README.md>)
+- [docs/README.md](<../../../README.md>)
+- [docs/M0_MANUAL_TESTING.md](<../../../M0_MANUAL_TESTING.md>)
+- [server/package.json](<../../../../server/package.json>)
 
 ## API, type and schema contract
 
@@ -59,7 +59,7 @@ Concrete intended boundary example (IDs and dates are illustrative, not producti
 Capability register entry {"name":"automatedPayments","state":"STAGED","ownerTask":"COM-04","evidence":null}; licenseStatus="OWNER_DECISION_REQUIRED" until an approved license file exists.
 ```
 
-Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../../../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
@@ -71,7 +71,7 @@ Commands validate the current actor at execution time. Repeated mutations use th
 
 Archive old guides byte-for-byte with hashes and superseded status. Root entry points become accurate current navigation; old claims remain labeled historical. No deletion of prior evidence or silent rewrite of original FR/TC identifiers.
 
-Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+Follow [expand/backfill/verify/cutover](../../../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 

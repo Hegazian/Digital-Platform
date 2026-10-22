@@ -7,7 +7,7 @@
 | Release milestone | M3 — Paid release and operations |
 | Status | **Planned** |
 | Implementation owner | Identity recovery |
-| Dependencies | [SEC-10](SEC-10.md), [SEC-13](SEC-13.md), [ENG-07](ENG-07.md), [ENH-10](ENH-10.md) |
+| Dependencies | [SEC-10](../archive/completed/M0/SEC-10.md), [SEC-13](SEC-13.md), [ENG-07](ENG-07.md), [ENH-10](ENH-10.md) |
 | Original finding / request | [ENG-11 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / G |
 | Acceptance links | [A33](../AUDIT_TRACEABILITY.md#a33) |

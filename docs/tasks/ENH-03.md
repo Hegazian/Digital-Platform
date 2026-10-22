@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Assets, uploads and processing owner |
-| Dependencies | [SEC-02](SEC-02.md), [SEC-03](SEC-03.md), [ENG-05](ENG-05.md), [ENG-06](ENG-06.md), [ENG-07](ENG-07.md), [ENH-02](ENH-02.md), [ENG-09](ENG-09.md) |
+| Dependencies | [SEC-02](../archive/completed/M0/SEC-02.md), [SEC-03](../archive/completed/M0/SEC-03.md), [ENG-05](ENG-05.md), [ENG-06](ENG-06.md), [ENG-07](ENG-07.md), [ENH-02](ENH-02.md), [ENG-09](ENG-09.md) |
 | Original finding / request | [Revised enhancement scope](../PRODUCT_SCOPE.md) |
 | Original evidence classification | Agreed scope/enhancement request; no defect reproduction claimed. |
 | Acceptance links | [A02](../AUDIT_TRACEABILITY.md#a02), [A03](../AUDIT_TRACEABILITY.md#a03), [A29](../AUDIT_TRACEABILITY.md#a29), [A34](../AUDIT_TRACEABILITY.md#a34), [A37](../AUDIT_TRACEABILITY.md#a37) |

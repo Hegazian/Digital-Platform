@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Identity concurrency |
-| Dependencies | [SEC-10](SEC-10.md), [ENG-05](ENG-05.md) |
+| Dependencies | [SEC-10](../archive/completed/M0/SEC-10.md), [ENG-05](ENG-05.md) |
 | Original finding / request | [SEC-13 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1: refresh-token consumption is not atomic [C] |
 | Acceptance links | [A10](../AUDIT_TRACEABILITY.md#a10), [A33](../AUDIT_TRACEABILITY.md#a33) |

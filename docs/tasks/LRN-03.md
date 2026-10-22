@@ -7,7 +7,7 @@
 | Release milestone | M2 — Authoring and learning |
 | Status | **Planned** |
 | Implementation owner | Assessment grading owner |
-| Dependencies | [LRN-02](LRN-02.md), [SEC-08](SEC-08.md) |
+| Dependencies | [LRN-02](LRN-02.md), [SEC-08](../archive/completed/M0/SEC-08.md) |
 | Original finding / request | [LRN-03 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / G/S |
 | Acceptance links | [A05](../AUDIT_TRACEABILITY.md#a05), [A26](../AUDIT_TRACEABILITY.md#a26) |

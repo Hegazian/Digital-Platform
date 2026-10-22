@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [SEC-05](SEC-05.md), [ENG-05](ENG-05.md) |
+| Dependencies | [SEC-05](../archive/completed/M0/SEC-05.md), [ENG-05](ENG-05.md) |
 | Original finding / request | [SEC-07 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1: any teacher receives any quiz's answer key [R: F04] |
 | Acceptance links | [A05](../AUDIT_TRACEABILITY.md#a05) |

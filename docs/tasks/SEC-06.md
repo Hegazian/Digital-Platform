@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [SEC-04](SEC-04.md), [COM-01](COM-01.md) |
+| Dependencies | [SEC-04](../archive/completed/M0/SEC-04.md), [COM-01](COM-01.md) |
 | Original finding / request | [SEC-06 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1: PRIVATE/UNLISTED visibility is not enforced [R: F02-F03] |
 | Acceptance links | [A04](../AUDIT_TRACEABILITY.md#a04), [A12](../AUDIT_TRACEABILITY.md#a12) |

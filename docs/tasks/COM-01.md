@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Commerce/access policy owner |
-| Dependencies | [SEC-04](SEC-04.md), [COM-09](COM-09.md), [ENH-02](ENH-02.md) |
+| Dependencies | [SEC-04](../archive/completed/M0/SEC-04.md), [COM-09](COM-09.md), [ENH-02](ENH-02.md) |
 | Original finding / request | [COM-01 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / R:F06 |
 | Acceptance links | [A11](../AUDIT_TRACEABILITY.md#a11) |

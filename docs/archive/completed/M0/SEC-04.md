@@ -8,33 +8,33 @@
 | Status | **Complete** |
 | Implementation owner | Learning access; COM-01 owns the final shared policy |
 | Dependencies | None; start independently within the milestone gate. |
-| Original finding / request | [SEC-04 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original finding / request | [SEC-04 original finding](../../../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P0: public course payload includes paid lesson content and storage paths [R: F02-F03] |
-| Acceptance links | [A04](../AUDIT_TRACEABILITY.md#a04) |
+| Acceptance links | [A04](../../../AUDIT_TRACEABILITY.md#a04) |
 | Release disposition | Required before completing this milestone; no release credit for documentation alone. |
 
-**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../../../CURRENT_STATUS.md), [implementation results and task disposition](../../reviews/M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../../reviews/M0_REVIEW_ROUND_2.md), and [manual checks](../../../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../../../CURRENT_STATUS.md), [first review](../../reviews/M0_REVIEW_RESOLUTION.md) and [second review](../../reviews/M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../../../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
 **Original audit/request context; later implementation is recorded above.**
 
-[course.service.ts:152](<../../server/src/modules/courses/course.service.ts>) includes full lesson text, videos, materials, quizzes, and block configurations before returning a public published course. The list endpoint also loads nested lesson resources. The sanitizer only removes selected answer fields; it does not check enrollment or redact protected resources. A client paywall cannot protect these API responses.
+[course.service.ts:152](<../../../../server/src/modules/courses/course.service.ts>) includes full lesson text, videos, materials, quizzes, and block configurations before returning a public published course. The list endpoint also loads nested lesson resources. The sanitizer only removes selected answer fields; it does not check enrollment or redact protected resources. A client paywall cannot protect these API responses.
 
 Split catalog metadata from authenticated learning delivery. Return only lesson titles/preview metadata from catalog endpoints. Enforce access before serializing each protected lesson/resource, including non-video text and blocks.
 
-The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../../../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
 Public reads expose curated discovery metadata; protected lesson bodies, blocks, assessment content and asset grants are serialized only after an explicit access decision.
 
-Learning access; COM-01 owns the final shared policy owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+Learning access; COM-01 owns the final shared policy owns this change. Shared implementation must use the owning tasks in the [ownership register](../../../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../../../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
@@ -45,11 +45,11 @@ Learning access; COM-01 owns the final shared policy owns this change. Shared im
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
-- [server/src/modules/courses/course.service.ts](<../../server/src/modules/courses/course.service.ts>)
-- [server/src/modules/courses/course.routes.ts](<../../server/src/modules/courses/course.routes.ts>)
-- [server/src/modules/collections/collection.service.ts](<../../server/src/modules/collections/collection.service.ts>)
-- [client/src/components/VideoPlayerSection.tsx](<../../client/src/components/VideoPlayerSection.tsx>)
-- [client/src/lib/apiTypes.ts](<../../client/src/lib/apiTypes.ts>)
+- [server/src/modules/courses/course.service.ts](<../../../../server/src/modules/courses/course.service.ts>)
+- [server/src/modules/courses/course.routes.ts](<../../../../server/src/modules/courses/course.routes.ts>)
+- [server/src/modules/collections/collection.service.ts](<../../../../server/src/modules/collections/collection.service.ts>)
+- [client/src/components/VideoPlayerSection.tsx](<../../../../client/src/components/VideoPlayerSection.tsx>)
+- [client/src/lib/apiTypes.ts](<../../../../client/src/lib/apiTypes.ts>)
 
 ## API, type and schema contract
 
@@ -59,7 +59,7 @@ Concrete intended boundary example (IDs and dates are illustrative, not producti
 GET /api/v1/courses/c_1 -> {"data":{"id":"c_1","title":{"ar":"رياضيات"},"lessons":[{"id":"l_1","title":{"ar":"الجبر"},"isPreview":false}]}}; GET /api/v1/learning/lessons/l_1 -> 403 ACCESS_REQUIRED without a grant.
 ```
 
-Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../../../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
@@ -71,7 +71,7 @@ Commands validate the current actor at execution time. Repeated mutations use th
 
 Version unsafe clients to new DTOs; do not preserve leaked fields as compatibility. Keep legacy lesson IDs and catalog URLs. If rollout fails, disable protected reads and repair clients rather than re-expose nested resources.
 
-Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+Follow [expand/backfill/verify/cutover](../../../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 

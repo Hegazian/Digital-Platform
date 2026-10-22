@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [SEC-10](SEC-10.md), [ENG-05](ENG-05.md) |
+| Dependencies | [SEC-10](../archive/completed/M0/SEC-10.md), [ENG-05](ENG-05.md) |
 | Original finding / request | [SEC-14 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P2: MFA enrollment, storage, recovery, and replay handling are incomplete [S/C/G] |
 | Acceptance links | [A10](../AUDIT_TRACEABILITY.md#a10) |

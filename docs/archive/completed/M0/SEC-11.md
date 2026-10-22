@@ -8,31 +8,31 @@
 | Status | **Complete** |
 | Implementation owner | Platform engineering |
 | Dependencies | [SEC-10](SEC-10.md) |
-| Original finding / request | [SEC-11 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original finding / request | [SEC-11 original finding](../../../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1: rejected teachers can log in [R: F11] |
-| Acceptance links | [A09](../AUDIT_TRACEABILITY.md#a09) |
+| Acceptance links | [A09](../../../AUDIT_TRACEABILITY.md#a09) |
 | Release disposition | Required before completing this milestone; no release credit for documentation alone. |
 
-**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../../../CURRENT_STATUS.md), [implementation results and task disposition](../../reviews/M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../../reviews/M0_REVIEW_ROUND_2.md), and [manual checks](../../../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-05 and ENG-13 keep their continuing M1/release obligations In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../../../CURRENT_STATUS.md), [first review](../../reviews/M0_REVIEW_RESOLUTION.md) and [second review](../../reviews/M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../../../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
 **Original audit/request context; later implementation is recorded above.**
 
-[auth.service.ts:118](<../../server/src/modules/auth/auth.service.ts>) blocks only PENDING teachers, not REJECTED teachers. A rejected fixture received a session. The approval middleware blocks some operations, but shared authenticated endpoints remain accessible. Define and enforce a consistent rejected-account policy in login, refresh, MFA completion, and authorization.
+[auth.service.ts:118](<../../../../server/src/modules/auth/auth.service.ts>) blocks only PENDING teachers, not REJECTED teachers. A rejected fixture received a session. The approval middleware blocks some operations, but shared authenticated endpoints remain accessible. Define and enforce a consistent rejected-account policy in login, refresh, MFA completion, and authorization.
 
-The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../../../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
 PENDING and REJECTED teacher accounts cannot obtain a normal platform session; an explicit approval/status flow is separate from learning authorization.
 
-Platform engineering owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+Platform engineering owns this change. Shared implementation must use the owning tasks in the [ownership register](../../../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../../../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
@@ -43,9 +43,9 @@ Platform engineering owns this change. Shared implementation must use the owning
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
-- [server/src/modules/auth/auth.service.ts](<../../server/src/modules/auth/auth.service.ts>)
-- [server/src/modules/auth/mfa.controller.ts](<../../server/src/modules/auth/mfa.controller.ts>)
-- [server/src/modules/auth/auth.middleware.ts](<../../server/src/modules/auth/auth.middleware.ts>)
+- [server/src/modules/auth/auth.service.ts](<../../../../server/src/modules/auth/auth.service.ts>)
+- [server/src/modules/auth/mfa.controller.ts](<../../../../server/src/modules/auth/mfa.controller.ts>)
+- [server/src/modules/auth/auth.middleware.ts](<../../../../server/src/modules/auth/auth.middleware.ts>)
 
 ## API, type and schema contract
 
@@ -55,7 +55,7 @@ Concrete intended boundary example (IDs and dates are illustrative, not producti
 Correct credentials for REJECTED teacher -> 403 ACCOUNT_NOT_APPROVED after credential verification; no access/refresh cookie is issued.
 ```
 
-Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../../../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
@@ -67,7 +67,7 @@ Commands validate the current actor at execution time. Repeated mutations use th
 
 Inventory active rejected teacher sessions and revoke at rollout. Retain owned drafts and review history. Restoring account status is an audited admin action, not a seed update.
 
-Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+Follow [expand/backfill/verify/cutover](../../../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 

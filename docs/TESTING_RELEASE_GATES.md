@@ -2,7 +2,7 @@
 
 ## Current M0 implementation verification (22 October 2026)
 
-Latest verified application commit: **d9c720f**. The [current status](CURRENT_STATUS.md) and [22 October review evidence](../audit/review-round-2/verification.json) are authoritative for this checkpoint. The earlier 21 October results remain historical in [M0 status](M0_IMPLEMENTATION_STATUS.md#original-checkpoint-verification--21-october) and [audit/m0](../audit/m0/verification.json). This documentation refresh did not rerun application tests.
+Latest verified application commit: **d9c720f**. The [current status](CURRENT_STATUS.md) and [22 October review evidence](../audit/review-round-2/verification.json) are authoritative for this checkpoint. The earlier 21 October results remain historical in [M0 status](archive/reviews/M0_IMPLEMENTATION_STATUS.md#original-checkpoint-verification--21-october) and [audit/m0](../audit/m0/verification.json). This documentation refresh did not rerun application tests.
 
 The M0 internal engineering/G0 checkpoint is finalized. Server typecheck/build and coverage gates passed: **77 files / 397 tests**. Client typecheck/build, lint (**0 errors, 25 warnings**) and **9 files / 63 component/hook/transport/proxy tests** passed. Production-build browser checks passed **24 tests, zero skipped**; the same 24 checks passed with `next dev` / Strict Mode. Both modes use the real local API and dedicated PostgreSQL database, on Chromium 156.0.8078.4 desktop and Pixel 5 emulation. Expanded dashboard/profile/session/mobile/cancellation checks supplement enrollment, protected PDFs, assignments, denials and WebM renewal. These are two executions of the same suite, not 48 distinct feature cases. Actual devices and Firefox/WebKit remain open.
 

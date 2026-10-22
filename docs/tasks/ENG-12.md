@@ -7,7 +7,7 @@
 | Release milestone | M4 — Post-launch enhancements |
 | Status | **Planned** |
 | Implementation owner | Developer integrations |
-| Dependencies | [ENG-03](ENG-03.md), [ENG-07](ENG-07.md), [ENH-02](ENH-02.md) |
+| Dependencies | [ENG-03](../archive/completed/M0/ENG-03.md), [ENG-07](ENG-07.md), [ENH-02](ENH-02.md) |
 | Original finding / request | [ENG-12 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P2 / G |
 | Acceptance links | [A40](../AUDIT_TRACEABILITY.md#a40) |

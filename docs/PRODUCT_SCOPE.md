@@ -59,7 +59,7 @@ Archival removes discovery and new sales. Existing valid purchases retain access
 
 File validation, signature/type checks, malware scanning, metadata probing, transcoding supplied media, rendition packaging, deterministic format conversion and thumbnail extraction are allowed. Uploaded captions may be converted between supported file formats without changing their words. All teaching files stay privately stored and referenced through managed asset IDs with authorized delivery.
 
-The platform does **not** create educational text, questions, answers, rubrics, translations, narration, captions or teaching video. It has no AI tutor, model provider integration, model cost pipeline, prompt pipeline or automatic source-to-course generation requirement. Remove existing tutor endpoints/UI/SDK/config/fallback under [SCOPE-02](tasks/SCOPE-02.md). Historical descriptions of these features are preserved as withdrawn recommendations.
+The platform does **not** create educational text, questions, answers, rubrics, translations, narration, captions or teaching video. It has no AI tutor, model provider integration, model cost pipeline, prompt pipeline or automatic source-to-course generation requirement. Remove existing tutor endpoints/UI/SDK/config/fallback under [SCOPE-02](archive/completed/M0/SCOPE-02.md). Historical descriptions of these features are preserved as withdrawn recommendations.
 
 ## Launch completeness and exclusions
 

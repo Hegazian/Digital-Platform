@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Validation adoption; ENH-02 owns shared schemas |
-| Dependencies | [ENH-02](ENH-02.md), [ENG-01](ENG-01.md) |
+| Dependencies | [ENH-02](ENH-02.md), [ENG-01](../archive/completed/M0/ENG-01.md) |
 | Original finding / request | [ENG-04 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A04](../AUDIT_TRACEABILITY.md#a04) |

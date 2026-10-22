@@ -7,7 +7,7 @@
 | Release milestone | M2 — Authoring and learning |
 | Status | **Planned** |
 | Implementation owner | Player block registry |
-| Dependencies | [LRN-05](LRN-05.md), [SEC-04](SEC-04.md), [ENH-03](ENH-03.md) |
+| Dependencies | [LRN-05](LRN-05.md), [SEC-04](../archive/completed/M0/SEC-04.md), [ENH-03](ENH-03.md) |
 | Original finding / request | [LRN-06 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A20](../AUDIT_TRACEABILITY.md#a20) |

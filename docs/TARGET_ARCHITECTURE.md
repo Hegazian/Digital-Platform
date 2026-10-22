@@ -56,15 +56,15 @@ Modules call typed service interfaces. Controllers validate transport input, obt
 | Academic taxonomy | [ENH-01](tasks/ENH-01.md) | ENG-08 repairs read side effects/uniqueness; LRN-15 catalog filters |
 | Canonical modules/lesson mapping | [LRN-07](tasks/LRN-07.md) | Player/progress/revisions consume it; no second Section hierarchy |
 | Effective access/audience policy | [COM-01](tasks/COM-01.md) | COM-09 owns date/lifecycle primitives; SEC-12 domain guards; COM-10 roster projection |
-| Catalog allowlist / learning separation | [SEC-04](tasks/SEC-04.md) | SEC-06 visibility, LRN-09 previews, ENG-10 performance |
-| Safe question/result serializers | [SEC-05](tasks/SEC-05.md) | SEC-08 applies terminal result serializer; SEC-07 author/bank ACL |
+| Catalog allowlist / learning separation | [SEC-04](archive/completed/M0/SEC-04.md) | SEC-06 visibility, LRN-09 previews, ENG-10 performance |
+| Safe question/result serializers | [SEC-05](archive/completed/M0/SEC-05.md) | SEC-08 applies terminal result serializer; SEC-07 author/bank ACL |
 | Asset library/upload/processing pipeline | [ENH-03](tasks/ENH-03.md) | SEC-02 closes existing bypass; SEC-03 validation; ENG-09 bounds existing streams; ENH-07 supplies tracks |
 | Immutable publication/review | [LRN-05](tasks/LRN-05.md) | ENH-06 orchestrates UI; ENH-04 import creates drafts; ENH-05 rights/issues |
 | Assessment engine/version migration | [LRN-02](tasks/LRN-02.md) | LRN-01 expiry fix, LRN-03 grade policy, LRN-04 atomic submit, LRN-10/11 UI timing |
 | Structured import engine | [ENH-04](tasks/ENH-04.md) | ENH-06 authoring UI consumes preview/commit, no second parser |
 | Payment state/ledger/fulfillment | [COM-06](tasks/COM-06.md) | COM-07 product snapshot, COM-08 voucher atomicity, COM-12 UI, COM-04 future adapters |
 | Audit/outbox dispatch | [ENG-07](tasks/ENG-07.md) | ENH-10 notification delivery; COM-06 reconciliation; ENG-12 future webhooks |
-| Server capability policy | [ENG-03](tasks/ENG-03.md) | SEC-15/LRN-08 immediate containment; staged feature tasks own enablement evidence |
+| Server capability policy | [ENG-03](archive/completed/M0/ENG-03.md) | SEC-15/LRN-08 immediate containment; staged feature tasks own enablement evidence |
 | Interface/content locales | [LRN-16](tasks/LRN-16.md) | ENH-07 caption/accessibility specifics; all frontend tasks consume catalogs |
 | Whole CI/test safety/advisory upgrades | [ENG-13](tasks/ENG-13.md) | Domain tasks own meaningful regression assertions and fixtures |
 | Privacy/support/retention execution | [ENH-16](tasks/ENH-16.md) | ENH-11 minor consent/guardian linkage; identity ENG-11 recovery |

@@ -2,7 +2,7 @@
 
 Reviewed **21 October 2026**. Exact lockfile hashes, counts, paths and expiry are in [dependency verification](../audit/m0/dependency-verification.json), with [server](../audit/m0/server-audit.json) and [client](../audit/m0/client-audit.json) reports. Reproduce using `node docs/scripts/audit-dependencies.cjs` from the repository root; an unavailable advisory service is an error.
 
-Refreshed **22 October 2026** during the [second review round](M0_REVIEW_ROUND_2.md), with explicit user authorization for NPM metadata transfer. Lockfiles are unchanged; the policy still passes with zero runtime advisory packages and the same nine development-only exceptions.
+Refreshed **22 October 2026** during the [second review round](archive/reviews/M0_REVIEW_ROUND_2.md), with explicit user authorization for NPM metadata transfer. Lockfiles are unchanged; the policy still passes with zero runtime advisory packages and the same nine development-only exceptions.
 
 This evidence is included at application checkpoint **d9c720f** and summarized in [current status](CURRENT_STATUS.md). The [next-steps plan](NEXT_STEPS.md) keeps remediation under ENG-13, due before paid release or **19 January 2027**, whichever comes first. A documentation refresh does not constitute another advisory scan.
 

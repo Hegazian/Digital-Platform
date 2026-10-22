@@ -1,5 +1,7 @@
 # API and data contracts
 
+Current private-media compatibility rule after the final M0 review: new upload object keys are scoped to the server-generated material/video ID (`lesson-materials/<materialId>/<file>` or `lesson-videos/<videoId>/<file>`). Arbitrary object keys, other buckets and unrelated IDs never establish delivery authority. Video attachment resolves a supplied internal reference to an existing owned upload; manual document attachments use public HTTPS only. External content is delivered without platform credentials. Legacy unscoped references retain their bytes but require verified re-upload under [the recovery procedure](MIGRATION_OPERATIONS.md#private-media-object-binding-after-the-final-m0-review). This transitional binding is not the future ENH-03 managed-asset library.
+
 Refreshed **22 October 2026** against application checkpoint **d9c720f**. See [current implementation and test evidence](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). M0 adapters below exist; C01–C10 remain target contracts until their owning task supplies implementation and compatibility evidence. ENH-02 owns contract/schema migration after ENG-05; consumers must not independently change envelopes.
 
 ## Implemented M0 compatibility adapters

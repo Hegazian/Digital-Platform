@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const {date,implementationCommit,evidence,waves} = require('./current-state.cjs');
+const {retiredRootDocs,historicalDocMoves,taskDocument} = require('./doc-layout.cjs');
 const root = path.resolve(__dirname,'../..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const manifest = JSON.parse(read('docs/task-manifest.json'));
@@ -32,7 +33,8 @@ for(const w of waves) {
 }
 const files = fs.readdirSync(path.join(root,'docs/tasks')).filter(p=>p.endsWith('.md'));
 check(tasks.length===77 && byId.size===77,'Expected 77 unique task records');
-check(files.length===77,'Expected exactly 77 task Markdown files');
+check(files.length===tasks.filter(t=>t.status!=='Complete').length,'Active task files must exclude completed work');
+for(const p of Object.keys(retiredRootDocs))check(!fs.existsSync(path.join(root,p)),'Superseded root wrapper was regenerated: '+p);
 check(expected.every(id=>byId.has(id)) && tasks.every(t=>expected.includes(t.id)),'Task IDs differ from 58 findings + 2 scope + 17 enhancements');
 const sourceAudit = read('audit/PRODUCT_READINESS_REVIEW.md');
 const findingIds = new Set([...sourceAudit.matchAll(/(?:^### |^\| )((?:SEC|COM|LRN|ENG)-\d{2})(?: —| \/)/gm)].map(m=>m[1]));
@@ -40,7 +42,8 @@ check(findingIds.size===58,'Expected 58 original finding headings/rows in preser
 for(const id of findingIds) check(byId.get(id)?.originalFinding===id,'Missing exact finding owner '+id);
 const sections = ['Current delivery and next action','Current behavior and evidence','Intended behavior and ownership boundary','Ordered implementation changes','API, type and schema contract','Authorization, concurrency and failure handling','Migration, compatibility and rollback','Verification and acceptance tests'];
 for(const t of tasks) {
- const docPath=`docs/tasks/${t.id}.md`;
+ const docPath=t.documentPath;
+ check(docPath===taskDocument(t),'Task document disposition differs: '+t.id);
  check(fs.existsSync(path.join(root,docPath)),'Missing task file '+t.id);
  if(!fs.existsSync(path.join(root,docPath))) continue;
  const body=read(docPath);
@@ -87,8 +90,8 @@ for(const a of archives) {
 }
 check(archives.length===13,'Expected 13 exact archived original guides');
 const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','ENG05_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
-for(const p of shared)check(fs.existsSync(path.join(root,'docs',p)),'Missing shared document '+p);
-const activePaths=[...shared.map(p=>'docs/'+p),...files.map(p=>'docs/tasks/'+p),...archives.map(a=>a.path),'docs/archive/INDEX.md'];
+for(const p of shared)check(fs.existsSync(path.join(root,historicalDocMoves['docs/'+p] || 'docs/'+p)),'Missing shared document '+p);
+const activePaths=[...shared.map(p=>historicalDocMoves['docs/'+p] || 'docs/'+p),...tasks.map(t=>t.documentPath),'README.md','server/README.md','client/README.md','docs/archive/INDEX.md','docs/archive/completed/README.md','docs/archive/reviews/README.md','docs/M0_FINAL_REVIEW.md'];
 let links=0,anchors=0;
 function stripFences(body) {return body.replace(/^```[^\n]*\n[\s\S]*?^```\s*$/gm,'');}
 function slugs(body) {
@@ -134,14 +137,14 @@ check(ci.includes('npm run db:migrate:test') && ci.includes('npm run db:migrate:
 check(dbEnv.includes('isDedicatedTestTarget') && dbEnv.includes('isDedicatedDevelopmentTarget') && dbEnv.includes('Refusing prisma db push'),'Schema-push command lacks local-target guards');
 check(migrationFixture.includes('eng05d_') && migrationFixture.includes('driftCheck.status !== 2') && migrationFixture.includes("'_prisma_migrations'"),'Migration fixture must reject drift before writing migration history');
 for(const id of ['C01','C02','C03','C04','C05','C06','C07','C08','C09','C10']) check(contract.includes('## '+id+' —'),'Missing normative contract '+id);
-for(const owner of ['ENH-02','LRN-07','COM-01','ENH-03','LRN-05','LRN-02','ENH-04','COM-06','ENG-07','ENG-03'])check(architecture.includes(`[${owner}](tasks/${owner}.md)`),'Missing owning shared concern '+owner);
+for(const owner of ['ENH-02','LRN-07','COM-01','ENH-03','LRN-05','LRN-02','ENH-04','COM-06','ENG-07','ENG-03'])check(architecture.includes(`[${owner}](${path.posix.relative('docs',taskDocument(byId.get(owner)))})`),'Missing owning shared concern '+owner);
 for(const name of ['Paymob / Fawry','Realtime whiteboard','Code execution','Developer tokens/webhooks','Guardian portal','Certificates','Offline packs'])check(gates.includes('| '+name+' |'),'Missing API disabled matrix row '+name);
 check(gates.includes('FEATURE_DISABLED') && contract.includes('410') && contract.includes('CAPABILITY_REMOVED'),'Missing staged/removal API policy');
 // Only executable/planned requirements, not preserved historical quotes, are checked here.
 const policy=read('docs/PRODUCT_SCOPE.md');
 check(policy.includes('does **not** create educational text') && policy.includes('no AI tutor'),'Missing explicit human content scope');
 const suspicious=[];
-for(const p of activePaths.filter(p=>!p.includes('/tasks/') && !p.endsWith('AUDIT_TRACEABILITY.md'))) {
+for(const p of activePaths.filter(p=>!p.includes('/tasks/') && !p.includes('/archive/') && !p.endsWith('AUDIT_TRACEABILITY.md'))) {
  for(const line of read(p).split('\n')) {
   if(/\b(must|shall|required to|implement)\b.{0,80}\b(AI generation|AI tutoring|generate educational|generated translations|AI production pipeline)\b/i.test(line) && !/\b(no|not|remove|withdrawn|outside|superseded|do not)\b/i.test(line))suspicious.push(p+': '+line);
  }

@@ -7,7 +7,7 @@
 | Release milestone | M1 — Foundation and content delivery |
 | Status | **Planned** |
 | Implementation owner | Platform engineering |
-| Dependencies | [ENG-01](ENG-01.md) |
+| Dependencies | [ENG-01](../archive/completed/M0/ENG-01.md) |
 | Original finding / request | [ENG-02 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / R:F10 |
 | Acceptance links | [A18](../AUDIT_TRACEABILITY.md#a18) |

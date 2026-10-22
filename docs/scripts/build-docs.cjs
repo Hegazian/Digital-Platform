@@ -3,10 +3,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { date, implementationCommit, taskUpdate } = require('./current-state.cjs');
+const { retiredRootDocs, historicalDocMoves, taskDocument, rewriteLinks } = require('./doc-layout.cjs');
 const root = path.resolve(__dirname, '../..');
 const docs = path.join(root, 'docs');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
-const write = (p, s) => { const f = path.join(root, p); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s.trim() + '\n', 'utf8'); };
+const write = (p, s) => {
+  if (retiredRootDocs[p]) return;
+  const output = historicalDocMoves[p] || p;
+  const f = path.join(root, output);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, rewriteLinks(s.trim(), p, output, tasks) + '\n', 'utf8');
+};
 const tasks = [];
 // Each row supplies implementation-specific detail; shared protocols live in the linked specifications.
 function task(id, title, p, m, deps, paths, target, steps, example, controls, migration, tests, done, owner = 'Platform engineering') {
@@ -212,7 +219,11 @@ require('./tasks-learning.cjs')(task);
 require('./tasks-engineering.cjs')(task);
 require('./tasks-enhancements.cjs')(task);
 const { cases, writeShared } = require('./shared-docs.cjs');
-for (const t of tasks) t.status = statusOverrides[t.id] || 'Planned';
+for (const t of tasks) {
+  t.status = statusOverrides[t.id] || 'Planned';
+  t.documentPath = taskDocument(t);
+  t.paths = [...new Set(t.paths.map(p => retiredRootDocs[p] || p))];
+}
 const link = id => `[${id}](${id}.md)`;
 function taskText(t) {
   const finding = findings.get(t.id);
@@ -308,8 +319,19 @@ for (const p of archiveFiles) {
   if (!fs.existsSync(path.join(root,dest))) { fs.mkdirSync(path.dirname(path.join(root,dest)),{recursive:true}); fs.copyFileSync(path.join(root,p),path.join(root,dest)); }
   hashes.push({path:p, archive:dest, sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,dest))).digest('hex')});
 }
-for (const t of tasks) write(`docs/tasks/${t.id}.md`, taskText(t));
-write('docs/task-manifest.json', JSON.stringify({schemaVersion:1,date,baseline:'2fbdc8e',implementationCommit,milestones:milestoneNames,tasks:tasks.map(t=>({...t,originalFinding:findings.has(t.id)?t.id:null,originalEvidence:findings.get(t.id)?.title||null,acceptanceCases:cases.filter(c=>c.tasks.includes(t.id)).map(c=>c.id)})),acceptanceCases:cases},null,2));
+for (const t of tasks) write(t.documentPath, rewriteLinks(taskText(t), `docs/tasks/${t.id}.md`, t.documentPath, tasks));
+write('docs/task-manifest.json', JSON.stringify({schemaVersion:2,date,baseline:'2fbdc8e',implementationCommit,milestones:milestoneNames,tasks:tasks.map(t=>({...t,originalFinding:findings.has(t.id)?t.id:null,originalEvidence:findings.get(t.id)?.title||null,acceptanceCases:cases.filter(c=>c.tasks.includes(t.id)).map(c=>c.id)})),acceptanceCases:cases},null,2));
 write('docs/archive/manifest.json',JSON.stringify(hashes,null,2));
 writeShared({root,docs,read,write,tasks,findings,originalCases,cases,milestoneNames});
-console.log(`Wrote ${tasks.length} task documents, shared specifications and repository entry points.`);
+write('docs/archive/completed/README.md', `# Completed milestone 0 work\n\nThese ${tasks.filter(t=>t.status==='Complete').length} task specifications are retained as historical implementation/acceptance records. They are excluded from the [active backlog](../../ROADMAP_BACKLOG.md). Completion covers the internal M0/G0 engineering checkpoint; production holds remain in [current status](../../CURRENT_STATUS.md).\n\n${tasks.filter(t=>t.status==='Complete').map(t=>`- [${t.id} — ${t.title}](M0/${t.id}.md)`).join('\n')}\n`);
+// Keep hand-written specifications linked to the current document locations.
+for (const p of fs.readdirSync(docs).filter(p=>p.endsWith('.md'))) write(`docs/${p}`, read(`docs/${p}`));
+write('docs/archive/reviews/README.md', `# Historical M0 review evidence\n\nCurrent decisions and verification are in [the final review](../../M0_FINAL_REVIEW.md). These earlier reviews retain their findings, fixes and original checkpoint evidence; their older counts and task statuses are historical.\n\n${Object.values(historicalDocMoves).map(p=>`- [${path.basename(p)}](${path.basename(p)})`).join('\n')}\n`);
+// Exact known generated paths only; never remove source, uploads, or audit evidence.
+for (const t of tasks.filter(t=>t.status==='Complete')) {
+  const old = path.join(root, 'docs/tasks', `${t.id}.md`);
+  if (fs.existsSync(old)) fs.unlinkSync(old);
+}
+for (const p of Object.keys(retiredRootDocs)) if (fs.existsSync(path.join(root,p))) fs.unlinkSync(path.join(root,p));
+for (const p of Object.keys(historicalDocMoves)) if (fs.existsSync(path.join(root,p))) fs.unlinkSync(path.join(root,p));
+console.log(`Wrote ${tasks.filter(t=>t.status!=='Complete').length} active and ${tasks.filter(t=>t.status==='Complete').length} archived task documents; removed superseded root wrappers.`);

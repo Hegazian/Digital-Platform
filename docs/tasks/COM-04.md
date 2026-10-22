@@ -7,7 +7,7 @@
 | Release milestone | M3 — Paid release and operations |
 | Status | **Planned** |
 | Implementation owner | Commerce provider adapters; staged subdeliverables |
-| Dependencies | [ENG-03](ENG-03.md), [COM-06](COM-06.md), [COM-07](COM-07.md) |
+| Dependencies | [ENG-03](../archive/completed/M0/ENG-03.md), [COM-06](COM-06.md), [COM-07](COM-07.md) |
 | Original finding / request | [COM-04 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S/G |
 | Acceptance links | [A14](../AUDIT_TRACEABILITY.md#a14), [A15](../AUDIT_TRACEABILITY.md#a15) |
