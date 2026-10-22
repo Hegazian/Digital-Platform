@@ -104,12 +104,13 @@ export class StorageService {
   /**
    * Upload a file buffer to the explicitly selected storage backend.
    */
-  static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials'): Promise<string> {
+  static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials', scope?: string): Promise<string> {
     const driver = this.driver();
     const { base: supabaseUrl, key: supabaseKey } = driver === 'supabase' ? this.supabaseConfig() : { base: '', key: '' };
 
     const extension = path.extname(fileName).toLowerCase().replace(/[^a-z0-9.]/g, '');
-    const uniqueFileName = `${randomUUID()}${extension}`;
+    if (scope && !/^[a-f0-9-]+$/i.test(scope)) throw new Error('Invalid storage scope');
+    const uniqueFileName = `${scope ? `${scope}/` : ''}${randomUUID()}${extension}`;
 
     if (driver === 'supabase') {
       try {
@@ -140,6 +141,7 @@ export class StorageService {
     }
 
     const localFilePath = path.join(uploadDir, uniqueFileName);
+    fs.mkdirSync(path.dirname(localFilePath), { recursive: true });
     fs.writeFileSync(localFilePath, fileBuffer);
 
     return `/uploads/${bucketName}/${uniqueFileName}`;
@@ -194,11 +196,8 @@ export class StorageService {
    */
   static async deleteFile(fileUrl: string): Promise<void> {
     if (fileUrl.startsWith('/uploads/')) {
-      const parts = fileUrl.split('/');
-      const fileName = parts.pop()!;
-      const bucketName = parts.pop()!;
       const root = path.resolve(getUploadsRoot());
-      const localFilePath = path.resolve(root, bucketName, fileName);
+      const localFilePath = path.resolve(root, fileUrl.slice('/uploads/'.length));
       if (!localFilePath.startsWith(root + path.sep) || !fs.existsSync(localFilePath)) return;
       const realRoot = fs.realpathSync(root);
       const realFilePath = fs.realpathSync(localFilePath);

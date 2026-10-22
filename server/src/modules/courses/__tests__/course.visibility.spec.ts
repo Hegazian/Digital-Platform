@@ -23,6 +23,15 @@ describe('Course Read Visibility & Answer Sanitization', () => {
   let draftCourseId: string;
   let publishedCourseId: string;
 
+  it('preserves catalog and protected learning timestamps as ISO strings', async () => {
+    const catalog = await request(app).get(`/api/v1/courses/${publishedCourseId}`);
+    expect(catalog.status).toBe(200);
+    expect(new Date(catalog.body.data.createdAt).toISOString()).toBe(catalog.body.data.createdAt);
+    const learning = await request(app).get(`/api/v1/courses/${publishedCourseId}/learning`).set('Authorization', `Bearer ${teacherAToken}`);
+    expect(learning.status).toBe(200);
+    expect(new Date(learning.body.data.updatedAt).toISOString()).toBe(learning.body.data.updatedAt);
+  });
+
   const seedCurriculum = async (courseId: string, marker: string) => {
     const mod = await prisma.courseModule.create({
       data: { courseId, titleEn: `Module ${marker}`, titleAr: `وحدة ${marker}` },

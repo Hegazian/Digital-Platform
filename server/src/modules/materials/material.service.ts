@@ -2,6 +2,8 @@ import { prisma } from '../../prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { StorageService } from '../../utils/storage';
 import { Role, SubscriptionStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { materialDeliveryUrl, materialObjectKey } from './material-reference';
 
 export class MaterialService {
   /**
@@ -43,11 +45,13 @@ export class MaterialService {
     }
 
     // Upload to Supabase/Storage
-    const fileUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType);
+    const materialId = randomUUID();
+    const fileUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-materials', materialId);
 
     // Save to Database
     const material = await prisma.material.create({
       data: {
+        id: materialId,
         lessonId,
         title,
         fileUrl,
@@ -108,8 +112,8 @@ export class MaterialService {
     return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
   }
 
-  private static withProtectedUrls<T extends Array<{ id: string }>>(materials: T): T {
-    return materials.map((material) => ({ ...material, fileUrl: `/api/v1/materials/${material.id}/content` })) as unknown as T;
+  private static withProtectedUrls<T extends Array<{ id: string; fileUrl: string }>>(materials: T): T {
+    return materials.map((material) => ({ ...material, fileUrl: materialDeliveryUrl(material) })) as unknown as T;
   }
 
   static async getMaterialForDelivery(materialId: string, userId: string, userRole: Role) {
@@ -155,7 +159,12 @@ export class MaterialService {
       throw new ForbiddenError('You do not have permission to delete this material');
     }
 
-    await StorageService.deleteFile(material.fileUrl);
+    let boundObject = false;
+    try { materialObjectKey(material); boundObject = true; } catch (error) {
+      if (!(error instanceof NotFoundError)) throw error;
+    }
+    // Removing an unverified legacy database reference never deletes its bytes.
+    if (boundObject) await StorageService.deleteFile(material.fileUrl);
     await prisma.material.delete({ where: { id: materialId } });
 
     return { message: 'Material deleted successfully' };

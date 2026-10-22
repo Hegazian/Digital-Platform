@@ -45,10 +45,16 @@ async function main() {
     ids.courses.push(course.id);
     const module = await db.courseModule.create({ data: { courseId: course.id, titleEn: 'Uploaded unit', titleAr: 'وحدة مرفوعة' } });
     const lesson = await db.lesson.create({ data: { moduleId: module.id, titleEn: `M0 lesson ${locale}`, titleAr: `درس الاختبار ${locale}`, orderIndex: 0 } });
-    const file = `${crypto.randomUUID()}.pdf`;
-    fs.writeFileSync(path.join(env.UPLOADS_DIR, 'lesson-materials', file), '%PDF-1.7\nM0 study fixture\n%%EOF');
-    const material = await db.material.create({ data: { lessonId: lesson.id, title: 'M0 study PDF', fileType: 'application/pdf', fileUrl: `/uploads/lesson-materials/${file}`, sizeBytes: 40 } });
-    const secondMaterial = await db.material.create({ data: { lessonId: lesson.id, title: 'M0 second PDF', fileType: 'application/pdf', fileUrl: `/uploads/lesson-materials/${file}`, sizeBytes: 40 } });
+    async function document(title) {
+      const id = crypto.randomUUID();
+      const file = `${crypto.randomUUID()}.pdf`;
+      const directory = path.join(env.UPLOADS_DIR, 'lesson-materials', id);
+      fs.mkdirSync(directory, { recursive: true });
+      fs.writeFileSync(path.join(directory, file), '%PDF-1.7\nM0 study fixture\n%%EOF');
+      return db.material.create({ data: { id, lessonId: lesson.id, title, fileType: 'application/pdf', fileUrl: `/uploads/lesson-materials/${id}/${file}`, sizeBytes: 40 } });
+    }
+    const material = await document('M0 study PDF');
+    const secondMaterial = await document('M0 second PDF');
     const assignment = await db.assignment.create({ data: { lessonId: lesson.id, createdById: fixture.users.teacher.id, titleEn: 'M0 assignment', titleAr: 'واجب الاختبار', maxAttempts: 3 } });
     fixture.courses[locale] = { id: course.id, lessonId: lesson.id, materialId: material.id, secondMaterialId: secondMaterial.id, assignmentId: assignment.id };
   }

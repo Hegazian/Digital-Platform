@@ -5,6 +5,7 @@ import { BadRequestError, NotFoundError } from '../../utils/errors';
 import fs from 'fs';
 import path from 'path';
 import { getUploadsRoot, StorageService } from '../../utils/storage';
+import { externalMaterialUrl, materialObjectKey } from './material-reference';
 
 export class MaterialController {
   static async uploadMaterial(req: AuthRequest, res: Response, next: NextFunction) {
@@ -50,6 +51,10 @@ export class MaterialController {
       const material = await MaterialService.getMaterialForDelivery(req.params.id as string, req.user!.userId, req.user!.role);
       res.setHeader('Cache-Control', 'private, no-store');
       const stored = material.fileUrl;
+      if (/^https?:\/\//i.test(stored)) {
+        return res.redirect(302, externalMaterialUrl(stored));
+      }
+      const internalPath = materialObjectKey(material);
       if (stored.startsWith('/uploads/')) {
         const root = path.resolve(getUploadsRoot());
         const relative = stored.replace(/^\/uploads\//, '');
@@ -63,16 +68,7 @@ export class MaterialController {
         res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath).replace(/["\r\n]/g, '_')}"`);
         return res.sendFile(realFilePath, { dotfiles: 'allow' });
       }
-      const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-      let internalPath = stored;
-      if (/^https?:\/\//i.test(stored)) {
-        const parsed = new URL(stored);
-        const match = parsed.pathname.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+\/.+)$/);
-        if (!match) throw new NotFoundError('Material file not found');
-        internalPath = decodeURIComponent(match[1]);
-      }
       const signedUrl = await StorageService.getSignedUrl(internalPath, 120);
-      if (!supabaseUrl && /^https?:\/\//i.test(stored)) return res.redirect(302, signedUrl);
       res.redirect(302, signedUrl);
     } catch (error) { next(error); }
   }

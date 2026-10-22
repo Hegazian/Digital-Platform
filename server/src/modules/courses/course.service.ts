@@ -4,6 +4,7 @@ import { VideoStatus, Role } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
 import { egpToUsd, usdToEgp } from '../../utils/currency';
 import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
+import { externalMaterialUrl, materialDeliveryUrl } from '../materials/material-reference';
 
 export class CourseService {
   /**
@@ -15,6 +16,7 @@ export class CourseService {
     const scrub = (value: any): any => {
       if (Array.isArray(value)) return value.map(scrub);
       if (!value || typeof value !== 'object') return value;
+      if (value instanceof Date) return value.toISOString();
       if ('quizId' in value && 'questionText' in value && typeof value.id === 'string') {
         const options = Array.isArray(value.options) ? value.options.map((option: any) => {
           if (!option || typeof option !== 'object') return option;
@@ -23,7 +25,7 @@ export class CourseService {
         return { id: value.id, questionText: value.questionText, type: value.type, orderIndex: value.orderIndex, points: value.points, options };
       }
       if ('fileUrl' in value && 'lessonId' in value && typeof value.id === 'string') {
-        value = { ...value, fileUrl: `/api/v1/materials/${value.id}/content` };
+        value = { ...value, fileUrl: materialDeliveryUrl(value) };
       }
       const forbidden = new Set(['correctAnswer', 'correctAnswerJson', 'isCorrect', 'explanation', 'questionsSnapshotJson', 'email', 'videoUrl']);
       return Object.fromEntries(Object.entries(value).filter(([key]) => !forbidden.has(key)).map(([key, item]) => [key, scrub(item)]));
@@ -905,7 +907,7 @@ export class CourseService {
         materials: data.materials && data.materials.length > 0 ? {
           create: data.materials.map((m) => ({
             title: m.title,
-            fileUrl: m.fileUrl,
+            fileUrl: externalMaterialUrl(m.fileUrl),
             fileType: m.fileType || 'pdf',
             sizeBytes: m.fileSize || 1024,
           })),
@@ -988,7 +990,7 @@ export class CourseService {
       data: {
         lessonId,
         title: data.title,
-        fileUrl: data.fileUrl,
+        fileUrl: externalMaterialUrl(data.fileUrl),
         fileType: data.fileType || 'pdf',
         sizeBytes: data.fileSize || 1024,
       },

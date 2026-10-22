@@ -126,6 +126,32 @@ describe('Material API Integration Tests', () => {
   });
 
   describe('GET /api/v1/materials/lesson/:lessonId', () => {
+    it('delivers a server-bound uploaded document and rejects key substitution', async () => {
+      const good = await request(app).get(`/api/v1/materials/${materialId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+      expect(good.status).toBe(200);
+      const original = await prisma.material.findUniqueOrThrow({ where: { id: materialId } });
+      for (const fileUrl of ['submission-files/private.pdf', '/uploads/submission-files/private.pdf', original.fileUrl.replace(materialId, 'unrelated-material')]) {
+        await prisma.material.update({ where: { id: materialId }, data: { fileUrl } });
+        const denied = await request(app).get(`/api/v1/materials/${materialId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+        expect(denied.status).toBe(404);
+      }
+      await prisma.material.update({ where: { id: materialId }, data: { fileUrl: original.fileUrl } });
+    });
+
+    it('preserves external HTTPS document links and rejects internal references at authoring', async () => {
+      const endpoint = `/api/v1/courses/lessons/${lessonId}/material`;
+      for (const fileUrl of ['submission-files/private.pdf', '/uploads/lesson-materials/private.pdf', 'https://private.supabase.co/storage/v1/object/public/submission-files/private.pdf']) {
+        const denied = await request(app).post(endpoint).set('Authorization', `Bearer ${teacherToken}`).send({ title: 'Forged', fileUrl });
+        expect(denied.status).toBe(400);
+      }
+      const created = await request(app).post(endpoint).set('Authorization', `Bearer ${teacherToken}`).send({ title: 'School notes', fileUrl: 'https://school.example/notes.pdf' });
+      expect(created.status).toBe(201);
+      const externalId = created.body.data.id;
+      const delivered = await request(app).get(`/api/v1/materials/${externalId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+      expect(delivered.status).toBe(302);
+      expect(delivered.headers.location).toBe('https://school.example/notes.pdf');
+      expect(delivered.headers.authorization).toBeUndefined();
+    });
     it('should deny non-subscribed student access to materials', async () => {
       const res = await request(app)
         .get(`/api/v1/materials/lesson/${lessonId}`)

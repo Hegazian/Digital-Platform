@@ -43,7 +43,7 @@ vi.mock('../../../prisma', () => ({
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     $transaction: vi.fn((callback: (tx: any) => any) => callback({
-      user: { update: transactionMocks.userUpdate, count: transactionMocks.userCount },
+      user: { update: transactionMocks.userUpdate, count: transactionMocks.userCount, findUnique: (...args: any[]) => (prisma.user.findUnique as any)(...args) },
       refreshToken: { updateMany: transactionMocks.tokenUpdateMany },
     })),
   },
@@ -123,7 +123,7 @@ describe('AdminService Unit Tests', () => {
     });
 
     it('should throw ForbiddenError when trying to deactivate admin', async () => {
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'a1', role: 'ADMIN' });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'a1', role: 'ADMIN', isActive: true });
 
       await expect(AdminService.setUserActiveStatus('a1', false)).rejects.toThrow(ForbiddenError);
     });

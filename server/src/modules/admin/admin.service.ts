@@ -1,10 +1,19 @@
 import { prisma } from '../../prisma';
-import { Role, TeacherStatus, SubscriptionStatus } from '@prisma/client';
+import { Prisma, Role, TeacherStatus, SubscriptionStatus } from '@prisma/client';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { logAuditAction } from '../audit/audit.service';
 import { invalidateActivationCache } from '../auth/auth.middleware';
 
 export class AdminService {
+  private static async changeAccount<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await prisma.$transaction(work, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      } catch (error) {
+        if (attempt >= 3 || (error as { code?: string }).code !== 'P2034') throw error;
+      }
+    }
+  }
   /**
    * Get all users with optional filtering by role, teacher status, and search query.
    * Supports pagination via skip/take.
@@ -151,8 +160,10 @@ export class AdminService {
       throw new NotFoundError('User not found');
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      if (user.role === Role.ADMIN && !isActive) {
+    const updated = await this.changeAccount(async (tx) => {
+      const current = await tx.user.findUnique({ where: { id: userId } });
+      if (!current) throw new NotFoundError('User not found');
+      if (current.role === Role.ADMIN && current.isActive && !isActive) {
         const count = await tx.user.count({ where: { role: Role.ADMIN, isActive: true } });
         if (count <= 1) throw new ForbiddenError('Cannot deactivate the last active admin');
       }
@@ -290,8 +301,10 @@ export class AdminService {
     }
 
     const securityChange = data.role !== undefined || data.teacherStatus !== undefined || data.isActive !== undefined || hashedPassword !== undefined;
-    const updated = await prisma.$transaction(async (tx) => {
-      if (user.role === Role.ADMIN && (data.role && data.role !== Role.ADMIN || data.isActive === false)) {
+    const updated = await this.changeAccount(async (tx) => {
+      const current = await tx.user.findUnique({ where: { id: userId } });
+      if (!current) throw new NotFoundError('User not found');
+      if (current.role === Role.ADMIN && current.isActive && (data.role && data.role !== Role.ADMIN || data.isActive === false)) {
         const count = await tx.user.count({ where: { role: Role.ADMIN, isActive: true } });
         if (count <= 1) throw new ForbiddenError('Cannot remove the last active admin');
       }
