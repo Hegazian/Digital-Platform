@@ -1,10 +1,19 @@
 import { prisma } from '../../prisma';
-import { Role, TeacherStatus, SubscriptionStatus } from '@prisma/client';
+import { Prisma, Role, TeacherStatus, SubscriptionStatus } from '@prisma/client';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { logAuditAction } from '../audit/audit.service';
 import { invalidateActivationCache } from '../auth/auth.middleware';
 
 export class AdminService {
+  private static async changeAccount<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await prisma.$transaction(work, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      } catch (error) {
+        if (attempt >= 3 || (error as { code?: string }).code !== 'P2034') throw error;
+      }
+    }
+  }
   /**
    * Get all users with optional filtering by role, teacher status, and search query.
    * Supports pagination via skip/take.
@@ -111,16 +120,14 @@ export class AdminService {
       throw new BadRequestError(`Teacher is already ${status}`);
     }
 
-    const updated = await prisma.user.update({
-      where: { id: teacherId },
-      data: { teacherStatus: status as TeacherStatus },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        teacherStatus: true,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({
+        where: { id: teacherId },
+        data: { teacherStatus: status as TeacherStatus, authVersion: { increment: 1 } },
+        select: { id: true, email: true, name: true, role: true, teacherStatus: true },
+      });
+      await tx.refreshToken.updateMany({ where: { userId: teacherId, revokedAt: null }, data: { revokedAt: new Date() } });
+      return result;
     });
 
     // Send notification email to teacher (non-blocking)
@@ -153,32 +160,24 @@ export class AdminService {
       throw new NotFoundError('User not found');
     }
 
-    // Prevent deactivating other admins
-    if (user.role === Role.ADMIN && !isActive) {
-      throw new ForbiddenError('Cannot deactivate admin accounts');
-    }
-
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: { isActive },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-      },
+    const updated = await this.changeAccount(async (tx) => {
+      const current = await tx.user.findUnique({ where: { id: userId } });
+      if (!current) throw new NotFoundError('User not found');
+      if (current.role === Role.ADMIN && current.isActive && !isActive) {
+        const count = await tx.user.count({ where: { role: Role.ADMIN, isActive: true } });
+        if (count <= 1) throw new ForbiddenError('Cannot deactivate the last active admin');
+      }
+      const result = await tx.user.update({
+        where: { id: userId },
+        data: { isActive, authVersion: { increment: 1 } },
+        select: { id: true, email: true, name: true, role: true, isActive: true },
+      });
+      await tx.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      return result;
     });
 
     // Instant revocation: next request from this user re-checks the DB.
     invalidateActivationCache(userId);
-
-    // Deactivation also kills every live refresh session immediately
-    // (reactivation requires a fresh login).
-    if (!isActive) {
-      const { AuthService } = await import('../auth/auth.service');
-      await AuthService.revokeAllForUser(userId);
-    }
 
     await logAuditAction(
       adminId || userId,
@@ -301,28 +300,32 @@ export class AdminService {
       hashedPassword = await bcrypt.hash(data.password, 10);
     }
 
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(data.name && { name: data.name }),
-        ...(data.email && { email: data.email }),
-        ...(data.role && { role: data.role }),
-        ...(data.teacherStatus !== undefined && { teacherStatus: data.teacherStatus }),
-        ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
-        ...(hashedPassword && { password: hashedPassword }),
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        teacherStatus: true,
-        gradeId: true,
-        isActive: true,
-        createdAt: true,
-      },
+    const securityChange = data.role !== undefined || data.teacherStatus !== undefined || data.isActive !== undefined || hashedPassword !== undefined;
+    const updated = await this.changeAccount(async (tx) => {
+      const current = await tx.user.findUnique({ where: { id: userId } });
+      if (!current) throw new NotFoundError('User not found');
+      if (current.role === Role.ADMIN && current.isActive && (data.role && data.role !== Role.ADMIN || data.isActive === false)) {
+        const count = await tx.user.count({ where: { role: Role.ADMIN, isActive: true } });
+        if (count <= 1) throw new ForbiddenError('Cannot remove the last active admin');
+      }
+      const result = await tx.user.update({
+        where: { id: userId },
+        data: {
+          ...(data.name && { name: data.name }),
+          ...(data.email && { email: data.email }),
+          ...(data.role && { role: data.role }),
+          ...(data.teacherStatus !== undefined && { teacherStatus: data.teacherStatus }),
+          ...(data.gradeId !== undefined && { gradeId: data.gradeId }),
+          ...(data.isActive !== undefined && { isActive: data.isActive }),
+          ...(hashedPassword && { password: hashedPassword }),
+          ...(securityChange && { authVersion: { increment: 1 } }),
+        },
+        select: { id: true, email: true, name: true, role: true, teacherStatus: true, gradeId: true, isActive: true, createdAt: true },
+      });
+      if (securityChange) await tx.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      return result;
     });
+    invalidateActivationCache(userId);
 
     await logAuditAction(
       adminId || userId,

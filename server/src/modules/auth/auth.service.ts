@@ -32,6 +32,12 @@ export class AuthService {
     if (role === Role.ADMIN) {
       throw new ForbiddenError('Admin accounts cannot be created through public registration');
     }
+    if (sanitizedRole === Role.TEACHER) {
+      const config = await (prisma as any).appConfig?.findFirst?.({ select: { allowTeacherRegistration: true } });
+      if (config && config.allowTeacherRegistration === false) {
+        throw new ForbiddenError('Teacher registration is currently closed');
+      }
+    }
 
     // Students must carry their identifier and grade year (zod enforces for
     // HTTP; this guard covers direct service callers).
@@ -115,13 +121,13 @@ export class AuthService {
       throw new UnauthorizedError('Account is deactivated or unverified');
     }
 
-    if (user.role === Role.TEACHER && user.teacherStatus === TeacherStatus.PENDING) {
-      throw new UnauthorizedError('Teacher account is pending approval');
-    }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedError('Invalid credentials');
+    }
+
+    if (user.role === Role.TEACHER && user.teacherStatus !== TeacherStatus.APPROVED) {
+      throw new ForbiddenError('Teacher account is not approved');
     }
 
     // Enterprise MFA Check
@@ -134,7 +140,7 @@ export class AuthService {
         }
       } else {
         const { generateAccessToken } = await import('../../utils/jwt');
-        const mfaSessionToken = generateAccessToken({ userId: user.id, purpose: 'mfa_challenge' });
+        const mfaSessionToken = generateAccessToken({ userId: user.id, authVersion: user.authVersion, purpose: 'mfa_challenge' });
         return {
           mfaRequired: true,
           mfaSessionToken,
@@ -143,7 +149,7 @@ export class AuthService {
       }
     }
 
-    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
+    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus, authVersion: user.authVersion };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
     await persistRefreshToken(user.id, refreshToken);
@@ -185,6 +191,12 @@ export class AuthService {
     if (!user || !user.isActive || !user.mfaSecret) {
       throw new UnauthorizedError('Invalid user account or MFA not configured');
     }
+    if ((decoded.authVersion ?? 0) !== (user.authVersion ?? 0)) {
+      throw new UnauthorizedError('MFA challenge is no longer valid; please sign in again');
+    }
+    if (user.role === Role.TEACHER && user.teacherStatus !== TeacherStatus.APPROVED) {
+      throw new ForbiddenError('Teacher account is not approved');
+    }
 
     const { verifyTotpToken } = await import('../../utils/totp');
     const isCodeValid = await verifyTotpToken(user.id, user.mfaSecret, mfaCode);
@@ -192,7 +204,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid MFA authentication code');
     }
 
-    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
+    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus, authVersion: user.authVersion };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
     await persistRefreshToken(user.id, refreshToken);
@@ -253,7 +265,15 @@ export class AuthService {
       throw new UnauthorizedError('User account is invalid or deactivated');
     }
 
-    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus };
+    if (user.role === Role.TEACHER && user.teacherStatus !== TeacherStatus.APPROVED) {
+      await prisma.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } });
+      throw new ForbiddenError('Teacher account is not approved');
+    }
+    if ((decoded.authVersion ?? 0) !== (user.authVersion ?? 0)) {
+      throw new UnauthorizedError('Session authorization has changed; please sign in again');
+    }
+
+    const payload = { userId: user.id, role: user.role, teacherStatus: user.teacherStatus, authVersion: user.authVersion };
     const newAccessToken = generateAccessToken(payload);
     const newRefreshToken = generateRefreshToken(payload);
 

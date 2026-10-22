@@ -1,5 +1,4 @@
-import { PrismaClient, Role, TeacherStatus, ProductType } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import { PrismaClient, ProductType } from '@prisma/client';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -8,69 +7,9 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting Canonical Database Seeding...');
 
-  const defaultPasswordHash = await bcrypt.hash('Password123!', 10);
-  const adminPasswordHash = await bcrypt.hash('Abdo@56751790', 10);
+  // User accounts are never seeded. Provision the initial administrator with `npm run create:admin`.
 
-  // 1. Root Administrator
-  const admin = await prisma.user.upsert({
-    where: { email: 'abdelrahmanhegazy70@gmail.com' },
-    update: {
-      password: adminPasswordHash,
-      role: Role.ADMIN,
-      isActive: true,
-      name: 'Abdelrahman Hegazy (Admin)',
-    },
-    create: {
-      email: 'abdelrahmanhegazy70@gmail.com',
-      password: adminPasswordHash,
-      name: 'Abdelrahman Hegazy (Admin)',
-      role: Role.ADMIN,
-      isActive: true,
-    },
-  });
-  console.log(`✅ Root Admin Seeded: ${admin.email}`);
-
-  // 2. Demo Teacher
-  const teacher = await prisma.user.upsert({
-    where: { email: 'teacher@eduplatform.com' },
-    update: {
-      password: defaultPasswordHash,
-      role: Role.TEACHER,
-      teacherStatus: TeacherStatus.APPROVED,
-      isActive: true,
-      name: 'Dr. Mahmoud El-Sayed',
-    },
-    create: {
-      email: 'teacher@eduplatform.com',
-      password: defaultPasswordHash,
-      name: 'Dr. Mahmoud El-Sayed',
-      role: Role.TEACHER,
-      teacherStatus: TeacherStatus.APPROVED,
-      isActive: true,
-    },
-  });
-  console.log(`✅ Demo Teacher Seeded: ${teacher.email}`);
-
-  // 3. Demo Student
-  const student = await prisma.user.upsert({
-    where: { email: 'student@eduplatform.com' },
-    update: {
-      password: defaultPasswordHash,
-      role: Role.STUDENT,
-      isActive: true,
-      name: 'Omar Mostafa',
-    },
-    create: {
-      email: 'student@eduplatform.com',
-      password: defaultPasswordHash,
-      name: 'Omar Mostafa',
-      role: Role.STUDENT,
-      isActive: true,
-    },
-  });
-  console.log(`✅ Demo Student Seeded: ${student.email}`);
-
-  // 4. Secondary Stage
+  // 1. Secondary Stage
   const secondaryStage = await prisma.educationalStage.upsert({
     where: { code: 'STAGE_SECONDARY' },
     update: {
@@ -87,7 +26,7 @@ async function main() {
   });
   console.log(`✅ Educational Stage Seeded: ${secondaryStage.nameEn}`);
 
-  // 5. Grades in Secondary Stage
+  // 2. Grades in Secondary Stage
   const grades = [
     { code: 'SEC_1', nameEn: '1st Secondary', nameAr: 'الصف الأول الثانوي', sortOrder: 1 },
     { code: 'SEC_2', nameEn: '2nd Secondary', nameAr: 'الصف الثاني الثانوي', sortOrder: 2 },
@@ -113,7 +52,7 @@ async function main() {
     console.log(`✅ Grade Seeded: ${existingGrade.nameEn}`);
   }
 
-  // 6. Academic Year
+  // 3. Academic Year
   let academicYear = await prisma.academicYear.findFirst({
     where: { name: '2026/2027' },
   });
@@ -130,7 +69,7 @@ async function main() {
   }
   console.log(`✅ Academic Year Seeded: ${academicYear.name}`);
 
-  // 7. Core Secondary Subjects & Products
+  // 4. Core Secondary Subjects & Products
   const subjectsData = [
     {
       nameEn: 'Physics (Electricity, Magnetism & Modern Physics)',

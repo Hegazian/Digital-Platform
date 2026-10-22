@@ -4,12 +4,14 @@ import { Role } from '@prisma/client';
 
 interface QuizQuestionInput {
   questionText: string;
-  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER';
+  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER' | 'ESSAY';
   options?: Array<{ id?: string; optionText?: string; text?: string; isCorrect: boolean; orderIndex?: number }>;
   correctAnswer?: string;
   explanation?: string;
   points?: number;
 }
+
+const TEXT_QUESTION_TYPES = ['SHORT_ANSWER', 'ESSAY'];
 
 /** Validates a single question against its declared type rules. */
 function validateQuestion(q: QuizQuestionInput, index: number): void {
@@ -22,9 +24,12 @@ function validateQuestion(q: QuizQuestionInput, index: number): void {
 
   const options = Array.isArray(q.options) ? q.options : [];
 
-  if (type === 'SHORT_ANSWER') {
-    if (!q.correctAnswer || !q.correctAnswer.trim()) {
-      throw new BadRequestError(`${label}: SHORT_ANSWER requires a correctAnswer`);
+  if (TEXT_QUESTION_TYPES.includes(type)) {
+    // Free-text questions carry no options.
+    if (type === 'SHORT_ANSWER') {
+      if (!q.correctAnswer || !q.correctAnswer.trim()) {
+        throw new BadRequestError(`${label}: SHORT_ANSWER requires a correctAnswer`);
+      }
     }
     return;
   }
@@ -63,7 +68,7 @@ function validateQuestion(q: QuizQuestionInput, index: number): void {
 /** Normalizes question payloads into Prisma create data. */
 function toQuestionData(q: QuizQuestionInput, index: number) {
   const type = q.type || 'MCQ';
-  const isText = type === 'SHORT_ANSWER';
+  const isText = TEXT_QUESTION_TYPES.includes(type);
 
   const options = isText
     ? []
@@ -133,7 +138,7 @@ export class QuizService {
       where: { id: quizId },
       include: {
         questions: true,
-        lesson: { include: { section: { select: { course: true } } } },
+        lesson: { include: { module: { select: { course: true } }, section: { select: { course: true } } } },
       },
     });
 
@@ -141,7 +146,8 @@ export class QuizService {
       throw new NotFoundError('Quiz not found');
     }
 
-    const ownerTeacherId = quiz.lesson?.section?.course?.teacherId;
+    const ownerTeacherId =
+      quiz.lesson?.module?.course?.teacherId || quiz.lesson?.section?.course?.teacherId;
 
     const canManage =
       userRole === Role.ADMIN ||
@@ -200,96 +206,55 @@ export class QuizService {
       select: {
         lesson: {
           select: {
+            module: { select: { course: { select: { teacherId: true } } } },
             section: { select: { course: { select: { teacherId: true } } } },
           },
         },
       },
     });
     if (!quiz) return null;
-    return quiz.lesson?.section?.course?.teacherId || null;
+    return (
+      quiz.lesson?.module?.course?.teacherId ||
+      quiz.lesson?.section?.course?.teacherId ||
+      null
+    );
   }
 
   /**
    * Get quiz by ID.
-   * Viewer may be:
-   * - boolean (legacy unit test support: true = teacher/admin, false = student)
-   * - { userId: string; role: Role | string } (authenticated viewer)
+   * If isTeacher is false, the correct answers are stripped from the options.
    */
-  static async getQuizById(
-    id: string,
-    viewerOrIsTeacher: boolean | { userId: string; role: Role | string } = false
-  ) {
+  static async getQuizById(id: string, userId: string, userRole: Role): Promise<any> {
     const quiz = await prisma.quiz.findUnique({
       where: { id },
       include: {
-        questions: {
-          orderBy: { orderIndex: 'asc' },
-        },
-        lesson: {
-          include: {
-            section: { include: { course: true } },
-          },
-        },
+        questions: { orderBy: { orderIndex: 'asc' } },
+        lesson: { include: { module: { include: { course: true } }, section: { include: { course: true } } } },
       },
     });
-
-    if (!quiz) {
-      throw new NotFoundError('Quiz not found');
-    }
-
-    let includeAnswers = false;
-
-    if (typeof viewerOrIsTeacher === 'boolean') {
-      includeAnswers = viewerOrIsTeacher;
-    } else if (viewerOrIsTeacher) {
-      const { userId, role } = viewerOrIsTeacher;
-      const ownerTeacherId = quiz.lesson?.section?.course?.teacherId;
-
-      if (role === Role.ADMIN) {
-        includeAnswers = true;
-      } else if (role === Role.TEACHER) {
-        if (ownerTeacherId && ownerTeacherId !== userId) {
-          throw new ForbiddenError('You do not own this quiz');
-        }
-        includeAnswers = true;
-      } else {
-        // STUDENT or other user role
-        if (quiz.lesson?.id) {
-          const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
-          const hasAccess = await EntitlementResolver.hasLessonAccess(userId, quiz.lesson.id);
-          if (!hasAccess) {
-            throw new ForbiddenError('You do not have access to this course quiz');
-          }
-        }
-        includeAnswers = false;
-      }
-    } else {
-      if (quiz.lesson?.id) {
-        const isFreePreview = Boolean(quiz.lesson?.section?.isFreePreview);
-        const isFreeCourse = Boolean(quiz.lesson?.section?.course?.isFree);
-        if (!isFreePreview && !isFreeCourse) {
-          throw new ForbiddenError('You do not have access to this course quiz');
-        }
-      }
-      includeAnswers = false;
-    }
-
-    if (!includeAnswers) {
-      // Strip `isCorrect` / accepted answers / explanation for students
-      quiz.questions = quiz.questions.map((q) => {
-        const rawOptions = (q.options as any[]) || [];
-        const sanitizedOptions = rawOptions.map(({ isCorrect: _isCorrect, ...opt }: any) => opt);
+    if (!quiz) throw new NotFoundError('Quiz not found');
+    const courseTeacherId = quiz.lesson?.module?.course.teacherId || quiz.lesson?.section?.course.teacherId;
+    const canReviewKeys = userRole === Role.ADMIN || (userRole === Role.TEACHER && courseTeacherId === userId);
+    const { lesson: _lesson, ...quizDto } = quiz;
+    return {
+      ...quizDto,
+      questions: quiz.questions.map((question) => {
+        const { options } = question;
+        const safeOptions = canReviewKeys ? options : Array.isArray(options) ? options.map((option: any) => {
+          if (!option || typeof option !== 'object') return option;
+          return { ...(option.id !== undefined && { id: option.id }), ...(option.text !== undefined && { text: option.text }) };
+        }) : options;
+        if (canReviewKeys) return { ...question, options: safeOptions };
         return {
-          ...q,
-          options: sanitizedOptions,
-          correctAnswer: null,
-          explanation: null, // Hide explanation before submission
+          id: question.id,
+          questionText: question.questionText,
+          type: question.type,
+          orderIndex: question.orderIndex,
+          points: question.points,
+          options: safeOptions,
         };
-      });
-    }
-
-    const { lesson: _lesson, ...quizData } = quiz as any;
-    return quizData;
+      }),
+    };
   }
 
   /**
@@ -343,8 +308,8 @@ export class QuizService {
     );
   }
 
-  /** Grades one answer against its question. Deterministically returns earned points. */
-  private static gradeAnswer(question: any, answer: any): number {
+  /** Grades one answer against its question. Returns earned points or null when manual review is required. */
+  private static gradeAnswer(question: any, answer: any): number | null {
     const options = (question.options as any[]) || [];
     const type = question.type || 'MCQ';
 
@@ -365,11 +330,11 @@ export class QuizService {
       }
       case 'SHORT_ANSWER': {
         const given = String(answer.textAnswer ?? '').trim().toLowerCase();
-        const expected = String(question.correctAnswer ?? '').trim().toLowerCase();
-        return given && given === expected ? question.points : 0;
+        return given && given === question.correctAnswer ? question.points : 0;
       }
+      case 'ESSAY':
       default:
-        return 0;
+        return null; // requires instructor review
     }
   }
 
@@ -396,17 +361,25 @@ export class QuizService {
 
     let totalPoints = 0;
     let earnedPoints = 0;
+    let needsReview = false;
 
     for (const question of quiz.questions) {
       totalPoints += question.points;
       const studentAnswer = answers.find((a: any) => a.questionId === question.id);
       if (!studentAnswer) continue;
 
-      earnedPoints += this.gradeAnswer(question, studentAnswer);
+      const earned = this.gradeAnswer(question, studentAnswer);
+      if (earned === null) {
+        needsReview = true;
+      } else {
+        earnedPoints += earned;
+      }
     }
 
     const percentageScore = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
-    const isPassed = percentageScore >= quiz.passingScore;
+    const finalStatus = needsReview ? 'AWAITING_REVIEW' : 'COMPLETED';
+    // Passing cannot be granted while essay/short answers await review.
+    const isPassed = !needsReview && percentageScore >= quiz.passingScore;
 
     const result = await prisma.$transaction(
       async (tx) => {
@@ -439,7 +412,7 @@ export class QuizService {
           return tx.quizAttempt.update({
             where: { id: openAttempt.id },
             data: {
-              status: 'COMPLETED',
+              status: finalStatus as any,
               score: percentageScore,
               isPassed,
               completedAt: new Date(),
@@ -468,7 +441,7 @@ export class QuizService {
             score: percentageScore,
             answers,
             isPassed,
-            status: 'COMPLETED',
+            status: finalStatus as any,
             completedAt: new Date(),
           },
         });
@@ -480,7 +453,7 @@ export class QuizService {
       attemptId: result.id,
       score: percentageScore,
       isPassed,
-      needsReview: false,
+      needsReview,
       earnedPoints,
       totalPoints,
     };

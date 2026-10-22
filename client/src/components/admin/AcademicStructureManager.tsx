@@ -53,10 +53,6 @@ export default function AcademicStructureManager() {
   const [subjectNameEn, setSubjectNameEn] = useState('');
   const [subjectNameAr, setSubjectNameAr] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     setError(null);
     try {
@@ -72,6 +68,10 @@ export default function AcademicStructureManager() {
       setError(errorMessage(err, 'Failed to load academic structure'));
     }
   };
+
+  useEffect(() => {
+    void loadData();
+  }, []);
 
   const handleCreateStage = async (e: React.FormEvent) => {
     e.preventDefault();

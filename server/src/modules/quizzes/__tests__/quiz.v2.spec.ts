@@ -23,7 +23,7 @@ describe('Quiz Engine v2', () => {
   let studentId: string;
   let subjectId: string;
   let courseId: string;
-  let sectionId: string;
+  let moduleId: string;
   let lessonId: string;
   let quizId: string;
 
@@ -77,10 +77,10 @@ describe('Quiz Engine v2', () => {
     });
     courseId = course.id;
 
-    const sec = await prisma.section.create({
-      data: { courseId, titleEn: 'Section', titleAr: 'قسم' },
+    const mod = await prisma.courseModule.create({
+      data: { courseId, titleEn: 'Mod', titleAr: 'وحدة' },
     });
-    sectionId = sec.id;
+    moduleId = mod.id;
 
     // Enroll the student in the course (learning-access gate requires an
     // active entitlement for course-attached quizzes).
@@ -140,37 +140,14 @@ describe('Quiz Engine v2', () => {
         correctAnswer: 'paris',
       },
       {
-        questionText: 'Water boils at 100C at sea level.',
-        type: 'TRUE_FALSE',
-        points: 5,
-        options: [
-          { text: 'True', isCorrect: true },
-          { text: 'False', isCorrect: false },
-        ],
+        questionText: 'Explain photosynthesis.',
+        type: 'ESSAY',
+        points: 15,
       },
     ],
   });
 
-  it('rejects question with type ESSAY (directed to assignments module for teacher grading)', async () => {
-    const res = await request(app)
-      .post('/api/v1/quizzes')
-      .set('Authorization', `Bearer ${teacherAToken}`)
-      .send({
-        titleEn: 'Essay Quiz',
-        titleAr: 'اختبار مقالي',
-        questions: [
-          {
-            questionText: 'Explain gravity in detail.',
-            type: 'ESSAY',
-            points: 10,
-          },
-        ],
-      });
-
-    expect(res.status).toBe(400);
-  });
-
-  it('teacher creates a quiz covering all 4 deterministic types (MCQ, TRUE_FALSE, MULTIPLE_SELECT, SHORT_ANSWER)', async () => {
+  it('teacher creates a quiz covering all 5 supported types (T/F validated too)', async () => {
     // TRUE_FALSE wrong shape is rejected first
     await request(app)
       .post('/api/v1/quizzes')
@@ -203,7 +180,7 @@ describe('Quiz Engine v2', () => {
 
     // Anchor the quiz to a lesson for the ownership tests
     const lessonRes = await request(app)
-      .post(`/api/v1/courses/sections/${sectionId}/lessons`)
+      .post(`/api/v1/courses/modules/${moduleId}/lessons`)
       .set('Authorization', `Bearer ${teacherAToken}`)
       .send({ titleEn: 'Quiz2 Lesson', titleAr: 'درس' });
     lessonId = lessonRes.body.data.id;
@@ -234,7 +211,7 @@ describe('Quiz Engine v2', () => {
     expect(JSON.stringify(res.body)).toMatch(/exactly one correct/i);
   });
 
-  it('timed attempt: start -> submit correct answers -> 100% deterministically auto-graded to COMPLETED', async () => {
+  it('timed attempt: start -> submit correct answers -> graded incl. multi-select and short answer; essay flags review', async () => {
     const start = await request(app)
       .post(`/api/v1/quizzes/${quizId}/attempts/start`)
       .set('Authorization', `Bearer ${studentToken}`);
@@ -246,7 +223,8 @@ describe('Quiz Engine v2', () => {
       orderBy: { orderIndex: 'asc' },
     });
 
-    const [mcq, multi, short, tf] = questions;
+    const [mcq, multi, short, _essay] = questions;
+    void _essay;
 
     const submit = await request(app)
       .post(`/api/v1/quizzes/${quizId}/attempts`)
@@ -259,17 +237,17 @@ describe('Quiz Engine v2', () => {
             selectedOptionIds: (multi.options as any[]).filter((o) => o.isCorrect).map((o) => o.id),
           },
           { questionId: short.id, textAnswer: '  PARIS ' }, // normalization check
-          { questionId: tf.id, selectedOptionId: (tf.options as any[]).find((o) => o.isCorrect)!.id },
+          { questionId: _essay.id, textAnswer: 'Student essay content...' },
         ],
       });
 
     expect(submit.status).toBe(200);
-    // All 4 questions correct => 100%
-    expect(submit.body.data.score).toBe(100);
-    expect(submit.body.data.isPassed).toBe(true);
+    // Auto-gradeable: 10 + 10 + 5 of 40 total => 25/40 = 63%
+    expect(submit.body.data.score).toBe(63);
+    expect(submit.body.data.needsReview).toBe(true);
 
     const attempt = await prisma.quizAttempt.findFirst({ where: { quizId, userId: studentId } });
-    expect(attempt?.status).toBe('COMPLETED');
+    expect(attempt?.status).toBe('AWAITING_REVIEW');
   });
 
   it('expired timed attempt is recorded and further submissions are blocked without a fresh start', async () => {

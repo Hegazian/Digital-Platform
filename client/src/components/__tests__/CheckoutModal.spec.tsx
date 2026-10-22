@@ -18,6 +18,7 @@ describe('CheckoutModal Component', () => {
   const onAccessGrantedMock = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.restoreAllMocks();
     useAppStore.setState({ lang: 'en', dir: 'ltr' });
   });
@@ -39,10 +40,9 @@ describe('CheckoutModal Component', () => {
   });
 
   it('redeems voucher directly and grants access on success', async () => {
-    const fetchApiSpy = vi.spyOn(apiModule, 'fetchApi').mockResolvedValue({
-      success: true,
-      data: { entitlementId: 'ent-123' },
-    });
+    const fetchApiSpy = vi.spyOn(apiModule, 'fetchApi').mockImplementation(async (endpoint) => ({
+      success: true, data: endpoint.includes('check-course') ? { hasAccess: true } : { entitlementId: 'ent-123' },
+    }));
 
     render(
       <CheckoutModal
@@ -64,10 +64,20 @@ describe('CheckoutModal Component', () => {
     await waitFor(() => {
       expect(fetchApiSpy).toHaveBeenCalledWith('/commerce/vouchers/redeem', {
         method: 'POST',
-        body: JSON.stringify({ code: 'TEST-VOUCHER-100' }),
+        body: JSON.stringify({ code: 'TEST-VOUCHER-100', expectedCourseId: mockCourse.id }),
       });
       expect(onAccessGrantedMock).toHaveBeenCalled();
     }, { timeout: 3000 });
+  });
+
+  it('keeps checkout open when a voucher does not apply to the course', async () => {
+    vi.spyOn(apiModule, 'fetchApi').mockRejectedValue(new Error('This voucher does not apply to the selected course'));
+    render(<CheckoutModal course={mockCourse} onClose={onCloseMock} onAccessGranted={onAccessGrantedMock} />);
+    fireEvent.click(screen.getByRole('button', { name: /voucher code/i }));
+    fireEvent.change(screen.getByPlaceholderText(/SCHOLAR2026/i), { target: { value: 'OTHER-COURSE' } });
+    fireEvent.click(screen.getByRole('button', { name: /activate with voucher/i }));
+    expect(await screen.findByText('This voucher does not apply to the selected course')).toBeVisible();
+    expect(onAccessGrantedMock).not.toHaveBeenCalled();
   });
 
   it('submits manual order with transaction reference and transitions to pending phase', async () => {

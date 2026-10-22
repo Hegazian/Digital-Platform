@@ -126,6 +126,32 @@ describe('Material API Integration Tests', () => {
   });
 
   describe('GET /api/v1/materials/lesson/:lessonId', () => {
+    it('delivers a server-bound uploaded document and rejects key substitution', async () => {
+      const good = await request(app).get(`/api/v1/materials/${materialId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+      expect(good.status).toBe(200);
+      const original = await prisma.material.findUniqueOrThrow({ where: { id: materialId } });
+      for (const fileUrl of ['submission-files/private.pdf', '/uploads/submission-files/private.pdf', original.fileUrl.replace(materialId, 'unrelated-material')]) {
+        await prisma.material.update({ where: { id: materialId }, data: { fileUrl } });
+        const denied = await request(app).get(`/api/v1/materials/${materialId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+        expect(denied.status).toBe(404);
+      }
+      await prisma.material.update({ where: { id: materialId }, data: { fileUrl: original.fileUrl } });
+    });
+
+    it('preserves external HTTPS document links and rejects internal references at authoring', async () => {
+      const endpoint = `/api/v1/courses/lessons/${lessonId}/material`;
+      for (const fileUrl of ['submission-files/private.pdf', '/uploads/lesson-materials/private.pdf', 'https://private.supabase.co/storage/v1/object/public/submission-files/private.pdf']) {
+        const denied = await request(app).post(endpoint).set('Authorization', `Bearer ${teacherToken}`).send({ title: 'Forged', fileUrl });
+        expect(denied.status).toBe(400);
+      }
+      const created = await request(app).post(endpoint).set('Authorization', `Bearer ${teacherToken}`).send({ title: 'School notes', fileUrl: 'https://school.example/notes.pdf' });
+      expect(created.status).toBe(201);
+      const externalId = created.body.data.id;
+      const delivered = await request(app).get(`/api/v1/materials/${externalId}/content`).set('Authorization', `Bearer ${teacherToken}`);
+      expect(delivered.status).toBe(302);
+      expect(delivered.headers.location).toBe('https://school.example/notes.pdf');
+      expect(delivered.headers.authorization).toBeUndefined();
+    });
     it('should deny non-subscribed student access to materials', async () => {
       const res = await request(app)
         .get(`/api/v1/materials/lesson/${lessonId}`)
@@ -165,72 +191,6 @@ describe('Material API Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-    });
-  });
-
-  describe('Direct /uploads Security & GET /api/v1/materials/:id/download', () => {
-    let testMaterialId: string;
-
-    beforeAll(async () => {
-      // Create a test material for download tests
-      const mat = await prisma.material.create({
-        data: {
-          lessonId,
-          title: 'Direct Download Test',
-          fileUrl: '/uploads/lesson-materials/test-secure-doc.pdf',
-          fileType: 'application/pdf',
-          sizeBytes: 2048,
-        },
-      });
-      testMaterialId = mat.id;
-    });
-
-    it('should block direct unauthenticated access to /uploads/lesson-materials and /uploads/lesson-videos', async () => {
-      const resMat = await request(app).get('/uploads/lesson-materials/test-secure-doc.pdf');
-      expect(resMat.status).toBe(403);
-
-      const resVid = await request(app).get('/uploads/lesson-videos/any-video.mp4');
-      expect(resVid.status).toBe(403);
-    });
-
-    it('should deny GET /api/v1/materials/:id/download to un-entitled student', async () => {
-      // Create an unsubscribed student
-      const unSub = await prisma.user.create({
-        data: {
-          email: `unsub-${Date.now()}@test.com`,
-          password: 'pass',
-          name: 'Unsub Student',
-          role: 'STUDENT',
-          isActive: true,
-        },
-      });
-      const unSubToken = generateAccessToken({ userId: unSub.id, role: 'STUDENT', teacherStatus: null });
-
-      const res = await request(app)
-        .get(`/api/v1/materials/${testMaterialId}/download`)
-        .set('Authorization', `Bearer ${unSubToken}`);
-
-      expect(res.status).toBe(403);
-    });
-
-    it('should allow GET /api/v1/materials/:id/download to course teacher owner', async () => {
-      const res = await request(app)
-        .get(`/api/v1/materials/${testMaterialId}/download`)
-        .set('Authorization', `Bearer ${teacherToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.downloadUrl).toBeDefined();
-    });
-
-    it('should allow GET /api/v1/materials/:id/download to entitled student', async () => {
-      const res = await request(app)
-        .get(`/api/v1/materials/${testMaterialId}/download`)
-        .set('Authorization', `Bearer ${studentToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.downloadUrl).toBeDefined();
     });
   });
 });

@@ -1,0 +1,25 @@
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/components/editor/CodePlaygroundBlock.tsx
+Module not found: Can't resolve '@uiw/react-codemirror'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/VideoPlayerSection.tsx
+./src/app/courses/[courseId]/page.tsx
+
+./src/components/editor/CodePlaygroundBlock.tsx
+Module not found: Can't resolve '@codemirror/lang-python'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/VideoPlayerSection.tsx
+./src/app/courses/[courseId]/page.tsx
+
+
+> Build failed because of webpack errors

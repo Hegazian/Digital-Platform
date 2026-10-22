@@ -1,33 +1,42 @@
-# EduPlatform — Documentation Index
+# Implementation documentation — start here
 
-Canonical engineering documentation for the **Digital-Platform** repository.  
-All documents are grounded strictly in the **as-built source code** (`server/`, `client/`, `server/prisma/schema.prisma`, `docker-compose.yml`, and `.github/workflows/ci.yml`).
+Refreshed: **22 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains 62 unfinished tasks; 15 completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. Continue ENG-09, plus ENG-05/ENG-06 operational evidence, under [the M1 handoff](NEXT_STEPS.md).
 
-| Document | Contents |
-| :--- | :--- |
-| [00-OVERVIEW.md](./00-OVERVIEW.md) | Product overview, 3-role matrix (`STUDENT`, `TEACHER`, `ADMIN`), feature status matrix, and repository map |
-| [01-ARCHITECTURE.md](./01-ARCHITECTURE.md) | System architecture, Express 5 middleware pipeline, 19 module mounts, and Next.js 14 client integration |
-| [02-SETUP.md](./02-SETUP.md) | Local development setup, Docker Compose databases (`5434`/`5433`), environment variables, and seeding |
-| [03-DATA-MODEL.md](./03-DATA-MODEL.md) | Complete reference for all 32 Prisma models, 17 enums, and SQL migrations |
-| [04-AUTH-AND-SECURITY.md](./04-AUTH-AND-SECURITY.md) | JWT rotation, TOTP MFA, RBAC, entitlement resolver, and enforced security controls |
-| [05-FEATURES.md](./05-FEATURES.md) | Feature-by-feature behavior across all 19 domains |
-| [06-API-CATALOG.md](./06-API-CATALOG.md) | Complete REST endpoint reference under `/api/v1` |
-| [07-OPERATIONS.md](./07-OPERATIONS.md) | Docker, CI pipeline, Vitest/Playwright test suites, uploads, and production checklist |
+> A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
----
+## Ordered start checklist
 
-## Key Facts at a Glance
+1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
+2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
+3. Continue [ENG-09](tasks/ENG-09.md), and retain [ENG-05](tasks/ENG-05.md) / [ENG-06](tasks/ENG-06.md) operational rehearsals. Follow the [M1 execution waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 continues the full-product coverage/release work.
+4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [operations](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
+5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
+6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
+7. Rehearse [operations, migration and recovery](MIGRATION_OPERATIONS.md), resolve minor-consent/retention and license decisions, and collect [release gate evidence](TESTING_RELEASE_GATES.md) for a limited pilot.
+8. Keep every M4 capability disabled at API boundaries; enable each only after its own gate. Automated payment adapters have independent provider sign-offs.
 
-| Fact | Value |
-| :--- | :--- |
-| **Backend** | Express 5.2.1 + TypeScript 5 + Prisma 5.11 + PostgreSQL 15 (19 domain modules) |
-| **Frontend** | Next.js 14.2.35 App Router + React 18 + Tailwind CSS 3.4 + Zustand + TanStack React Query |
-| **Roles** | `STUDENT`, `TEACHER`, `ADMIN` (secondary `TeacherStatus`: `PENDING`, `APPROVED`, `REJECTED`) |
-| **API Base** | `http://localhost:5000/api/v1` |
-| **Client URL** | `http://localhost:3000` (proxies `/api/v1` and `/uploads` to `:5000`) |
-| **Dev DB** | `eduplatform_dev` on port **5434** (`devuser` / `devpassword`) |
-| **Test DB** | `eduplatform_test` on port **5433** (`testuser` / `testpassword`) |
-| **Schema & Migrations** | 32 models, 17 enums, versioned SQL migrations (`prisma/migrations/0001_init`) |
-| **Auth** | Bearer Access JWT (`15m`) + rotating `httpOnly` cookie `eduplat_rt` (`7d`, SHA-256 DB registry) + TOTP MFA |
-| **Payments** | Manual wallets (Vodafone Cash, InstaPay), Vouchers, and inbound Paymob/Fawry webhooks |
-| **CI Pipeline** | Server `tsc` + Vitest coverage (56 suites / 324 tests); Client `tsc` + Vitest (4 suites / 12 tests) + `next build` |
+## Package index
+
+| Document | Purpose |
+|---|---|
+| [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
+| [Next implementation steps](NEXT_STEPS.md) | ENG-05 restore/recovery gate, ENG-06 implementation, remaining M1 dependency waves and release evidence |
+| [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md) | Baseline rationale, local and remote migration checks, and outstanding adoption gates |
+| [ENG-06 implementation evidence](ENG06_IMPLEMENTATION.md) | Liveness/readiness, storage selection, graceful drain, local tests and remaining outage checks |
+| [Product goal and scope](PRODUCT_SCOPE.md) | Audiences, permissions, all-school curriculum, launch scope and exclusions |
+| [Target architecture](TARGET_ARCHITECTURE.md) | Module/data ownership, workers, deployment and safety boundaries |
+| [API and data contracts](API_DATA_CONTRACTS.md) | Normative DTOs, schemas, actions, errors, validation and compatibility |
+| [Roadmap and backlog](ROADMAP_BACKLOG.md) | Unfinished task links, dependencies, milestones and execution order |
+| [Completed M0 specifications](archive/completed/README.md) | Completed task records retained outside the active backlog |
+| [Final M0 review](M0_FINAL_REVIEW.md) | Findings, corrections, fresh verification and merge disposition |
+| [Audit traceability](AUDIT_TRACEABILITY.md) | All 58 findings and all 42 previous acceptance dispositions |
+| [Testing and release gates](TESTING_RELEASE_GATES.md) | Baseline, fixtures, CI, exit criteria and sign-off evidence |
+| [M0 manual testing](M0_MANUAL_TESTING.md) | Local setup, step-by-step checks and visible browser replay |
+| [Earlier M0 reviews](archive/reviews/README.md) | Historical checkpoint results and resolved findings, removed from the active plan |
+| [M0 dependency review](M0_DEPENDENCY_REVIEW.md) | Patched runtime paths and bounded development-only exceptions |
+| [Migration and operations](MIGRATION_OPERATIONS.md) | Data/asset preservation, deployment, rollback, recovery and monitoring |
+| [Task template](TASK_TEMPLATE.md) | Required task detail and completion checklist |
+| [Documentation verification](VERIFICATION_REPORT.md) | Task/finding/case coverage, links, dependencies and archived hash checks |
+| [Archived documents](archive/INDEX.md) | Exact previous guides/FR/TC identifiers, superseded status and hashes |
+
+Task source is maintained in [documentation authoring scripts](scripts/build-docs.cjs); [task-manifest.json](task-manifest.json) is machine-readable output. Run 'node docs/scripts/build-docs.cjs' to rebuild generated task/index/entry docs, then 'node docs/scripts/validate-docs.cjs'. Shared hand-written specifications are not overwritten by the generator. The generator and validator do not connect to the application or database; the separate advisory script contacts the NPM advisory service.

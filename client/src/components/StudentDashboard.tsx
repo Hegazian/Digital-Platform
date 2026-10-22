@@ -12,9 +12,13 @@ import {
   Clock,
   Video,
   Tag,
+  Target,
   ArrowRight,
+  Compass,
 } from 'lucide-react';
+import CareerPickerModal from './onboarding/CareerPickerModal';
 import VoucherRedeemModal from './VoucherRedeemModal';
+import { useQuery } from '@tanstack/react-query';
 
 /** Only allow safe URL protocols to prevent javascript: XSS injection. */
 function sanitizeUrl(url: string): string {
@@ -48,19 +52,30 @@ interface ProgressSummary {
 }
 
 /**
- * Student Hub — deliberately minimal: continue learning and live sessions when
- * they exist. Everything else lives in the course player where it belongs.
+ * Student Hub — deliberately minimal: continue learning, live sessions when
+ * they exist, and the student's career-track pulse. Everything else lives in
+ * the course player where it belongs.
  */
 export default function StudentDashboard() {
-  const { user, setSelectedCourse, lang } = useAppStore();
+  const { user, setSelectedCourse, lang, careerTrackSlug } = useAppStore();
   const router = useRouter();
   const t = (en: string, ar: string) => (lang === 'ar' ? ar : en);
 
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
   const [liveSessions, setLiveSessions] = useState<any[]>([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [showCareerPicker, setShowCareerPicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Onboarding: ask for a dream career once per session until chosen
+  useEffect(() => {
+    if (user?.role === 'STUDENT' && !careerTrackSlug) {
+      if (!sessionStorage.getItem('careerPromptDismissed')) {
+        setShowCareerPicker(true);
+      }
+    }
+  }, [user?.role, careerTrackSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,8 +131,30 @@ export default function StudentDashboard() {
             {t(`Welcome back, ${firstName}`, `أهلاً بعودتك، ${firstName}`)}
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            {t('Pick up where you left off.', 'أكمل من حيث توقفت.')}
+            {careerTrackSlug
+              ? t(
+                  `Training for your future — ${careerTrackSlug} track`,
+                  `تتدرب لمستقبلك — مسار ${careerTrackSlug}`
+                )
+              : t('Pick up where you left off.', 'أكمل من حيث توقفت.')}
           </p>
+          {careerTrackSlug && (
+            <div className="flex items-center gap-2 mt-2">
+              <Link
+                href={`/courses?track=${careerTrackSlug}`}
+                className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition inline-flex items-center gap-1"
+              >
+                <Compass className="w-3 h-3" />
+                {t('Browse track courses', 'دورات المسار')}
+              </Link>
+              <button
+                onClick={() => setShowCareerPicker(true)}
+                className="text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2"
+              >
+                {t('change', 'تغيير')}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -159,6 +196,12 @@ export default function StudentDashboard() {
           </div>
         ))}
       </div>
+
+      {/* ── Career track pulse (compact, only when set) ────────── */}
+      {careerTrackSlug && <TrackPulse onOpenCourse={(id) => {
+        setSelectedCourse(id);
+        router.push(`/courses/${id}`);
+      }} />}
 
       {/* ── Continue Learning ──────────────────────────────────── */}
       <section className="space-y-4">
@@ -304,6 +347,15 @@ export default function StudentDashboard() {
       )}
 
       {/* ── Modals ─────────────────────────────────────────────── */}
+      {showCareerPicker && (
+        <CareerPickerModal
+          onClose={() => {
+            sessionStorage.setItem('careerPromptDismissed', '1');
+            setShowCareerPicker(false);
+          }}
+        />
+      )}
+
       <VoucherRedeemModal
         isOpen={showVoucherModal}
         onClose={() => setShowVoucherModal(false)}
@@ -315,5 +367,67 @@ export default function StudentDashboard() {
         }}
       />
     </div>
+  );
+}
+
+/** Compact career-track progress pulled from the careers API. */
+function TrackPulse({ onOpenCourse }: { onOpenCourse: (id: string) => void }) {
+  const { lang, careerTrackSlug } = useAppStore();
+  const t = (en: string, ar: string) => (lang === 'ar' ? ar : en);
+
+  const progressQuery = useQuery({
+    queryKey: ['careers', 'my-progress', careerTrackSlug],
+    queryFn: () => fetchApi('/careers/mine/progress'),
+    enabled: Boolean(careerTrackSlug),
+    staleTime: 60_000,
+  });
+  const tp = progressQuery.data?.data;
+  if (!tp?.track) return null;
+
+  return (
+    <section className="glass-panel rounded-2xl p-5 border border-indigo-500/20 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <Target className="w-4 h-4 text-indigo-400" />
+          {lang === 'ar' ? `مسار ${tp.track.nameAr}` : `${tp.track.nameEn} Track`}
+        </h2>
+        <span className="text-[11px] text-slate-500">
+          {tp.completedCourses}/{tp.totalCourses} {t('courses completed', 'دورة مكتملة')}
+        </span>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-[11px] text-slate-500">
+          <span>{t('Lessons completed', 'الدروس المكتملة')}</span>
+          <span className="font-mono">
+            {tp.completedLessons}/{tp.totalLessons}
+          </span>
+        </div>
+        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-500"
+            style={{
+              width:
+                tp.totalLessons > 0
+                  ? `${Math.round((tp.completedLessons / tp.totalLessons) * 100)}%`
+                  : '0%',
+            }}
+          />
+        </div>
+      </div>
+
+      {tp.nextCourse && (
+        <button
+          onClick={() => onOpenCourse(tp.nextCourse.id)}
+          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-200 border border-indigo-500/30 text-xs font-bold flex items-center justify-center gap-2 transition"
+        >
+          {t('Up next:', 'التالي:')}
+          <span className="truncate max-w-[220px]">
+            {lang === 'ar' ? tp.nextCourse.titleAr || tp.nextCourse.titleEn : tp.nextCourse.titleEn}
+          </span>
+          <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+        </button>
+      )}
+    </section>
   );
 }

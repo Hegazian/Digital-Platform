@@ -1,0 +1,138 @@
+[
+  {
+    "id": "F01",
+    "description": "Anonymous access to an uploaded video bypasses streaming authorization",
+    "observed": {
+      "httpStatus": 200,
+      "bytes": 22,
+      "authenticated": false
+    }
+  },
+  {
+    "id": "F02-F03",
+    "description": "Anonymous PRIVATE course response exposes paid data and short-answer key",
+    "observed": {
+      "httpStatus": 200,
+      "visibility": "PRIVATE",
+      "content": "Paid textbook-derived lesson",
+      "videoUrl": "/uploads/lesson-videos/audit-fixture.mp4",
+      "materialUrl": "/uploads/lesson-materials/audit.pdf",
+      "correctAnswer": "answer-secret"
+    }
+  },
+  {
+    "id": "F04",
+    "description": "Unrelated teacher can read a quiz answer key",
+    "observed": {
+      "httpStatus": 200,
+      "isCorrect": true
+    }
+  },
+  {
+    "id": "F05",
+    "description": "Expired assessment response includes the internal answer snapshot",
+    "observed": {
+      "status": "EXPIRED",
+      "questionsSnapshotJson": "[{\"correctAnswerJson\":\"\\\"answer-secret\\\"\"}]"
+    }
+  },
+  {
+    "id": "F06",
+    "description": "Subject subscription grants resolver access but course paywall endpoint denies access",
+    "observed": {
+      "paywall": {
+        "hasAccess": false,
+        "entitlement": null
+      },
+      "resolverAccess": true
+    }
+  },
+  {
+    "id": "F07",
+    "description": "Announcement request body overrides the authenticated teacher identity",
+    "observed": {
+      "authenticatedTeacher": "actual-teacher",
+      "serviceTeacher": "victim-teacher"
+    }
+  },
+  {
+    "id": "F08",
+    "description": "Live-session request body overrides the authenticated teacher identity",
+    "observed": {
+      "authenticatedTeacher": "actual-teacher",
+      "serviceTeacher": "victim-teacher"
+    }
+  },
+  {
+    "id": "F09",
+    "description": "Idempotency key lookup can return another student order",
+    "observed": {
+      "caller": "attacker-student",
+      "returnedStudent": "victim-student",
+      "transactionRef": "victim-reference"
+    }
+  },
+  {
+    "id": "F10",
+    "description": "Exchange-rate update is stripped by the config validation schema",
+    "observed": {
+      "httpStatus": 200,
+      "submittedRate": 60,
+      "savedRate": 48,
+      "updateData": {}
+    }
+  },
+  {
+    "id": "F11",
+    "description": "Rejected teacher can obtain a login session",
+    "observed": {
+      "teacherStatus": "REJECTED",
+      "sessionIssued": true
+    }
+  },
+  {
+    "id": "F12",
+    "description": "Old ADMIN role in access token survives a database role change",
+    "observed": {
+      "httpStatus": 200,
+      "currentDatabaseRole": "STUDENT",
+      "authorizedRole": "ADMIN"
+    }
+  },
+  {
+    "id": "F13",
+    "description": "AI without provider key returns the same physics answer for unrelated Arabic prompt",
+    "observed": {
+      "httpStatus": 200,
+      "provider": "eduplatform-ai-fallback",
+      "answer": "[EduPlatform AI Tutor] Newton's Second Law states that Force equals mass times acceleration (F = m * a). In Egyptian curriculum physics, this explains why pushing a heavier object requires more force to reach the same speed."
+    }
+  },
+  {
+    "id": "F14",
+    "description": "Database outage health endpoint returns HTTP 200",
+    "observed": {
+      "httpStatus": 200,
+      "reportedStatus": "degraded",
+      "database": "error"
+    }
+  },
+  {
+    "id": "F15",
+    "description": "Student can upload HTML and JavaScript disguised with an allowed PDF MIME type",
+    "observed": [
+      {
+        "filename": "audit-active.html",
+        "uploadStatus": 201,
+        "anonymousReadStatus": 200,
+        "servedContentType": "text/html; charset=utf-8"
+      },
+      {
+        "filename": "audit-active.js",
+        "uploadStatus": 201,
+        "anonymousReadStatus": 200,
+        "servedContentType": "text/javascript; charset=utf-8"
+      }
+    ]
+  }
+]

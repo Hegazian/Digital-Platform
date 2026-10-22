@@ -123,7 +123,7 @@ describe('MaterialService Unit Tests', () => {
     it('should delete material and call StorageService.deleteFile', async () => {
       const mockMaterial = {
         id: 'm1',
-        fileUrl: '/uploads/materials/test.pdf',
+        fileUrl: '/uploads/lesson-materials/m1/1234-abcd.pdf',
         lesson: { section: { course: { teacherId: 't1' } } },
       };
       (prisma.material.findUnique as any).mockResolvedValue(mockMaterial);
@@ -132,7 +132,7 @@ describe('MaterialService Unit Tests', () => {
       const result = await MaterialService.deleteMaterial('m1', 't1', Role.TEACHER);
 
       expect(result.message).toBe('Material deleted successfully');
-      expect(StorageService.deleteFile).toHaveBeenCalledWith('/uploads/materials/test.pdf');
+      expect(StorageService.deleteFile).toHaveBeenCalledWith('/uploads/lesson-materials/m1/1234-abcd.pdf');
     });
   });
 });

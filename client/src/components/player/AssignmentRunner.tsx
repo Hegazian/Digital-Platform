@@ -17,7 +17,7 @@ export default function AssignmentRunner({ lessonId }: AssignmentRunnerProps) {
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [submissionTexts, setSubmissionTexts] = useState<{ [key: string]: string }>({});
   const [uploadedFiles, setUploadedFiles] = useState<{
-    [key: string]: { fileUrl: string; fileName: string; sizeBytes: number } | null;
+    [key: string]: { fileUrl: string; fileName: string; sizeBytes: number; uploadToken: string } | null;
   }>({});
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -54,6 +54,7 @@ export default function AssignmentRunner({ lessonId }: AssignmentRunnerProps) {
         ...prev,
         [assignmentId]: {
           fileUrl: res.data.fileUrl,
+          uploadToken: res.data.uploadToken,
           fileName: res.data.fileName,
           sizeBytes: res.data.sizeBytes,
         },
@@ -85,7 +86,7 @@ export default function AssignmentRunner({ lessonId }: AssignmentRunnerProps) {
       if (text) payload.submissionText = text;
       if (uploaded?.fileUrl) {
         payload.files = [
-          { fileUrl: uploaded.fileUrl, fileName: uploaded.fileName, sizeBytes: uploaded.sizeBytes },
+          { ...uploaded },
         ];
       }
 

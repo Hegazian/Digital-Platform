@@ -91,7 +91,7 @@ export class TeacherService {
     // Scope counts to lessons inside THIS teacher's courses only.
     const myLessons = await prisma.lesson.findMany({
       where: {
-        section: { course: { teacherId } },
+        OR: [{ module: { course: { teacherId } } }, { section: { course: { teacherId } } }],
       },
       select: { id: true },
     });
@@ -105,10 +105,13 @@ export class TeacherService {
         : 0;
 
     // Quizzes attempted by this student
-    const attempts = await prisma.quizAttempt.findMany({
-      where: { userId: studentId },
+    const quizAttempts = await prisma.quizAttempt.findMany({
+      where: { userId: studentId, quiz: { lesson: { id: { in: myLessonIds } } } },
       select: { score: true, isPassed: true },
     });
+    // Retain the legacy assessment history until its owning migration is ready.
+    const legacyAttempts = await prisma.assessmentAttempt.findMany({ where: { studentId }, select: { score: true, isPassed: true } });
+    const attempts = [...quizAttempts, ...legacyAttempts];
 
     return {
       student,
@@ -203,10 +206,7 @@ export class TeacherService {
       where: {
         status: 'PAID',
         product: {
-          OR: [
-            { productType: 'COURSE', resourceId: { in: courseIds } },
-            { productType: 'SUBJECT', resourceId: { in: subjectIds } },
-          ],
+          productType: 'COURSE', resourceId: { in: courseIds },
         },
       },
       select: {

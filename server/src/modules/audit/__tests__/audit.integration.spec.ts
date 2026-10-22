@@ -31,7 +31,7 @@ describe('Immutable Audit Trails (TDD)', () => {
 
   afterAll(async () => {
     try {
-      await prisma.auditLog.deleteMany();
+      await prisma.auditLog.deleteMany({ where: { userId: adminId } });
       await prisma.user.deleteMany({ where: { email: { contains: 'admin_audit_' } } });
     } catch (e) {}
   });

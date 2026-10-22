@@ -176,19 +176,19 @@ describe('End-to-End Journeys', () => {
         .send({ isFree: true });
       expect(pricing.status).toBe(200);
 
-      const section = await request(app)
-        .post(`/api/v1/courses/${cleanupIds.courseId}/sections`)
+      const mod = await request(app)
+        .post(`/api/v1/courses/${cleanupIds.courseId}/modules`)
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({ titleEn: 'Mechanics', titleAr: 'ميكانيكا' });
-      expect(section.status).toBe(201);
+      expect(mod.status).toBe(201);
 
       const lesson = await request(app)
-        .post(`/api/v1/courses/sections/${section.body.data.id}/lessons`)
+        .post(`/api/v1/courses/modules/${mod.body.data.id}/lessons`)
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({
           titleEn: 'Newton Laws',
           titleAr: 'قوانين نيوتن',
-          video: { title: 'Newton Lecture', videoUrl: '/uploads/e2e.mp4', duration: 1800 },
+          video: { title: 'Newton Lecture', videoUrl: 'https://content.example/e2e.mp4', duration: 1800 },
           quiz: {
             title: 'Newton Check',
             passingScore: 50,
@@ -241,9 +241,9 @@ describe('End-to-End Journeys', () => {
       const anon = await request(app).get(`/api/v1/courses/${cleanupIds.courseId}`);
       expect(anon.status).toBe(200);
       expect(anon.body.data.status).toBe('PUBLISHED');
-      // Answer keys must not leak to anonymous viewers
-      const q = anon.body.data.sections[0].lessons[0].quiz.questions[0];
-      expect(q.options.some((o: any) => o.isCorrect === true)).toBe(false);
+      // Catalog DTOs never contain protected curriculum or answer keys.
+      expect(anon.body.data.modules).toBeUndefined();
+      expect(anon.body.data.sections).toBeUndefined();
     });
   });
 

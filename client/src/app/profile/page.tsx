@@ -234,10 +234,11 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowMfaModal(true)}
+                disabled={mfaEnabled}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-200 transition shrink-0"
               >
                 {mfaEnabled
-                  ? (dir === 'rtl' ? 'إعادة ضبط 2FA' : 'Re-enroll 2FA')
+                  ? (dir === 'rtl' ? 'التحقق بخطوتين مفعّل' : '2FA enabled')
                   : (dir === 'rtl' ? 'تفعيل 2FA' : 'Configure 2FA')}
               </button>
             </div>

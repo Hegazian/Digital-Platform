@@ -1,4 +1,5 @@
 import { prisma } from '../../prisma';
+import { verifySubmissionUpload } from './submission-upload';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { Role, AssignmentSubmissionStatus } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
@@ -25,6 +26,7 @@ export class AssignmentService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -33,7 +35,7 @@ export class AssignmentService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (userRole !== Role.ADMIN && courseTeacherId !== teacherId) {
       throw new ForbiddenError('Only the course owner or Admin can create assignments for this lesson');
     }
@@ -206,7 +208,7 @@ export class AssignmentService {
     studentId: string,
     data: {
       submissionText?: string;
-      files?: Array<{ fileUrl: string; fileName: string; sizeBytes?: number }>;
+      files?: Array<{ fileUrl: string; fileName: string; sizeBytes?: number; uploadToken?: string }>;
     }
   ) {
     const assignment = await prisma.assignment.findUnique({
@@ -216,6 +218,8 @@ export class AssignmentService {
     if (!assignment) {
       throw new NotFoundError('Assignment not found');
     }
+
+    const verifiedFiles = data.files?.map((file) => verifySubmissionUpload(studentId, file));
 
     if (!data.submissionText && (!data.files || data.files.length === 0)) {
       throw new BadRequestError('Submission must contain text or at least one file attachment');
@@ -248,8 +252,8 @@ export class AssignmentService {
         submissionText: data.submissionText,
         status,
         submittedAt: now,
-        files: data.files && data.files.length > 0 ? {
-          create: data.files.map((f) => ({
+        files: verifiedFiles && verifiedFiles.length > 0 ? {
+          create: verifiedFiles.map((f) => ({
             fileUrl: f.fileUrl,
             fileName: f.fileName,
             sizeBytes: f.sizeBytes || 0,

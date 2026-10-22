@@ -4,10 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
-import { prisma } from './prisma';
 import { Logger } from './utils/logger';
 import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
-import { getUploadsRoot } from './utils/storage';
 
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
@@ -20,15 +18,23 @@ import progressRoutes from './modules/progress/progress.routes';
 
 import academicRouter from './modules/academic/academic.routes';
 import commerceRouter from './modules/commerce/commerce.routes';
+import assessmentRouter from './modules/assessment/assessment.routes';
 import notificationRouter from './modules/notifications/notification.routes';
 import teacherRouter from './modules/teacher/teacher.routes';
 import liveRouter from './modules/live/live.routes';
 import configRoutes from './modules/config/config.routes';
+import playgroundRoutes from './modules/courses/playground.routes';
+import boardRoutes from './modules/courses/board.routes';
 import discussionRoutes from './modules/discussions/discussion.routes';
-import aiRoutes from './modules/ai/ai.routes';
+import podcastRoutes from './modules/podcasts/podcast.routes';
+import collectionRoutes from './modules/collections/collection.routes';
+import apiTokenRoutes from './modules/developer/api-token.routes';
+import webhookRoutes from './modules/developer/webhook.routes';
 import mfaRoutes from './modules/auth/mfa.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import assignmentRoutes from './modules/assignments/assignment.routes';
+import careersRoutes from './modules/careers/careers.routes';
+import { checkReadiness } from './modules/health/health.service';
 
 const app: Express = express();
 
@@ -61,19 +67,6 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 const allowedOrigin = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
-// Block direct unauthenticated access to lesson media files in /uploads.
-// Videos must be streamed via /api/v1/videos/:id/stream and materials downloaded via /api/v1/materials/:id/download.
-app.use('/uploads', (req, res, next) => {
-  const urlPath = req.path;
-  if (urlPath.startsWith('/lesson-videos') || urlPath.startsWith('/lesson-materials')) {
-    return res.status(403).json({
-      success: false,
-      message: 'Direct access to lesson media is forbidden. Use authorized streaming or download endpoints.',
-    });
-  }
-  next();
-});
-app.use('/uploads', express.static(getUploadsRoot()));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
@@ -115,32 +108,24 @@ app.use('/api/v1/auth/mfa-login', authLimiter);
 app.use('/api/v1/auth/refresh', authLimiter);
 app.use('/api/v1/mfa', authLimiter);
 
-// 4. Health Check Endpoint
-const handleHealthCheck = async (req: Request, res: Response) => {
-  let dbStatus = 'disconnected';
-  try {
-    await prisma.$queryRawUnsafe('SELECT 1');
-    dbStatus = 'connected';
-  } catch (e) {
-    dbStatus = 'error';
-  }
-
-  const memory = process.memoryUsage();
-
-  res.status(200).json({
-    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
-    database: dbStatus,
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    memory: {
-      heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
-      rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
-    },
+// 4. Liveness is process-only; readiness includes dependencies required to serve safely.
+const handleLiveness = (_req: Request, res: Response) => res.status(200).json({ status: 'LIVE' });
+const handleReadiness = async (_req: Request, res: Response) => {
+  const result = await checkReadiness();
+  res.status(result.ready ? 200 : 503).json({
+    status: result.ready ? 'READY' : 'NOT_READY',
+    draining: result.draining,
+    dependencies: result.dependencies
   });
 };
 
-app.get('/health', handleHealthCheck);
-app.get('/api/v1/health', handleHealthCheck);
+app.get('/health/live', handleLiveness);
+app.get('/health/ready', handleReadiness);
+app.get('/api/v1/health/live', handleLiveness);
+app.get('/api/v1/health/ready', handleReadiness);
+// Preserve existing probe paths as readiness checks so orchestrators fail closed.
+app.get('/health', handleReadiness);
+app.get('/api/v1/health', handleReadiness);
 
 // 5. Welcome Root Route for Browser Visits
 app.get('/', (req: Request, res: Response) => {
@@ -173,15 +158,22 @@ app.use('/api/v1/progress', progressRoutes);
 
 app.use('/api/v1/academic', academicRouter);
 app.use('/api/v1/commerce', commerceRouter);
+app.use('/api/v1/assessment', assessmentRouter);
 app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/teacher', teacherRouter);
 app.use('/api/v1/live', liveRouter);
 app.use('/api/v1/config', configRoutes);
+app.use('/api/v1/playgrounds', playgroundRoutes);
+app.use('/api/v1/boards', boardRoutes);
 app.use('/api/v1/discussions', discussionRoutes);
-app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/podcasts', podcastRoutes);
+app.use('/api/v1/collections', collectionRoutes);
+app.use('/api/v1/developer', apiTokenRoutes);
+app.use('/api/v1/developer', webhookRoutes);
 app.use('/api/v1/mfa', mfaRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
+app.use('/api/v1/careers', careersRoutes);
 
 // 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -204,13 +196,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     err = new BadRequestError('Referenced record does not exist');
   }
 
-  const statusCode = err.statusCode || 500;
-  if (statusCode >= 500) {
-    Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
-  } else {
-    Logger.warn(err.message || 'Client Request Error', requestId, { statusCode, path: req.originalUrl });
-  }
+  Logger.error(err.message || 'Internal Server Error', requestId, { stack: err.stack });
 
+  const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     success: false,
     message: statusCode >= 500 ? 'Internal Server Error' : err.message,

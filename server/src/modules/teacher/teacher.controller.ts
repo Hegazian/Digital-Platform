@@ -28,8 +28,8 @@ export class TeacherController {
     try {
       const teacherId = req.user!.userId;
       const result = await TeacherService.broadcastAnnouncement({
-        teacherId,
         ...req.body,
+        teacherId,
       });
       res.status(201).json({ success: true, data: result });
     } catch (err) {

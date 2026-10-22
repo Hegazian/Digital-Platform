@@ -1,7 +1,11 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../auth/auth.middleware';
 import { MaterialService } from './material.service';
-import { BadRequestError } from '../../utils/errors';
+import { BadRequestError, NotFoundError } from '../../utils/errors';
+import fs from 'fs';
+import path from 'path';
+import { getUploadsRoot, StorageService } from '../../utils/storage';
+import { externalMaterialUrl, materialObjectKey } from './material-reference';
 
 export class MaterialController {
   static async uploadMaterial(req: AuthRequest, res: Response, next: NextFunction) {
@@ -24,7 +28,7 @@ export class MaterialController {
         userRole: role,
       });
 
-      res.status(201).json({ success: true, data: material });
+      res.status(201).json({ success: true, data: { ...material, fileUrl: `/api/v1/materials/${material.id}/content` } });
     } catch (error) {
       next(error);
     }
@@ -42,6 +46,33 @@ export class MaterialController {
     }
   }
 
+  static async getMaterialContent(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const material = await MaterialService.getMaterialForDelivery(req.params.id as string, req.user!.userId, req.user!.role);
+      res.setHeader('Cache-Control', 'private, no-store');
+      const stored = material.fileUrl;
+      if (/^https?:\/\//i.test(stored)) {
+        return res.redirect(302, externalMaterialUrl(stored));
+      }
+      const internalPath = materialObjectKey(material);
+      if (stored.startsWith('/uploads/')) {
+        const root = path.resolve(getUploadsRoot());
+        const relative = stored.replace(/^\/uploads\//, '');
+        const filePath = path.resolve(root, relative);
+        if (!filePath.startsWith(root + path.sep) || !fs.existsSync(filePath)) throw new NotFoundError('Material file not found');
+        const realRoot = fs.realpathSync(root);
+        const realFilePath = fs.realpathSync(filePath);
+        if (!realFilePath.startsWith(realRoot + path.sep)) throw new NotFoundError('Material file not found');
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath).replace(/["\r\n]/g, '_')}"`);
+        return res.sendFile(realFilePath, { dotfiles: 'allow' });
+      }
+      const signedUrl = await StorageService.getSignedUrl(internalPath, 120);
+      res.redirect(302, signedUrl);
+    } catch (error) { next(error); }
+  }
+
   static async deleteMaterial(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
@@ -49,18 +80,6 @@ export class MaterialController {
 
       const result = await MaterialService.deleteMaterial(id as string, userId, role);
       res.status(200).json({ success: true, data: result });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async downloadMaterial(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params;
-      const { userId, role } = req.user!;
-
-      const downloadInfo = await MaterialService.getMaterialDownload(id as string, userId, role);
-      res.status(200).json({ success: true, data: downloadInfo });
     } catch (error) {
       next(error);
     }

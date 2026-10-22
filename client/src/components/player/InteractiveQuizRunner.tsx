@@ -24,7 +24,7 @@ interface QuizOption {
 interface QuizQuestion {
   id?: string;
   questionText: string;
-  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER';
+  type?: 'MCQ' | 'TRUE_FALSE' | 'MULTIPLE_SELECT' | 'SHORT_ANSWER' | 'ESSAY';
   points: number;
   options: QuizOption[];
 }
@@ -83,6 +83,7 @@ export default function InteractiveQuizRunner({
   answersRef.current = { singleAnswers, multiAnswers, textAnswers };
 
   const submittingRef = useRef(false);
+  const submitRef = useRef<() => void>(() => {});
   const [submitting, setSubmitting] = useState(false);
 
   const [result, setResult] = useState<{
@@ -161,7 +162,7 @@ export default function InteractiveQuizRunner({
         const base: Record<string, unknown> = { questionId: q.id };
         if (q.type === 'MULTIPLE_SELECT') {
           base.selectedOptionIds = Array.from(multiAnswers[q.id!] || []);
-        } else if (q.type === 'SHORT_ANSWER') {
+        } else if (q.type === 'SHORT_ANSWER' || q.type === 'ESSAY') {
           base.textAnswer = textAnswers[q.id!] || '';
         } else {
           base.selectedOptionId = singleAnswers[q.id!];
@@ -189,8 +190,7 @@ export default function InteractiveQuizRunner({
 
   // The countdown interval captures whichever handleSubmit existed when the
   // attempt started; route it through a ref so it always invokes the latest.
-  const submitRef = useRef(handleSubmit);
-  submitRef.current = handleSubmit;
+  useEffect(() => { submitRef.current = handleSubmit; });
 
   if (!quiz || questions.length === 0) {
     return (
@@ -210,7 +210,7 @@ export default function InteractiveQuizRunner({
 
   const answeredCount = questions.filter((q) => {
     if (q.type === 'MULTIPLE_SELECT') return (multiAnswers[q.id!]?.size || 0) > 0;
-    if (q.type === 'SHORT_ANSWER') return !!textAnswers[q.id!];
+    if (q.type === 'SHORT_ANSWER' || q.type === 'ESSAY') return !!textAnswers[q.id!];
     return !!singleAnswers[q.id!];
   }).length;
 
@@ -402,12 +402,16 @@ export default function InteractiveQuizRunner({
           )}
 
           {/* Free-text questions */}
-          {currentType === 'SHORT_ANSWER' && (
+          {(currentType === 'SHORT_ANSWER' || currentType === 'ESSAY') && (
             <textarea
-              rows={3}
+              rows={currentType === 'ESSAY' ? 8 : 3}
               value={textAnswers[currentQ.id!] || ''}
               onChange={(e) => setTextAnswers((prev) => ({ ...prev, [currentQ.id!]: e.target.value }))}
-              placeholder="Type your answer…"
+              placeholder={
+                currentType === 'ESSAY'
+                  ? 'Write your essay answer here…'
+                  : 'Type your answer…'
+              }
               className="glass-input w-full text-sm resize-y"
             />
           )}

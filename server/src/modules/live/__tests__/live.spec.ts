@@ -69,6 +69,14 @@ describe('Zoom Live Classes Integration Tests', () => {
   });
 
   describe('POST /api/v1/live/sessions', () => {
+    it('rejects attempts to attribute a session to a different teacher', async () => {
+      const res = await request(app)
+        .post('/api/v1/live/sessions')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({ subjectId, titleEn: 'x', titleAr: 'x', startTime: new Date(Date.now() + 3600_000).toISOString(), durationMinutes: 30, teacherId: 'another-teacher' });
+      expect(res.status).toBe(400);
+    });
+
     it('should allow teacher to schedule a Zoom live meeting session', async () => {
       const res = await request(app)
         .post('/api/v1/live/sessions')

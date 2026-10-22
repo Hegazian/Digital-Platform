@@ -1,0 +1,2658 @@
+{
+  "generatedAt": "2026-10-21",
+  "sourceFiles": 171,
+  "sourceLines": 30796,
+  "serverTestFiles": 67,
+  "clientE2eFiles": 7,
+  "clientComponentTestFiles": 0,
+  "declaredCases": 368,
+  "routeCount": 171,
+  "writeRoutesWithoutBodySchema": [
+    {
+      "file": "server/src/modules/ai/ai.routes.ts",
+      "line": 7,
+      "method": "POST",
+      "path": "/tutor",
+      "handlers": [
+        "authenticate",
+        "askAITutor"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 46,
+      "method": "POST",
+      "path": "/assessments/:assessmentId/start",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT])",
+        "AssessmentController.startAssessmentAttempt"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/uploads",
+      "handlers": [
+        "authenticate",
+        "upload.single('file')",
+        "(req: Request, res: Response, next: NextFunction) => AssignmentController.uploadSubmissionFile(req as AuthRequest, res, next)"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 21,
+      "method": "POST",
+      "path": "/logout",
+      "handlers": [
+        "AuthController.logout"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/mfa.routes.ts",
+      "line": 7,
+      "method": "POST",
+      "path": "/setup",
+      "handlers": [
+        "authenticate",
+        "setupMfa"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/mfa.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/verify",
+      "handlers": [
+        "authenticate",
+        "verifyMfa"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 14,
+      "method": "POST",
+      "path": "/products",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.createProduct"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 28,
+      "method": "POST",
+      "path": "/vouchers",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.createVoucher"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/vouchers/redeem",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT], false)",
+        "CommerceController.redeemVoucher"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 73,
+      "method": "PATCH",
+      "path": "/admin/orders/:id/approve",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.adminApproveOrder"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 80,
+      "method": "PATCH",
+      "path": "/admin/orders/:id/reject",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.adminRejectOrder"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 101,
+      "method": "POST",
+      "path": "/webhooks/paymob",
+      "handlers": [
+        "CommerceController.processPaymobWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 102,
+      "method": "POST",
+      "path": "/webhooks/fawry",
+      "handlers": [
+        "CommerceController.processFawryWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/board.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/:blockId/state",
+      "handlers": [
+        "authenticate",
+        "updateBoardState"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 47,
+      "method": "PATCH",
+      "path": "/:id/publish",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CourseController.publishCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 48,
+      "method": "PATCH",
+      "path": "/:id/archive",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.archiveCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 49,
+      "method": "POST",
+      "path": "/:id/enroll",
+      "handlers": [
+        "authenticate",
+        "CourseController.enrollCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 50,
+      "method": "POST",
+      "path": "/:id/submit",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.submitCourseForReview"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 51,
+      "method": "POST",
+      "path": "/:id/review",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CourseController.reviewCourseStatus"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 56,
+      "method": "PATCH",
+      "path": "/sections/:sectionId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.updateSection"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/sections/:sectionId/lessons",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createSectionLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 59,
+      "method": "POST",
+      "path": "/:courseId/sections/reorder",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.reorderSections"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 65,
+      "method": "POST",
+      "path": "/:courseId/modules",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createModule"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 77,
+      "method": "POST",
+      "path": "/modules/:moduleId/lessons",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 86,
+      "method": "POST",
+      "path": "/lessons/:lessonId/video",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachVideoToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 87,
+      "method": "POST",
+      "path": "/lessons/:lessonId/material",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachMaterialToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 88,
+      "method": "POST",
+      "path": "/lessons/:lessonId/quiz",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachQuizToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 91,
+      "method": "PATCH",
+      "path": "/blocks/:blockId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.updateLessonBlock"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 100,
+      "method": "POST",
+      "path": "/lessons/:lessonId/blocks",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.addLessonBlock"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/playground.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/execute",
+      "handlers": [
+        "authenticate",
+        "executeCode"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/api-token.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/tokens",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "createApiToken"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/webhook.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/webhooks",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "registerWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/discussions/discussion.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/threads",
+      "handlers": [
+        "authenticate",
+        "createThread"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/discussions/discussion.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/threads/:id/replies",
+      "handlers": [
+        "authenticate",
+        "postReply"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/live/live.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/sessions",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "LiveController.createLiveSession"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/materials/material.routes.ts",
+      "line": 44,
+      "method": "POST",
+      "path": "/upload",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "upload.single('file')",
+        "MaterialController.uploadMaterial"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/notifications/notification.routes.ts",
+      "line": 8,
+      "method": "PATCH",
+      "path": "/:id/read",
+      "handlers": [
+        "authenticate",
+        "NotificationController.markAsRead"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/progress/progress.routes.ts",
+      "line": 34,
+      "method": "POST",
+      "path": "/:lessonId/complete",
+      "handlers": [
+        "assertLessonLearningAccess",
+        "ProgressController.markCompleted"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 35,
+      "method": "POST",
+      "path": "/:id/attempts/start",
+      "handlers": [
+        "authenticate",
+        "assertQuizLearningAccess",
+        "QuizController.startAttempt"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 16,
+      "method": "PATCH",
+      "path": "/:id/approve",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "SubscriptionController.approve"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 17,
+      "method": "PATCH",
+      "path": "/:id/reject",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "SubscriptionController.reject"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/teacher/teacher.routes.ts",
+      "line": 21,
+      "method": "POST",
+      "path": "/announcements",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "TeacherController.broadcastAnnouncement"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/videos/video.routes.ts",
+      "line": 34,
+      "method": "POST",
+      "path": "/upload",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "upload.single('file')",
+        "VideoController.uploadVideo"
+      ],
+      "bodyValidated": false
+    }
+  ],
+  "modules": [
+    {
+      "name": "academic",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 8
+    },
+    {
+      "name": "admin",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 21
+    },
+    {
+      "name": "ai",
+      "sourceFiles": 2,
+      "testFiles": 1,
+      "testCases": 2
+    },
+    {
+      "name": "assessment",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 9
+    },
+    {
+      "name": "assignments",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 10
+    },
+    {
+      "name": "audit",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 2
+    },
+    {
+      "name": "auth",
+      "sourceFiles": 6,
+      "testFiles": 9,
+      "testCases": 41
+    },
+    {
+      "name": "careers",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 7
+    },
+    {
+      "name": "collections",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 7
+    },
+    {
+      "name": "commerce",
+      "sourceFiles": 4,
+      "testFiles": 6,
+      "testCases": 21
+    },
+    {
+      "name": "config",
+      "sourceFiles": 2,
+      "testFiles": 2,
+      "testCases": 8
+    },
+    {
+      "name": "courses",
+      "sourceFiles": 9,
+      "testFiles": 14,
+      "testCases": 90
+    },
+    {
+      "name": "developer",
+      "sourceFiles": 4,
+      "testFiles": 2,
+      "testCases": 4
+    },
+    {
+      "name": "discussions",
+      "sourceFiles": 2,
+      "testFiles": 1,
+      "testCases": 3
+    },
+    {
+      "name": "health",
+      "sourceFiles": 0,
+      "testFiles": 1,
+      "testCases": 3
+    },
+    {
+      "name": "live",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 3
+    },
+    {
+      "name": "materials",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 10
+    },
+    {
+      "name": "notifications",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 4
+    },
+    {
+      "name": "podcasts",
+      "sourceFiles": 3,
+      "testFiles": 3,
+      "testCases": 10
+    },
+    {
+      "name": "progress",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 6
+    },
+    {
+      "name": "quizzes",
+      "sourceFiles": 3,
+      "testFiles": 3,
+      "testCases": 19
+    },
+    {
+      "name": "subscriptions",
+      "sourceFiles": 3,
+      "testFiles": 2,
+      "testCases": 12
+    },
+    {
+      "name": "teacher",
+      "sourceFiles": 3,
+      "testFiles": 1,
+      "testCases": 5
+    },
+    {
+      "name": "videos",
+      "sourceFiles": 3,
+      "testFiles": 3,
+      "testCases": 12
+    }
+  ],
+  "routes": [
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 19,
+      "method": "GET",
+      "path": "/stages",
+      "handlers": [
+        "AcademicController.getAllEducationalStages"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 20,
+      "method": "GET",
+      "path": "/stages/:stageId/grades",
+      "handlers": [
+        "AcademicController.getGradesByStage"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 21,
+      "method": "GET",
+      "path": "/years",
+      "handlers": [
+        "AcademicController.getAllAcademicYears"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 22,
+      "method": "GET",
+      "path": "/grades/:gradeId/subjects",
+      "handlers": [
+        "AcademicController.getSubjectsByGrade"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 25,
+      "method": "GET",
+      "path": "/grade-subjects",
+      "handlers": [
+        "authenticate",
+        "AcademicController.getGradeSubjects"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 28,
+      "method": "POST",
+      "path": "/stages",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createStageSchema)",
+        "AcademicController.createEducationalStage"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 29,
+      "method": "PATCH",
+      "path": "/stages/:stageId",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createStageSchema.partial())",
+        "AcademicController.updateEducationalStage"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 35,
+      "method": "DELETE",
+      "path": "/stages/:stageId",
+      "handlers": [
+        "...adminOnly",
+        "AcademicController.deleteEducationalStage"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 38,
+      "method": "POST",
+      "path": "/grades",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createGradeSchema)",
+        "AcademicController.createGrade"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 39,
+      "method": "PATCH",
+      "path": "/grades/:gradeId",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createGradeSchema.omit({ stageId: true }).partial())",
+        "AcademicController.updateGrade"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 45,
+      "method": "DELETE",
+      "path": "/grades/:gradeId",
+      "handlers": [
+        "...adminOnly",
+        "AcademicController.deleteGrade"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 48,
+      "method": "POST",
+      "path": "/years",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createAcademicYearSchema)",
+        "AcademicController.createAcademicYear"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 49,
+      "method": "PATCH",
+      "path": "/years/:yearId",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(updateAcademicYearSchema)",
+        "AcademicController.updateAcademicYear"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 55,
+      "method": "DELETE",
+      "path": "/years/:yearId",
+      "handlers": [
+        "...adminOnly",
+        "AcademicController.deleteAcademicYear"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/grade-subjects",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(createGradeSubjectSchema)",
+        "AcademicController.createGradeSubject"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 64,
+      "method": "PATCH",
+      "path": "/grade-subjects/:id",
+      "handlers": [
+        "...adminOnly",
+        "validateBody(z.object({ isActive: z.boolean() }))",
+        "AcademicController.updateGradeSubject"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/academic/academic.routes.ts",
+      "line": 70,
+      "method": "DELETE",
+      "path": "/grade-subjects/:id",
+      "handlers": [
+        "...adminOnly",
+        "AcademicController.deleteGradeSubject"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 21,
+      "method": "GET",
+      "path": "/users",
+      "handlers": [
+        "validateQuery(getUsersQuerySchema)",
+        "AdminController.getUsers"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 22,
+      "method": "POST",
+      "path": "/users",
+      "handlers": [
+        "validateBody(createAdminUserSchema)",
+        "AdminController.createUser"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 23,
+      "method": "PATCH",
+      "path": "/users/:id",
+      "handlers": [
+        "validateBody(updateAdminUserSchema)",
+        "AdminController.updateUser"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 24,
+      "method": "PATCH",
+      "path": "/users/:id/active",
+      "handlers": [
+        "validateBody(setUserActiveSchema)",
+        "AdminController.setUserActive"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 27,
+      "method": "PATCH",
+      "path": "/academic-years/:id",
+      "handlers": [
+        "validateBody(updateAcademicYearSchema)",
+        "AdminController.updateAcademicYear"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 34,
+      "method": "GET",
+      "path": "/teachers/pending",
+      "handlers": [
+        "AdminController.getPendingTeachers"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 35,
+      "method": "PATCH",
+      "path": "/teachers/:id/status",
+      "handlers": [
+        "validateBody(teacherStatusSchema)",
+        "AdminController.updateTeacherStatus"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/admin/admin.routes.ts",
+      "line": 38,
+      "method": "GET",
+      "path": "/stats",
+      "handlers": [
+        "AdminController.getStats"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/ai/ai.routes.ts",
+      "line": 7,
+      "method": "POST",
+      "path": "/tutor",
+      "handlers": [
+        "authenticate",
+        "askAITutor"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 16,
+      "method": "GET",
+      "path": "/pools",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "AssessmentController.listQuestionPools"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 17,
+      "method": "GET",
+      "path": "/assessments",
+      "handlers": [
+        "authenticate",
+        "AssessmentController.listAssessments"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 20,
+      "method": "POST",
+      "path": "/pools",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createQuestionPoolSchema)",
+        "AssessmentController.createQuestionPool"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 28,
+      "method": "POST",
+      "path": "/pools/:poolId/questions",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(addQuestionItemSchema)",
+        "AssessmentController.addQuestionItem"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 37,
+      "method": "POST",
+      "path": "/assessments",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createAssessmentSchema)",
+        "AssessmentController.createAssessment"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 46,
+      "method": "POST",
+      "path": "/assessments/:assessmentId/start",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT])",
+        "AssessmentController.startAssessmentAttempt"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 53,
+      "method": "GET",
+      "path": "/attempts/:attemptId",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT])",
+        "AssessmentController.getAttempt"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assessment/assessment.routes.ts",
+      "line": 60,
+      "method": "POST",
+      "path": "/attempts/:attemptId/submit",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT])",
+        "validateBody(submitAssessmentAttemptSchema)",
+        "AssessmentController.submitAttempt"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 56,
+      "method": "GET",
+      "path": "/my-submissions",
+      "handlers": [
+        "authenticate",
+        "AssignmentController.getStudentSubmissions"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/uploads",
+      "handlers": [
+        "authenticate",
+        "upload.single('file')",
+        "(req: Request, res: Response, next: NextFunction) => AssignmentController.uploadSubmissionFile(req as AuthRequest, res, next)"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 66,
+      "method": "GET",
+      "path": "/lesson/:lessonId",
+      "handlers": [
+        "authenticate",
+        "AssignmentController.getAssignmentsByLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 67,
+      "method": "POST",
+      "path": "/:id/submit",
+      "handlers": [
+        "authenticate",
+        "assertAssignmentLearningAccess",
+        "validateBody(submitAssignmentSchema)",
+        "AssignmentController.submitAssignment"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 74,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "AssignmentController.getAssignmentById"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 77,
+      "method": "POST",
+      "path": "/lesson/:lessonId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "requireRole([Role.TEACHER])",
+        "validateBody(createAssignmentSchema)",
+        "AssignmentController.createAssignment"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 85,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(updateAssignmentSchema)",
+        "AssignmentController.updateAssignment"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 86,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "AssignmentController.deleteAssignment"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 87,
+      "method": "GET",
+      "path": "/:id/submissions",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "AssignmentController.getSubmissionsByAssignment"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/assignments/assignment.routes.ts",
+      "line": 88,
+      "method": "POST",
+      "path": "/submissions/:submissionId/grade",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "requireRole([Role.TEACHER])",
+        "validateBody(gradeSubmissionSchema)",
+        "AssignmentController.gradeSubmission"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/audit/audit.routes.ts",
+      "line": 9,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "getAuditLogs"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 15,
+      "method": "POST",
+      "path": "/register",
+      "handlers": [
+        "validateBody(registerSchema)",
+        "AuthController.register"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 16,
+      "method": "POST",
+      "path": "/login",
+      "handlers": [
+        "validateBody(loginSchema)",
+        "AuthController.login"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 17,
+      "method": "POST",
+      "path": "/mfa-login",
+      "handlers": [
+        "validateBody(mfaLoginSchema)",
+        "AuthController.mfaLogin"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 19,
+      "method": "POST",
+      "path": "/refresh",
+      "handlers": [
+        "validateBody(refreshTokenSchema)",
+        "AuthController.refreshToken"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 21,
+      "method": "POST",
+      "path": "/logout",
+      "handlers": [
+        "AuthController.logout"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 24,
+      "method": "GET",
+      "path": "/me",
+      "handlers": [
+        "authenticate",
+        "(req: AuthRequest, res) => {\n  res.json({ success: true, user: req.user });\n}"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 28,
+      "method": "GET",
+      "path": "/profile",
+      "handlers": [
+        "authenticate",
+        "AuthController.getProfile"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/auth.routes.ts",
+      "line": 29,
+      "method": "PATCH",
+      "path": "/profile",
+      "handlers": [
+        "authenticate",
+        "validateBody(updateProfileSchema)",
+        "AuthController.updateProfile"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/auth/mfa.routes.ts",
+      "line": 7,
+      "method": "POST",
+      "path": "/setup",
+      "handlers": [
+        "authenticate",
+        "setupMfa"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/auth/mfa.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/verify",
+      "handlers": [
+        "authenticate",
+        "verifyMfa"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/careers/careers.routes.ts",
+      "line": 15,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "CareersController.listTracks"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/careers/careers.routes.ts",
+      "line": 18,
+      "method": "GET",
+      "path": "/mine",
+      "handlers": [
+        "authenticate",
+        "CareersController.getMyTrack"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/careers/careers.routes.ts",
+      "line": 19,
+      "method": "GET",
+      "path": "/mine/progress",
+      "handlers": [
+        "authenticate",
+        "CareersController.getMyTrackProgress"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/careers/careers.routes.ts",
+      "line": 20,
+      "method": "PUT",
+      "path": "/mine",
+      "handlers": [
+        "authenticate",
+        "validateBody(setTrackSchema)",
+        "CareersController.setMyTrack"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 36,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "optionalAuth",
+        "listCollections"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 37,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "optionalAuth",
+        "getCollectionById"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 40,
+      "method": "POST",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(createCollectionSchema)",
+        "createCollection"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 41,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(updateCollectionSchema)",
+        "updateCollection"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 42,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "deleteCollection"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/collections/collection.routes.ts",
+      "line": 43,
+      "method": "PUT",
+      "path": "/:id/courses",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(setCoursesSchema)",
+        "setCollectionCourses"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 11,
+      "method": "GET",
+      "path": "/products",
+      "handlers": [
+        "CommerceController.getAllProducts"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 14,
+      "method": "POST",
+      "path": "/products",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.createProduct"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 21,
+      "method": "GET",
+      "path": "/vouchers",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.getAllVouchers"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 28,
+      "method": "POST",
+      "path": "/vouchers",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.createVoucher"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 35,
+      "method": "DELETE",
+      "path": "/vouchers/:id",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.deleteVoucher"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 43,
+      "method": "POST",
+      "path": "/orders",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT], false)",
+        "validateBody(createOrderSchema)",
+        "CommerceController.createOrder"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 52,
+      "method": "GET",
+      "path": "/orders/me",
+      "handlers": [
+        "authenticate",
+        "CommerceController.getMyOrders"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/vouchers/redeem",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT], false)",
+        "CommerceController.redeemVoucher"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 66,
+      "method": "GET",
+      "path": "/admin/orders",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.adminListOrders"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 73,
+      "method": "PATCH",
+      "path": "/admin/orders/:id/approve",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.adminApproveOrder"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 80,
+      "method": "PATCH",
+      "path": "/admin/orders/:id/reject",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CommerceController.adminRejectOrder"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 88,
+      "method": "GET",
+      "path": "/entitlements/check",
+      "handlers": [
+        "authenticate",
+        "CommerceController.checkEntitlementAccess"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 94,
+      "method": "GET",
+      "path": "/entitlements/check-course/:courseId",
+      "handlers": [
+        "authenticate",
+        "CommerceController.checkCourseAccess"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 101,
+      "method": "POST",
+      "path": "/webhooks/paymob",
+      "handlers": [
+        "CommerceController.processPaymobWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/commerce/commerce.routes.ts",
+      "line": 102,
+      "method": "POST",
+      "path": "/webhooks/fawry",
+      "handlers": [
+        "CommerceController.processFawryWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/config/config.routes.ts",
+      "line": 29,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "getAppConfig"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/config/config.routes.ts",
+      "line": 32,
+      "method": "PUT",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(updateAppConfigSchema)",
+        "updateAppConfig"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/config/config.routes.ts",
+      "line": 33,
+      "method": "PATCH",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(updateAppConfigSchema)",
+        "updateAppConfig"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/board.routes.ts",
+      "line": 7,
+      "method": "GET",
+      "path": "/:blockId",
+      "handlers": [
+        "authenticate",
+        "getBoardState"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/board.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/:blockId/state",
+      "handlers": [
+        "authenticate",
+        "updateBoardState"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 23,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "CourseController.getAllSubjects"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 24,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "CourseController.getSubjectById"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 26,
+      "method": "POST",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createSubjectSchema)",
+        "CourseController.createSubject"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 27,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(updateSubjectSchema)",
+        "CourseController.updateSubject"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 28,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CourseController.deleteSubject"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 29,
+      "method": "PUT",
+      "path": "/:id/pricing",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "validateBody(updateSubjectPricingSchema)",
+        "CourseController.updateSubjectPricing"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 40,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "optionalAuth",
+        "CourseController.getAllCourses"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 41,
+      "method": "GET",
+      "path": "/teacher/dashboard",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.getTeacherDashboard"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 42,
+      "method": "GET",
+      "path": "/teacher/my-courses",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.getTeacherCourses"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 43,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "optionalAuth",
+        "CourseController.getCourseById"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 44,
+      "method": "POST",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createCourseSchema)",
+        "CourseController.createCourse"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 45,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(updateCourseSchema)",
+        "CourseController.updateCourse"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 46,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.deleteCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 47,
+      "method": "PATCH",
+      "path": "/:id/publish",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CourseController.publishCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 48,
+      "method": "PATCH",
+      "path": "/:id/archive",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.archiveCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 49,
+      "method": "POST",
+      "path": "/:id/enroll",
+      "handlers": [
+        "authenticate",
+        "CourseController.enrollCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 50,
+      "method": "POST",
+      "path": "/:id/submit",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.submitCourseForReview"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 51,
+      "method": "POST",
+      "path": "/:id/review",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "CourseController.reviewCourseStatus"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 54,
+      "method": "GET",
+      "path": "/:courseId/sections",
+      "handlers": [
+        "optionalAuth",
+        "CourseController.getSectionsByCourse"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 55,
+      "method": "POST",
+      "path": "/:courseId/sections",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createSectionSchema)",
+        "CourseController.createSection"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 56,
+      "method": "PATCH",
+      "path": "/sections/:sectionId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.updateSection"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 57,
+      "method": "DELETE",
+      "path": "/sections/:sectionId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.deleteSection"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 58,
+      "method": "POST",
+      "path": "/sections/:sectionId/lessons",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createSectionLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 59,
+      "method": "POST",
+      "path": "/:courseId/sections/reorder",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.reorderSections"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 65,
+      "method": "POST",
+      "path": "/:courseId/modules",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createModule"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 66,
+      "method": "PATCH",
+      "path": "/modules/:moduleId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(updateModuleSchema)",
+        "CourseController.updateModule"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 67,
+      "method": "DELETE",
+      "path": "/modules/:moduleId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.deleteModule"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 68,
+      "method": "POST",
+      "path": "/:courseId/modules/reorder",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(reorderModulesSchema)",
+        "CourseController.reorderModules"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 77,
+      "method": "POST",
+      "path": "/modules/:moduleId/lessons",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.createLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 78,
+      "method": "PATCH",
+      "path": "/lessons/:lessonId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(updateLessonSchema)",
+        "CourseController.updateLesson"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 79,
+      "method": "POST",
+      "path": "/lessons/reorder",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(reorderLessonsSchema)",
+        "CourseController.reorderLessons"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 86,
+      "method": "POST",
+      "path": "/lessons/:lessonId/video",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachVideoToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 87,
+      "method": "POST",
+      "path": "/lessons/:lessonId/material",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachMaterialToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 88,
+      "method": "POST",
+      "path": "/lessons/:lessonId/quiz",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.attachQuizToLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 89,
+      "method": "DELETE",
+      "path": "/lessons/:lessonId/quiz",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.detachQuizFromLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 90,
+      "method": "DELETE",
+      "path": "/lessons/:lessonId/video",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.detachVideoFromLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 91,
+      "method": "PATCH",
+      "path": "/blocks/:blockId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.updateLessonBlock"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 92,
+      "method": "DELETE",
+      "path": "/blocks/:blockId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.deleteLessonBlock"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 93,
+      "method": "DELETE",
+      "path": "/lessons/:lessonId",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.deleteLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/course.routes.ts",
+      "line": 100,
+      "method": "POST",
+      "path": "/lessons/:lessonId/blocks",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "CourseController.addLessonBlock"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/courses/playground.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/execute",
+      "handlers": [
+        "authenticate",
+        "executeCode"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/api-token.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/tokens",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "createApiToken"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/api-token.routes.ts",
+      "line": 10,
+      "method": "GET",
+      "path": "/tokens",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "getApiTokens"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/webhook.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/webhooks",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "registerWebhook"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/developer/webhook.routes.ts",
+      "line": 10,
+      "method": "GET",
+      "path": "/webhooks",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "getWebhooks"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/discussions/discussion.routes.ts",
+      "line": 7,
+      "method": "GET",
+      "path": "/courses/:courseId",
+      "handlers": [
+        "authenticate",
+        "getCourseThreads"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/discussions/discussion.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/threads",
+      "handlers": [
+        "authenticate",
+        "createThread"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/discussions/discussion.routes.ts",
+      "line": 9,
+      "method": "POST",
+      "path": "/threads/:id/replies",
+      "handlers": [
+        "authenticate",
+        "postReply"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/live/live.routes.ts",
+      "line": 8,
+      "method": "POST",
+      "path": "/sessions",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "LiveController.createLiveSession"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/live/live.routes.ts",
+      "line": 15,
+      "method": "GET",
+      "path": "/sessions/subject/:subjectId",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT])",
+        "LiveController.getSubjectLiveSessions"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/materials/material.routes.ts",
+      "line": 44,
+      "method": "POST",
+      "path": "/upload",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "upload.single('file')",
+        "MaterialController.uploadMaterial"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/materials/material.routes.ts",
+      "line": 45,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "MaterialController.deleteMaterial"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/materials/material.routes.ts",
+      "line": 48,
+      "method": "GET",
+      "path": "/lesson/:lessonId",
+      "handlers": [
+        "authenticate",
+        "MaterialController.getMaterialsByLesson"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/notifications/notification.routes.ts",
+      "line": 7,
+      "method": "GET",
+      "path": "/me",
+      "handlers": [
+        "authenticate",
+        "NotificationController.getMyNotifications"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/notifications/notification.routes.ts",
+      "line": 8,
+      "method": "PATCH",
+      "path": "/:id/read",
+      "handlers": [
+        "authenticate",
+        "NotificationController.markAsRead"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 44,
+      "method": "GET",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "listPodcasts"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 45,
+      "method": "GET",
+      "path": "/mine",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "listMine"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 46,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "getPodcastById"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 49,
+      "method": "POST",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createPodcastSchema)",
+        "createPodcast"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 50,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "validateBody(updatePodcastSchema)",
+        "updatePodcast"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 51,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "deletePodcast"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 52,
+      "method": "POST",
+      "path": "/:id/episodes",
+      "handlers": [
+        "authenticate",
+        "validateBody(addEpisodeSchema)",
+        "addEpisode"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/podcasts/podcast.routes.ts",
+      "line": 53,
+      "method": "DELETE",
+      "path": "/:id/episodes/:episodeId",
+      "handlers": [
+        "authenticate",
+        "deleteEpisode"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/progress/progress.routes.ts",
+      "line": 30,
+      "method": "GET",
+      "path": "/summary",
+      "handlers": [
+        "ProgressController.getSummary"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/progress/progress.routes.ts",
+      "line": 32,
+      "method": "GET",
+      "path": "/course/:courseId",
+      "handlers": [
+        "ProgressController.getCourseProgress"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/progress/progress.routes.ts",
+      "line": 33,
+      "method": "POST",
+      "path": "/:lessonId",
+      "handlers": [
+        "assertLessonLearningAccess",
+        "validateBody(updateWatchTimeSchema)",
+        "ProgressController.updateWatchTime"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/progress/progress.routes.ts",
+      "line": 34,
+      "method": "POST",
+      "path": "/:lessonId/complete",
+      "handlers": [
+        "assertLessonLearningAccess",
+        "ProgressController.markCompleted"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 30,
+      "method": "POST",
+      "path": "/",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(createQuizSchema)",
+        "QuizController.createQuiz"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 31,
+      "method": "PATCH",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "validateBody(updateQuizSchema)",
+        "QuizController.updateQuiz"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 34,
+      "method": "GET",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "QuizController.getQuiz"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 35,
+      "method": "POST",
+      "path": "/:id/attempts/start",
+      "handlers": [
+        "authenticate",
+        "assertQuizLearningAccess",
+        "QuizController.startAttempt"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 36,
+      "method": "POST",
+      "path": "/:id/attempts",
+      "handlers": [
+        "authenticate",
+        "assertQuizLearningAccess",
+        "validateBody(submitQuizAttemptSchema)",
+        "QuizController.submitAttempt"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/quizzes/quiz.routes.ts",
+      "line": 37,
+      "method": "GET",
+      "path": "/:id/attempts",
+      "handlers": [
+        "authenticate",
+        "QuizController.getMyAttempts"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 11,
+      "method": "POST",
+      "path": "/manual",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.STUDENT], false)",
+        "validateBody(createManualSubscriptionSchema)",
+        "SubscriptionController.createManualSubscription"
+      ],
+      "bodyValidated": true
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 12,
+      "method": "GET",
+      "path": "/me",
+      "handlers": [
+        "authenticate",
+        "SubscriptionController.getMySubscriptions"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 13,
+      "method": "GET",
+      "path": "/pending",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "SubscriptionController.getPending"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 16,
+      "method": "PATCH",
+      "path": "/:id/approve",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "SubscriptionController.approve"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 17,
+      "method": "PATCH",
+      "path": "/:id/reject",
+      "handlers": [
+        "authenticate",
+        "requireRole([Role.ADMIN])",
+        "SubscriptionController.reject"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/subscriptions/subscription.routes.ts",
+      "line": 18,
+      "method": "DELETE",
+      "path": "/:id",
+      "handlers": [
+        "authenticate",
+        "SubscriptionController.cancelSubscription"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/teacher/teacher.routes.ts",
+      "line": 7,
+      "method": "GET",
+      "path": "/students",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "TeacherController.getEnrolledStudents"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/teacher/teacher.routes.ts",
+      "line": 14,
+      "method": "GET",
+      "path": "/students/:studentId/progress",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "TeacherController.getStudentProgress"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/teacher/teacher.routes.ts",
+      "line": 21,
+      "method": "POST",
+      "path": "/announcements",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "TeacherController.broadcastAnnouncement"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/teacher/teacher.routes.ts",
+      "line": 28,
+      "method": "GET",
+      "path": "/revenue",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "TeacherController.getRevenueSummary"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/videos/video.routes.ts",
+      "line": 34,
+      "method": "POST",
+      "path": "/upload",
+      "handlers": [
+        "authenticate",
+        "requireApprovedTeacher",
+        "upload.single('file')",
+        "VideoController.uploadVideo"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/videos/video.routes.ts",
+      "line": 37,
+      "method": "GET",
+      "path": "/:videoId/playback-url",
+      "handlers": [
+        "authenticate",
+        "VideoController.getPlaybackUrl"
+      ],
+      "bodyValidated": false
+    },
+    {
+      "file": "server/src/modules/videos/video.routes.ts",
+      "line": 38,
+      "method": "GET",
+      "path": "/:videoId/stream",
+      "handlers": [
+        "VideoController.streamLocalVideo"
+      ],
+      "bodyValidated": false
+    }
+  ]
+}

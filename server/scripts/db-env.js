@@ -20,6 +20,31 @@ if (!envFile) {
 
 require('dotenv').config({ path: path.resolve(__dirname, '..', envFile), override: true });
 
+const isTestUrl = (raw) => {
+  try { const url = new URL(raw); return ['postgres:', 'postgresql:'].includes(url.protocol) && ['localhost', '127.0.0.1', '[::1]', '::1'].includes(url.hostname) && url.pathname === '/eduplatform_test'; }
+  catch { return false; }
+};
+const isLocalDevelopmentUrl = (raw) => {
+  try { const url = new URL(raw); return ['postgres:', 'postgresql:'].includes(url.protocol) && ['localhost', '127.0.0.1', '[::1]', '::1'].includes(url.hostname) && url.pathname === '/eduplatform_dev'; }
+  catch { return false; }
+};
+const isDedicatedTestTarget = isTestUrl(process.env.DATABASE_URL) && isTestUrl(process.env.DIRECT_URL);
+const isDedicatedDevelopmentTarget = isLocalDevelopmentUrl(process.env.DATABASE_URL) && isLocalDevelopmentUrl(process.env.DIRECT_URL);
+if (envFile === '.env.test' && !isDedicatedTestTarget) {
+  console.error('Refusing test database command: .env.test must target localhost/eduplatform_test.');
+  process.exit(2);
+}
+if (process.argv.includes('--force-reset') && !isDedicatedTestTarget) {
+  console.error('Refusing destructive Prisma reset: only localhost/eduplatform_test is allowlisted.');
+  process.exit(2);
+}
+
+const isSchemaPush = process.argv[3] === 'db' && process.argv[4] === 'push';
+if (isSchemaPush && !isDedicatedTestTarget && !(envFile === '.env' && isDedicatedDevelopmentTarget)) {
+  console.error('Refusing prisma db push: use reviewed migrations for application databases. db push is limited to localhost/eduplatform_test or localhost/eduplatform_dev.');
+  process.exit(2);
+}
+
 console.log(`[db-env] ${envFile} -> ${process.env.DATABASE_URL.replace(/:[^:@/]+@/, ':***@')}`);
 
 const result = spawnSync(

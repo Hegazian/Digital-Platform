@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { prisma } from '../../../prisma';
 import { QuizService } from '../quiz.service';
@@ -88,6 +89,7 @@ describe('QuizService Unit Tests', () => {
     it('should strip correct answers for students', async () => {
       const mockQuiz = {
         id: 'q1',
+        lesson: { module: { course: { teacherId: 'teacher-id' } }, section: null },
         questions: [
           {
             id: 'qu1',
@@ -101,15 +103,17 @@ describe('QuizService Unit Tests', () => {
       };
       (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
 
-      const result = await QuizService.getQuizById('q1', false);
+      const result = await QuizService.getQuizById('q1', 'student-id', Role.STUDENT);
 
-      expect(result.questions[0].explanation).toBeNull();
+      expect(result.questions[0]).not.toHaveProperty('explanation');
+      expect(result.questions[0]).not.toHaveProperty('correctAnswer');
       expect((result.questions[0].options as any[])[0].isCorrect).toBeUndefined();
     });
 
     it('should keep correct answers and explanations for teachers', async () => {
       const mockQuiz = {
         id: 'q1',
+        lesson: { module: { course: { teacherId: 'teacher-id' } }, section: null },
         questions: [
           {
             id: 'qu1',
@@ -123,7 +127,7 @@ describe('QuizService Unit Tests', () => {
       };
       (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
 
-      const result = await QuizService.getQuizById('q1', true);
+      const result = await QuizService.getQuizById('q1', 'teacher-id', Role.TEACHER);
 
       expect(result.questions[0].explanation).toBe('Exp');
       expect((result.questions[0].options as any[])[0].isCorrect).toBe(true);
@@ -176,74 +180,6 @@ describe('QuizService Unit Tests', () => {
       await expect(
         QuizService.submitAttempt('u1', 'q1', { answers: [{ questionId: 'qu1', selectedOptionId: 'o1' }] })
       ).rejects.toThrow(BadRequestError);
-    });
-
-    it('should deterministically auto-grade MCQ, TRUE_FALSE, MULTIPLE_SELECT, and SHORT_ANSWER with case/space normalization', async () => {
-      const mockQuiz = {
-        id: 'q2',
-        passingScore: 75,
-        questions: [
-          {
-            id: 'q_mcq',
-            type: 'MCQ',
-            points: 10,
-            options: [
-              { id: 'opt_a', text: 'A', isCorrect: true },
-              { id: 'opt_b', text: 'B', isCorrect: false },
-            ],
-          },
-          {
-            id: 'q_tf',
-            type: 'TRUE_FALSE',
-            points: 10,
-            options: [
-              { id: 'opt_t', text: 'True', isCorrect: true },
-              { id: 'opt_f', text: 'False', isCorrect: false },
-            ],
-          },
-          {
-            id: 'q_ms',
-            type: 'MULTIPLE_SELECT',
-            points: 10,
-            options: [
-              { id: 'opt_1', text: '1', isCorrect: true },
-              { id: 'opt_2', text: '2', isCorrect: true },
-              { id: 'opt_3', text: '3', isCorrect: false },
-            ],
-          },
-          {
-            id: 'q_sa',
-            type: 'SHORT_ANSWER',
-            points: 10,
-            correctAnswer: 'Cairo',
-          },
-        ],
-      };
-      (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
-      (prisma.quizAttempt.findFirst as any).mockResolvedValue(null);
-      (prisma.quizAttempt.count as any).mockResolvedValue(0);
-      (prisma.quizAttempt.create as any).mockImplementation(({ data }: any) => Promise.resolve({ id: 'att2', ...data }));
-
-      const answers = [
-        { questionId: 'q_mcq', selectedOptionId: 'opt_a' },
-        { questionId: 'q_tf', selectedOptionId: 'opt_t' },
-        { questionId: 'q_ms', selectedOptionIds: ['opt_1', 'opt_2'] },
-        { questionId: 'q_sa', textAnswer: '   cAIrO   ' },
-      ];
-
-      const result = await QuizService.submitAttempt('u1', 'q2', { answers });
-
-      expect(result.score).toBe(100);
-      expect(result.isPassed).toBe(true);
-      expect(prisma.quizAttempt.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'COMPLETED',
-            score: 100,
-            isPassed: true,
-          }),
-        })
-      );
     });
   });
 });

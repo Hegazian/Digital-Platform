@@ -53,6 +53,8 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
       const mine = (res.data || []).find((o: any) => o.id === orderId);
       if (!mine) return;
       if (mine.status === 'PAID') {
+        const access = await fetchApi(`/commerce/entitlements/check-course/${course.id}`);
+        if (!access.data?.hasAccess) return;
         setPhase('granted');
         if (pollRef.current) clearInterval(pollRef.current);
         setTimeout(onAccessGranted, 1500);
@@ -61,7 +63,7 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
     } catch {
       // transient polling errors are non-fatal
     }
-  }, [orderId, onAccessGranted]);
+  }, [orderId, onAccessGranted, course.id]);
 
   useEffect(() => {
     if (phase === 'pending' && orderId) {
@@ -86,8 +88,10 @@ export default function CheckoutModal({ course, onClose, onAccessGranted }: Chec
       if (method === 'VOUCHER') {
         await fetchApi('/commerce/vouchers/redeem', {
           method: 'POST',
-          body: JSON.stringify({ code: transactionRef.trim().toUpperCase() }),
+          body: JSON.stringify({ code: transactionRef.trim().toUpperCase(), expectedCourseId: course.id }),
         });
+        const access = await fetchApi(`/commerce/entitlements/check-course/${course.id}`);
+        if (!access.data?.hasAccess) throw new Error(t('Access is not active yet. Please try again.', 'الوصول غير مفعّل بعد. يرجى المحاولة مرة أخرى.'));
         setPhase('granted');
         setTimeout(onAccessGranted, 1500);
         return;

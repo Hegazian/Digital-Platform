@@ -31,6 +31,8 @@ describe('configStore & content resolution', () => {
         siteDescriptionEn: 'Desc',
         siteDescriptionAr: 'وصف',
         allowTeacherRegistration: true,
+        enableCodePlaygrounds: false,
+        enableCollaborativeBoards: false,
         primaryColor: '#4f46e5',
         homeContent: {
           navbar: {
@@ -64,6 +66,8 @@ describe('configStore & content resolution', () => {
         siteDescriptionEn: 'Top Math Courses',
         siteDescriptionAr: 'أفضل دورات الرياضيات',
         allowTeacherRegistration: true,
+        enableCodePlaygrounds: false,
+        enableCollaborativeBoards: false,
         primaryColor: '#4f46e5',
       },
     });

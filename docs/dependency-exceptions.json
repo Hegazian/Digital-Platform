@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "client": {
+    "ownerTask": "ENG-13",
+    "expiresAt": "2027-01-19T00:00:00Z",
+    "advisoryIds": [1240992, 1241232],
+    "packages": ["@next/eslint-plugin-next", "eslint-config-next", "braces", "chokidar", "fast-glob", "micromatch", "postcss-nested", "postcss-selector-parser", "tailwindcss"],
+    "reason": "These lockfile paths are development-only lint/CSS tooling. Their glob/selector inputs come from the trusted repository and are never fed uploaded lessons or student content. Production runtime has zero advisories. Resolve via the reviewed Tailwind/tooling migration before the paid release or this expiry, whichever comes first. Any new advisory ID, package path promoted into production, or expired exception fails CI."
+  }
+}

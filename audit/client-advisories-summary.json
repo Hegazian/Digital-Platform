@@ -1,0 +1,692 @@
+[
+  {
+    "package": "@tiptap/core",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "Tiptap: mergeAttributes() turns an own __proto__ key into inherited executable DOM attributes",
+    "vulnerable_versions": ">=2.0.0-alpha.0 <3.30.4",
+    "url": "https://github.com/advisories/GHSA-cp6q-959q-f8rh",
+    "affected": [
+      {
+        "path": "node_modules/@tiptap/core",
+        "version": "2.27.2",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+    "vulnerable_versions": ">=4.0.0 <5.0.11",
+    "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+    "affected": [
+      {
+        "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+    "vulnerable_versions": "<1.1.19",
+    "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "1.1.18",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+    "vulnerable_versions": ">=2.0.0 <2.1.5",
+    "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+    "affected": [
+      {
+        "path": "node_modules/glob/node_modules/brace-expansion",
+        "version": "2.1.4",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+    "vulnerable_versions": ">=4.0.0 <5.0.10",
+    "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+    "affected": [
+      {
+        "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+    "vulnerable_versions": "<1.1.21",
+    "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "1.1.18",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+    "vulnerable_versions": ">=2.0.0 <2.1.7",
+    "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+    "affected": [
+      {
+        "path": "node_modules/glob/node_modules/brace-expansion",
+        "version": "2.1.4",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+    "vulnerable_versions": ">=4.0.0 <5.0.12",
+    "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+    "affected": [
+      {
+        "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+    "vulnerable_versions": "<1.1.20",
+    "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "1.1.18",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+    "vulnerable_versions": ">=2.0.0 <2.1.6",
+    "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+    "affected": [
+      {
+        "path": "node_modules/glob/node_modules/brace-expansion",
+        "version": "2.1.4",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "braces",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+    "vulnerable_versions": "<=3.0.3",
+    "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "affected": [
+      {
+        "path": "node_modules/braces",
+        "version": "3.0.3",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "glob",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
+    "vulnerable_versions": ">=10.2.0 <10.5.0",
+    "url": "https://github.com/advisories/GHSA-5j98-mcp5-4vw2",
+    "affected": [
+      {
+        "path": "node_modules/glob",
+        "version": "10.3.10",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "js-yaml",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+    "vulnerable_versions": ">=4.0.0 <4.3.2",
+    "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+    "affected": [
+      {
+        "path": "node_modules/js-yaml",
+        "version": "4.3.1",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "markdown-it",
+    "directRuntimeDependency": false,
+    "severity": "low",
+    "title": "markdown-it: Quadratic-time denial of service in inline HTML parsing with html enabled",
+    "vulnerable_versions": "<14.3.3",
+    "url": "https://github.com/advisories/GHSA-vfgh-jcmw-g37q",
+    "affected": [
+      {
+        "path": "node_modules/markdown-it",
+        "version": "14.3.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "markdown-it",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "markdown-it linkify: true has two quadratic paths, so a few hundred KB of markdown blocks the event loop for tens of seconds",
+    "vulnerable_versions": "<14.3.1",
+    "url": "https://github.com/advisories/GHSA-253c-mchw-3w2r",
+    "affected": [
+      {
+        "path": "node_modules/markdown-it",
+        "version": "14.3.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "markdown-it",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "markdown-it: Quadratic complexity in smartquotes with unmatched closing quotes",
+    "vulnerable_versions": "<14.3.2",
+    "url": "https://github.com/advisories/GHSA-r7fv-28h4-cvq7",
+    "affected": [
+      {
+        "path": "node_modules/markdown-it",
+        "version": "14.3.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js Vulnerable to Denial of Service with Server Components",
+    "vulnerable_versions": ">=13.0.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-8h8q-6873-q5fj",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "low",
+    "title": "Next.js's Middleware / Proxy redirects can be cache-poisoned",
+    "vulnerable_versions": ">=12.2.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-3g8h-86w9-wvmq",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces",
+    "vulnerable_versions": ">=13.4.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-ffhc-5mcf-pf4q",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "low",
+    "title": "Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting",
+    "vulnerable_versions": ">=13.4.6 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-vfv6-92ff-j949",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js has cross-site scripting in beforeInteractive scripts with untrusted input",
+    "vulnerable_versions": ">=13.0.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-gx5p-jg67-6x7h",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js has a Denial of Service in the Image Optimization API",
+    "vulnerable_versions": ">=10.0.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-h64f-5h5j-jqjh",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+    "vulnerable_versions": ">=13.4.13 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-c4j6-fc7j-m34r",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js vulnerable to cache poisoning in React Server Component responses",
+    "vulnerable_versions": ">=14.2.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-wfc6-r584-vfw7",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n",
+    "vulnerable_versions": ">=12.2.0 <15.5.16",
+    "url": "https://github.com/advisories/GHSA-36qx-fr4f-26g5",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration",
+    "vulnerable_versions": ">=10.0.0 <15.5.10",
+    "url": "https://github.com/advisories/GHSA-9g9p-9gw9-jx7f",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
+    "vulnerable_versions": ">=13.0.0 <15.0.8",
+    "url": "https://github.com/advisories/GHSA-h25m-26qc-wcjf",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: HTTP request smuggling in rewrites",
+    "vulnerable_versions": ">=9.5.0 <15.5.13",
+    "url": "https://github.com/advisories/GHSA-ggv3-7p47-pfv8",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+    "vulnerable_versions": ">=10.0.0 <15.5.14",
+    "url": "https://github.com/advisories/GHSA-3x4c-7xq6-9pq8",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js has a Denial of Service with Server Components",
+    "vulnerable_versions": ">=13.0.0 <15.5.15",
+    "url": "https://github.com/advisories/GHSA-q4gf-8mx6-v5v3",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+    "vulnerable_versions": ">=14.1.1 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-89xv-2m56-2m9x",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js: Denial of Service in App Router using Server Actions",
+    "vulnerable_versions": ">=13.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-m99w-x7hq-7vfj",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: Cache confusion of response bodies for requests with bodies",
+    "vulnerable_versions": ">=13.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-68g3-v927-f742",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences",
+    "vulnerable_versions": ">=13.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-4633-3j49-mh5q",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: Unbounded Server Action payload in Edge runtime",
+    "vulnerable_versions": ">=13.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-4c39-4ccg-62r3",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname",
+    "vulnerable_versions": ">=12.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-p9j2-gv94-2wf4",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "Next.js: Unauthenticated disclosure of internal Server Function endpoints",
+    "vulnerable_versions": ">=13.0.0 <15.5.21",
+    "url": "https://github.com/advisories/GHSA-955p-x3mx-jcvp",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "critical",
+    "title": "Next.js: Unauthenticated Remote Code Execution on windows-hosted servers",
+    "vulnerable_versions": ">=13.4.0 <15.5.24",
+    "url": "https://github.com/advisories/GHSA-p293-qw3h-jr36",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "next",
+    "directRuntimeDependency": true,
+    "severity": "critical",
+    "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used",
+    "vulnerable_versions": ">=10.0.0 <15.5.24",
+    "url": "https://github.com/advisories/GHSA-2xp9-vwfh-vxw4",
+    "affected": [
+      {
+        "path": "node_modules/next",
+        "version": "14.2.35",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "postcss",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+    "vulnerable_versions": "<=8.5.22",
+    "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+    "affected": [
+      {
+        "path": "node_modules/next/node_modules/postcss",
+        "version": "8.4.31",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "postcss",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+    "vulnerable_versions": "<8.5.10",
+    "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+    "affected": [
+      {
+        "path": "node_modules/next/node_modules/postcss",
+        "version": "8.4.31",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "postcss",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+    "vulnerable_versions": "<=8.5.11",
+    "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q",
+    "affected": [
+      {
+        "path": "node_modules/next/node_modules/postcss",
+        "version": "8.4.31",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "postcss",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+    "vulnerable_versions": "<=8.5.17",
+    "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+    "affected": [
+      {
+        "path": "node_modules/next/node_modules/postcss",
+        "version": "8.4.31",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "postcss-selector-parser",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+    "vulnerable_versions": "<7.1.6",
+    "url": "https://github.com/advisories/GHSA-rj75-hqrm-r3gf",
+    "affected": [
+      {
+        "path": "node_modules/postcss-selector-parser",
+        "version": "6.1.4",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "prosemirror-view",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "ProseMirror has a XSS vulnerability in prosemirror-view's paste handling",
+    "vulnerable_versions": "<1.42.3",
+    "url": "https://github.com/advisories/GHSA-c8x8-7fp4-3x9w",
+    "affected": [
+      {
+        "path": "node_modules/prosemirror-view",
+        "version": "1.42.2",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "source-map-js",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+    "vulnerable_versions": ">=1.0.0 <1.2.2",
+    "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+    "affected": [
+      {
+        "path": "node_modules/source-map-js",
+        "version": "1.2.1",
+        "dev": false
+      }
+    ]
+  }
+]

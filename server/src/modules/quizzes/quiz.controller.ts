@@ -36,7 +36,7 @@ export class QuizController {
   static async getQuiz(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const quiz = await QuizService.getQuizById(id as string, req.user);
+      const quiz = await QuizService.getQuizById(id as string, req.user!.userId, req.user!.role);
       res.status(200).json({ success: true, data: quiz });
     } catch (error) {
       next(error);

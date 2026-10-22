@@ -98,6 +98,7 @@ describe('AuthService Unit Tests', () => {
     });
 
     it('should throw UnauthorizedError for pending teacher account', async () => {
+      vi.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
       (prisma.user.findUnique as any).mockResolvedValue({
         id: 'user-1',
         email: 'teacher@test.com',
@@ -109,7 +110,17 @@ describe('AuthService Unit Tests', () => {
 
       await expect(
         AuthService.login({ email: 'teacher@test.com', password: 'Password123!' })
-      ).rejects.toThrow('Teacher account is pending approval');
+      ).rejects.toThrow('Teacher account is not approved');
+    });
+
+    it('should deny rejected teachers after verifying their password', async () => {
+      vi.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      (prisma.user.findUnique as any).mockResolvedValue({
+        id: 'user-rejected', email: 'teacher@test.com', password: 'hashed_password',
+        isActive: true, role: Role.TEACHER, teacherStatus: 'REJECTED',
+      });
+      await expect(AuthService.login({ email: 'teacher@test.com', password: 'Password123!' }))
+        .rejects.toThrow('Teacher account is not approved');
     });
   });
 
@@ -142,6 +153,7 @@ describe('AuthService Unit Tests', () => {
         name: 'Student Name',
         role: Role.STUDENT,
         isActive: true,
+        authVersion: 1,
       });
 
       const res = await AuthService.refreshToken(sampleRefreshToken);

@@ -7,6 +7,7 @@ import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
 import { NextFunction, Response } from 'express';
 
 const quizRouter = Router();
+quizRouter.use((_req, res, next) => { res.setHeader('Cache-Control', 'private, no-store'); next(); });
 
 /**
  * NFR-001 / TC-STUDENT-032: attempting a course-attached quiz requires an
@@ -31,7 +32,7 @@ quizRouter.post('/', authenticate, requireApprovedTeacher, validateBody(createQu
 quizRouter.patch('/:id', authenticate, requireApprovedTeacher, validateBody(updateQuizSchema), QuizController.updateQuiz);
 
 // Shared / Student routes
-quizRouter.get('/:id', authenticate, QuizController.getQuiz);
+quizRouter.get('/:id', authenticate, assertQuizLearningAccess, QuizController.getQuiz);
 quizRouter.post('/:id/attempts/start', authenticate, assertQuizLearningAccess, QuizController.startAttempt);
 quizRouter.post('/:id/attempts', authenticate, assertQuizLearningAccess, validateBody(submitQuizAttemptSchema), QuizController.submitAttempt);
 quizRouter.get('/:id/attempts', authenticate, QuizController.getMyAttempts);

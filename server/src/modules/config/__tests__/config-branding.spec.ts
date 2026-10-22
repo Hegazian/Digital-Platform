@@ -74,6 +74,7 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(res.body.data.hostDomain).toBe('localhost:3000');
     expect(res.body.data.currency).toBe('EGP');
     expect(res.body.data.requireCourseApproval).toBe(true);
+    expect(res.body.data.capabilities).toEqual({ codeExecution: false, collaborativeBoards: false, developerIntegrations: false, automatedPaymentGateways: false });
   });
 
   it('PUT /config persists EVERY advertised field (previous bug: partial drop)', async () => {
@@ -89,6 +90,7 @@ describe('Config-driven branding & settings round-trip', () => {
       requireCourseApproval: false,
       allowTeacherRegistration: false,
       primaryColor: '#7c3aed',
+      capabilities: { developerIntegrations: true, automatedPaymentGateways: true },
     };
 
     const put = await request(app)
@@ -107,9 +109,13 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(cfg.siteDescriptionEn).toBe(payload.siteDescriptionEn);
     expect(cfg.hostDomain).toBe(payload.hostDomain);
     expect(cfg.supportEmail).toBe(payload.supportEmail);
-    expect(cfg.requireCourseApproval).toBe(false);
+    expect(cfg.requireCourseApproval).toBe(true);
+    expect(cfg.enableCodePlaygrounds).toBe(false);
+    expect(cfg.enableCollaborativeBoards).toBe(false);
     expect(cfg.allowTeacherRegistration).toBe(false);
     expect(cfg.primaryColor).toBe('#7c3aed');
+    expect(cfg.capabilities.developerIntegrations).toBe(false);
+    expect(put.body.data.capabilities).toEqual(cfg.capabilities);
   });
 
   it('PATCH also works and supports partial updates and nullable descriptions', async () => {

@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "EduPlatform | AI-Powered Learning",
+  title: "EduPlatform | Bilingual Learning",
   description: "Master Egyptian Secondary School Curriculum in Programming, Math, and Physics.",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

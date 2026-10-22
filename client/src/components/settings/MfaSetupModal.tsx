@@ -20,7 +20,7 @@ export default function MfaSetupModal({
   onSuccess,
   isAlreadyEnabled = false,
 }: MfaSetupModalProps) {
-  const { token } = useAppStore();
+  const { token, dir } = useAppStore();
   const [setupData, setSetupData] = useState<{ secret: string; qrCode: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [needsReauth, setNeedsReauth] = useState(isAlreadyEnabled);
@@ -148,6 +148,12 @@ export default function MfaSetupModal({
   };
 
   if (!isOpen) return null;
+  if (isAlreadyEnabled) return (
+    <Modal open onClose={onClose} label="Two-Factor Authentication" panelClassName="max-w-md rounded-2xl bg-slate-900 p-6">
+      <p>{dir === 'rtl' ? 'التحقق بخطوتين مفعّل. سيظل تطبيق المصادقة الحالي فعالاً.' : 'Two-factor authentication is enabled. Your current authenticator remains active.'}</p>
+      <button type="button" onClick={onClose} className="mt-4 rounded-lg bg-slate-800 px-4 py-2">{dir === 'rtl' ? 'إغلاق' : 'Close'}</button>
+    </Modal>
+  );
 
   return (
     <Modal

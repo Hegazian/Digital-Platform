@@ -1,0 +1,150 @@
+{
+  "date": "2026-10-21",
+  "branch": "codex/finalize-milestone-0",
+  "baseCommit": "2fbdc8e65a5bd5c33f749ed04b65155e9e06e1e2",
+  "scope": "M0 internal engineering/G0 checkpoint; production onboarding and G1-G3 remain gated",
+  "environment": {
+    "os": "Windows",
+    "node": "v26.7.0",
+    "ciNode": "22",
+    "browser": "Chrome 155 via Playwright desktop and Pixel 5 emulation"
+  },
+  "checks": [
+    {
+      "directory": "server",
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "directory": "server",
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "directory": "server",
+      "command": "npm run test:coverage",
+      "result": "passed",
+      "files": 77,
+      "tests": 397
+    },
+    {
+      "directory": "client",
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "directory": "client",
+      "command": "npm run build",
+      "result": "passed"
+    },
+    {
+      "directory": "client",
+      "command": "npm run lint",
+      "result": "passed",
+      "errors": 0,
+      "warnings": 26
+    },
+    {
+      "directory": "client",
+      "command": "npm run test:coverage",
+      "result": "passed",
+      "files": 4,
+      "tests": 17
+    },
+    {
+      "directory": "client",
+      "command": "npm run test:m0:browser",
+      "result": "passed",
+      "tests": 10,
+      "skipped": 0,
+      "realApi": true,
+      "realDatabase": true
+    },
+    {
+      "directory": ".",
+      "command": "node docs/scripts/audit-dependencies.cjs",
+      "result": "passed",
+      "runtimeAdvisoryPackages": 0,
+      "serverTotal": 0,
+      "clientDevExceptions": 9
+    }
+  ],
+  "coverage": {
+    "server": {
+      "lines": {
+        "total": 3516,
+        "covered": 2561,
+        "skipped": 0,
+        "pct": 72.83
+      },
+      "statements": {
+        "total": 3706,
+        "covered": 2668,
+        "skipped": 0,
+        "pct": 71.99
+      },
+      "functions": {
+        "total": 602,
+        "covered": 553,
+        "skipped": 0,
+        "pct": 91.86
+      },
+      "branches": {
+        "total": 2438,
+        "covered": 1540,
+        "skipped": 0,
+        "pct": 63.16
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "client": {
+      "lines": {
+        "total": 3628,
+        "covered": 220,
+        "skipped": 0,
+        "pct": 6.06
+      },
+      "statements": {
+        "total": 3937,
+        "covered": 244,
+        "skipped": 0,
+        "pct": 6.19
+      },
+      "functions": {
+        "total": 1145,
+        "covered": 41,
+        "skipped": 0,
+        "pct": 3.58
+      },
+      "branches": {
+        "total": 3577,
+        "covered": 223,
+        "skipped": 0,
+        "pct": 6.23
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
+  },
+  "lockfileSha256": {
+    "server": "2b0810fab3257fe4ef16da1314bcbff201fafd46772b30e671639165a4cfb347",
+    "client": "1dea396cc0109f451585f840d674fed65274433cb4f72601177db2bf3203f4ed"
+  },
+  "unexecuted": [
+    "Remote GitHub Actions run",
+    "Production credential rotation",
+    "Deployed private-bucket and real-scanner canaries",
+    "Representative production-copy restore rehearsal",
+    "Full-product G3 coverage target (not met)"
+  ],
+  "evidence": "M0_IMPLEMENTATION_STATUS.md, M0_REVIEW_RESOLUTION.md and M0_DEPENDENCY_REVIEW.md under docs provide interpretation and limits. This record describes local results, not a production release approval."
+}

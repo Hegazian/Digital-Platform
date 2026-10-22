@@ -13,12 +13,14 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
+import ProtectedFileLink from '@/components/ProtectedFileLink';
 import { errorMessage } from '@/lib/apiTypes';
 
 interface CourseLite {
   id: string;
   titleEn: string;
   titleAr?: string | null;
+  modules?: Array<{ id: string; titleEn: string; lessons?: Array<{ id: string; titleEn: string; assignments?: any[] }> }>;
   sections?: Array<{ id: string; titleEn: string; lessons?: Array<{ id: string; titleEn: string }> }>;
 }
 
@@ -74,9 +76,10 @@ export default function AssignmentStudio() {
   const [error, setError] = useState('');
 
   const course = courses.find((c) => c.id === courseId);
-  const lessons = (course?.sections || []).flatMap((s) =>
-    (s.lessons || []).map((l) => ({ ...l, moduleName: s.titleEn }))
-  );
+  const lessons = [
+    ...(course?.modules || []).flatMap((m) => (m.lessons || []).map((l) => ({ ...l, moduleName: m.titleEn }))),
+    ...(course?.sections || []).flatMap((s) => (s.lessons || []).map((l) => ({ ...l, moduleName: s.titleEn }))),
+  ];
 
   const loadCourses = useCallback(async () => {
     setLoading(true);
@@ -402,9 +405,9 @@ export default function AssignmentStudio() {
                     </p>
                   </div>
                   {(s.files || []).map((f, i) => (
-                    <a key={i} href={f.fileUrl} target="_blank" rel="noreferrer" className="text-[11px] text-indigo-300 hover:underline">
+                    <ProtectedFileLink key={i} fileUrl={f.fileUrl} fileName={f.fileName} className="text-[11px] text-indigo-300 hover:underline">
                       {f.fileName}
-                    </a>
+                    </ProtectedFileLink>
                   ))}
                 </div>
 

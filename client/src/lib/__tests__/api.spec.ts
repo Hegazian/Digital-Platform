@@ -28,18 +28,17 @@ describe('fetchApi client utility', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/test-endpoint',
       expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer my-test-token',
-        }),
+        credentials: 'include',
       })
     );
+    expect(new Headers(fetchMock.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer my-test-token');
   });
 
   it('performs single-flight token refresh and retries requests when receiving 401', async () => {
     localStorage.setItem('accessToken', 'old-expired-token');
 
     let refreshCallCount = 0;
-    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string, options?: RequestInit) => {
       if (url.endsWith('/auth/refresh')) {
         refreshCallCount++;
         return {
@@ -53,9 +52,7 @@ describe('fetchApi client utility', () => {
       }
 
       if (url.includes('/protected-data')) {
-        const lastCall = fetchMock.mock.calls[fetchMock.mock.calls.length - 1];
-        const headers = lastCall?.[1]?.headers;
-        if (headers?.Authorization === 'Bearer new-fresh-token') {
+        if (new Headers(options?.headers).get('Authorization') === 'Bearer new-fresh-token') {
           return {
             status: 200,
             ok: true,

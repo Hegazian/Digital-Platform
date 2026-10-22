@@ -1,0 +1,90 @@
+# ENG-12 — Gate developer integrations and specify complete later enablement
+
+| Field | Value |
+|---|---|
+| Stable ID | ENG-12 |
+| Priority | P2 |
+| Release milestone | M4 — Post-launch enhancements |
+| Status | **Planned** |
+| Implementation owner | Developer integrations |
+| Dependencies | [ENG-03](../archive/completed/M0/ENG-03.md), [ENG-07](ENG-07.md), [ENH-02](ENH-02.md) |
+| Original finding / request | [ENG-12 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
+| Original evidence classification | P2 / G |
+| Acceptance links | [A40](../AUDIT_TRACEABILITY.md#a40) |
+| Release disposition | Post-launch; disabled at the API until this task and its enablement gate pass. |
+
+
+
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **34723cd**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+
+## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
+
+Developer tokens are created/listed but cannot authenticate API requests, enforce scopes, expire through a management flow, or be revoked via exposed routes. Webhooks are registered/listed but no event delivery/retry worker uses them. `EventDispatcher` has no application publishers/subscribers.
+
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+
+## Intended behavior and ownership boundary
+
+At launch token/webhook APIs are disabled by ENG-03. Post-launch enablement requires actual scoped token authentication and durable safe webhook delivery.
+
+Developer integrations owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
+
+## Ordered implementation changes
+
+1. Backend: token issue/show-once/hash/authenticate/scopes/expiry/revoke routes; authorize resource access through same policies as sessions, not unrestricted admin keys.
+2. Frontend: management UI displays scopes/expiry/last-used/revoked state and webhook attempt history, replay controls with reasons.
+3. Database: token hash/prefix/owner/scopes and WebhookDelivery per event/endpoint/attempt with dedupe/version; never store plaintext token after issuance.
+4. Configuration/infrastructure: outbox publishers for documented events, signing secret rotation, timestamped signatures/replay windows, bounded retry/dead-letter.
+5. Security: outbound destination DNS/IP revalidated at connection time; block localhost/private/link-local/metadata IPv4+IPv6, forbid redirects or revalidate each hop, protect DNS rebinding, egress allowlist and small time/response limits.
+
+Implementation locations (existing source entry points; new models/modules described above are proposed):
+
+- [server/src/modules/developer/api-token.controller.ts](<../../server/src/modules/developer/api-token.controller.ts>)
+- [server/src/modules/developer/api-token.routes.ts](<../../server/src/modules/developer/api-token.routes.ts>)
+- [server/src/modules/developer/webhook.controller.ts](<../../server/src/modules/developer/webhook.controller.ts>)
+- [server/src/utils/eventBus.ts](<../../server/src/utils/eventBus.ts>)
+- [client/src/components/admin/DeveloperTabs.tsx](<../../client/src/components/admin/DeveloperTabs.tsx>)
+
+## API, type and schema contract
+
+Concrete intended boundary example (IDs and dates are illustrative, not production fixtures):
+
+```text
+POST /api/v1/developer/tokens {"scopes":["catalog:read"],"expiresAt":"..."} -> show token once; Authorization: Bearer <token> enforces scope; webhook envelope {id,type,schemaVersion,occurredAt,data}.
+```
+
+Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
+
+## Authorization, concurrency and failure handling
+
+Token owner must be authorized for action and resource; scopes cannot exceed issuer privileges. Revocation applies on next request. Webhook at-least-once is explicit, receiver dedupes by event ID; manual replay preserves original event identity and records operator.
+
+Commands validate the current actor at execution time. Repeated mutations use the owning contract's scoped idempotency or expected version; stale edits return 409/412 rather than silently overwrite. Retry only retryable infrastructure/serialization failures with bounded backoff, never validation/authorization failures. A durable write must not report success from process memory. Record request/entity/actor IDs and safe error codes, with no credentials, answer keys, student bodies or signed URLs in logs. Operations must expose stalled work for manual recovery.
+
+## Migration, compatibility and rollback
+
+Preserve existing registered endpoints/token metadata while disabled; require destination/secret revalidation before enabling. In-memory-only legacy records are unverified, not successful migrations. Rollback flags off, retain delivery history for reconciliation.
+
+Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
+
+## Verification and acceptance tests
+
+- **ENG-12-T01** — Launch direct APIs disabled even for admin; post-launch scope/expiry/revoke/cross-account tests pass.
+- **ENG-12-T02** — SSRF tests include redirect, DNS rebind, encoded IPv4, IPv6 and cloud metadata targets with zero prohibited egress.
+- **ENG-12-T03** — Duplicate event/retry/crash/secret rotation and Arabic/English management/replay UI pass.
+- **ENG-12-T90 / cross-account** — Execute the positive operation as its permitted actor, then repeat with student B, teacher B, a pending/rejected teacher and guest as applicable; assert the intended safe DTO/denial and no unauthorized durable side effects. For documentation/build-only work, verify no fixture credentials or false capability claims replace this runtime check.
+- **ENG-12-T91 / concurrency and recovery** — Overlap the relevant command/read with retry, stale version, access revocation or process restart; assert final persisted state and one intended effect. Read-only/documentation work instead checks deterministic output and link/contract consistency. Use real PostgreSQL barriers for transaction claims; mocks do not prove them.
+- **ENG-12-T92 / Arabic, English and browser** — Exercise affected views in both interface locales after reload, with correct lang/dir, formatting, keyboard focus and localized failures. For backend-only/config tasks, cover API locale/error keys and the consuming smoke journey; no new UI is required just to satisfy a test label.
+
+Observable acceptance:
+
+- [ ] M4 enablement evidence includes authentication and real durable delivery.
+- [ ] No API feature is advertised while registry-only implementation remains.
+- [ ] Applicable positive, negative, cross-account, concurrency/retry and Arabic/English browser tests above pass without skips; mark any genuinely inapplicable dimension with a written rationale.
+- [ ] Migration/compatibility and rollback are rehearsed with preserved historical records, or explicitly recorded as no-data-change.
+- [ ] API/types/docs and dependency consumers agree; owning task is linked and no duplicate engine is introduced.
+- [ ] Attach exact commit, environment, commands, test IDs/results and operational evidence; update backlog status only after review. Existing baseline passes do not complete this task.

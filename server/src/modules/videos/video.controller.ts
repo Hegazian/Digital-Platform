@@ -7,23 +7,22 @@ import { getUploadsRoot } from '../../utils/storage';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import { boundObjectKey } from '../../utils/media-references';
 
 export class VideoController {
   /**
    * Handles video upload from teacher.
    */
   static async uploadVideo(req: AuthRequest, res: Response, next: NextFunction) {
-    const tempFilePath = req.file?.path;
     try {
       if (!req.file) {
         throw new BadRequestError('No video file provided');
       }
 
       const userId = req.user!.userId;
-      const fileSource = req.file.path || req.file.buffer;
       const video = await VideoService.uploadVideo(
         userId,
-        fileSource,
+        req.file.buffer,
         req.file.originalname,
         req.file.mimetype,
         req.file.size
@@ -35,12 +34,6 @@ export class VideoController {
       });
     } catch (error) {
       next(error);
-    } finally {
-      if (tempFilePath && fs.existsSync(tempFilePath)) {
-        try {
-          fs.unlinkSync(tempFilePath);
-        } catch {}
-      }
     }
   }
 
@@ -53,11 +46,13 @@ export class VideoController {
       const userId = req.user!.userId;
 
       const secureUrl = await VideoService.getSecurePlaybackUrl(videoId as string, userId);
+      res.setHeader('Cache-Control', 'private, no-store');
 
       res.status(200).json({
         success: true,
         data: {
           playbackUrl: secureUrl,
+          expiresAt: new Date(Date.now() + 120_000).toISOString(),
         },
       });
     } catch (error) {
@@ -88,12 +83,17 @@ export class VideoController {
       if (payload.videoId !== videoId || payload.purpose !== 'stream') {
         throw new UnauthorizedError('Invalid token purpose or video mismatch');
       }
+      if (typeof payload.userId !== 'string' || !(await VideoService.verifyPlaybackAccess(videoId as string, payload.userId))) {
+        throw new ForbiddenError('Video access is no longer available');
+      }
+      res.setHeader('Cache-Control', 'private, no-store');
 
       const { prisma } = await import('../../prisma');
       const video = await prisma.video.findUnique({ where: { id: videoId as string } });
       if (!video || !video.videoUrl || !video.videoUrl.startsWith('/uploads/')) {
         throw new BadRequestError('Local video not found');
       }
+      boundObjectKey(video.videoUrl, 'lesson-videos', video.id);
 
       // Resolve the stored '/uploads/<bucket>/<file>' against the server's
       // real uploads root (cwd-independent - see getUploadsRoot) and pin it
@@ -107,32 +107,67 @@ export class VideoController {
       if (!fs.existsSync(filePath)) {
         throw new BadRequestError('Video file missing from disk');
       }
+      const realRoot = fs.realpathSync(uploadsRoot);
+      const realFilePath = fs.realpathSync(filePath);
+      if (!realFilePath.startsWith(realRoot + path.sep)) throw new ForbiddenError('Invalid video storage path');
 
-      const stat = fs.statSync(filePath);
+      const stat = fs.statSync(realFilePath);
       const fileSize = stat.size;
       const range = req.headers.range;
+      const contentType = ({ '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.mpeg': 'video/mpeg', '.mpg': 'video/mpeg' } as Record<string, string>)[path.extname(realFilePath).toLowerCase()] || 'video/mp4';
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Type', contentType);
 
       if (range) {
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunksize = (end - start) + 1;
-        const file = fs.createReadStream(filePath, { start, end });
-        const head = {
+        const parsed = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+        let start: number;
+        let end: number;
+        if (!parsed || fileSize === 0 || (!parsed[1] && !parsed[2])) {
+          res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+          return;
+        }
+        if (!parsed[1]) {
+          const suffixLength = Number(parsed[2]);
+          if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) {
+            res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+            return;
+          }
+          start = Math.max(0, fileSize - suffixLength);
+          end = fileSize - 1;
+        } else {
+          start = Number(parsed[1]);
+          end = parsed[2] ? Number(parsed[2]) : fileSize - 1;
+          if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= fileSize || end < start) {
+            res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+            return;
+          }
+          end = Math.min(end, fileSize - 1);
+        }
+        const chunksize = end - start + 1;
+        res.status(206).set({
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': 'video/mp4',
-        };
-        res.writeHead(206, head);
+          'Content-Length': String(chunksize),
+        });
+        const file = fs.createReadStream(realFilePath, { start, end });
+        file.on('error', (error) => {
+          if (res.headersSent) res.destroy(error);
+          else next(error);
+        });
+        res.on('close', () => {
+          if (!res.writableEnded) file.destroy();
+        });
         file.pipe(res);
       } else {
-        const head = {
-          'Content-Length': fileSize,
-          'Content-Type': 'video/mp4',
-        };
-        res.writeHead(200, head);
-        fs.createReadStream(filePath).pipe(res);
+        res.status(200).set('Content-Length', String(fileSize));
+        const file = fs.createReadStream(realFilePath);
+        file.on('error', (error) => {
+          if (res.headersSent) res.destroy(error);
+          else next(error);
+        });
+        res.on('close', () => {
+          if (!res.writableEnded) file.destroy();
+        });
+        file.pipe(res);
       }
     } catch (error) {
       next(error);

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '../lib/store';
 import { fetchApi } from '../lib/api';
 import { errorMessage } from '../lib/apiTypes';
@@ -9,8 +10,10 @@ import {
   GraduationCap,
   BookOpen,
   AlertCircle,
+  Target,
   ArrowRight,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 
 interface CatalogCourse {
@@ -86,6 +89,46 @@ export default function CourseCatalog() {
   }, []);
 
   const title = (c: CatalogCourse) => (lang === 'ar' && c.titleAr ? c.titleAr : c.titleEn);
+
+  // Career personalization: ?track=slug wins; otherwise the saved preference
+  const searchParams = useSearchParams();
+  const careerTrackSlug = useAppStore((s) => s.careerTrackSlug);
+  const activeTrack = searchParams.get('track') || careerTrackSlug || '';
+
+  const tracksQuery = useQuery({
+    queryKey: ['careers', 'tracks'],
+    queryFn: () => fetchApi('/career-tracks'),
+    staleTime: 5 * 60_000,
+    enabled: Boolean(activeTrack),
+  });
+
+  const trackSubjectIds = useMemo(() => {
+    if (!activeTrack) return new Set<string>();
+    const track = (tracksQuery.data?.data ?? []).find((t: any) => t.slug === activeTrack);
+    const ids = new Set<string>(
+      (track?.subjects ?? []).map((s: any) => s.subject?.id ?? s.subjectId)
+    );
+    ids.delete('');
+    return ids;
+  }, [activeTrack, tracksQuery.data]);
+
+  const { priorityCourses, otherCourses } = useMemo(() => {
+    if (trackSubjectIds.size === 0) return { priorityCourses: [], otherCourses: courses };
+    return {
+      priorityCourses: courses.filter((c) => {
+        // Course payload carries subjectId via subject relation id
+        return trackSubjectIds.has((c as any).subject?.id ?? '');
+      }),
+      otherCourses: courses.filter((c) => !trackSubjectIds.has((c as any).subject?.id ?? '')),
+    };
+  }, [courses, trackSubjectIds]);
+
+  const trackMeta = (tracksQuery.data?.data ?? []).find((t: any) => t.slug === activeTrack);
+  const trackLabel = trackMeta
+    ? lang === 'ar'
+      ? trackMeta.nameAr
+      : trackMeta.nameEn
+    : activeTrack;
 
   const renderCard = (course: CatalogCourse) => {
     const subjectLabel =
@@ -197,10 +240,15 @@ export default function CourseCatalog() {
     </div>
   );
 
-  const renderSection = (label: React.ReactNode, items: CatalogCourse[]) => (
+  const renderSection = (label: React.ReactNode, items: CatalogCourse[], accent = false) => (
     <section className="space-y-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-sm font-bold text-slate-300">
+        <h2
+          className={`flex items-center gap-2 text-sm font-bold ${
+            accent ? 'text-indigo-300' : 'text-slate-300'
+          }`}
+        >
+          {accent ? <Sparkles className="w-4 h-4" /> : null}
           {label}
         </h2>
         <span className="h-px flex-1 bg-slate-800" />
@@ -237,7 +285,21 @@ export default function CourseCatalog() {
         </div>
       ) : (
         <div className="space-y-10">
-          {renderSection(t('All courses', 'كل الدورات'), courses)}
+          {trackSubjectIds.size > 0 && priorityCourses.length > 0 &&
+            renderSection(
+              <>
+                <Target className="w-4 h-4" />
+                {t('For your future:', 'لمستقبلك:')} {trackLabel}
+              </>,
+              priorityCourses,
+              true
+            )}
+
+          {otherCourses.length > 0 &&
+            renderSection(
+              priorityCourses.length > 0 ? t('More courses', 'دورات أخرى') : t('All courses', 'كل الدورات'),
+              otherCourses
+            )}
         </div>
       )}
     </div>

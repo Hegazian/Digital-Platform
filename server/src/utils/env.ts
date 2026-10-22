@@ -38,12 +38,14 @@ export const JWT_SECRET = resolveSecret('JWT_SECRET');
 export const JWT_REFRESH_SECRET = resolveSecret('JWT_REFRESH_SECRET');
 
 /** Stream tokens may use a dedicated key; falls back to the main JWT secret. */
-export const VIDEO_STREAM_SECRET = process.env.VIDEO_STREAM_SECRET || JWT_SECRET;
+export const VIDEO_STREAM_SECRET = process.env.VIDEO_STREAM_SECRET ? resolveSecret('VIDEO_STREAM_SECRET') : JWT_SECRET;
 
 /**
  * Payment webhook HMAC keys. When unset outside production an ephemeral random
  * value is used, which makes every external signature verification fail closed
  * until real keys are configured.
  */
-export const PAYMOB_HMAC_SECRET = resolveSecret('PAYMOB_HMAC_SECRET');
-export const FAWRY_SECRET_KEY = resolveSecret('FAWRY_SECRET_KEY');
+// These adapters are hard disabled. They must not introduce mandatory launch
+// secrets; unconfigured signatures still fail closed in direct service tests.
+export const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET || crypto.randomBytes(48).toString('hex');
+export const FAWRY_SECRET_KEY = process.env.FAWRY_SECRET_KEY || crypto.randomBytes(48).toString('hex');

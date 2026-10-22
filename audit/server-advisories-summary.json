@@ -1,0 +1,302 @@
+[
+  {
+    "package": "@vitest/mocker",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+    "vulnerable_versions": ">=2.1.0 <4.1.11",
+    "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+    "affected": [
+      {
+        "path": "node_modules/@vitest/mocker",
+        "version": "4.1.10",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+    "vulnerable_versions": ">=4.0.0 <5.0.11",
+    "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+    "vulnerable_versions": ">=4.0.0 <5.0.10",
+    "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "brace-expansion",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+    "vulnerable_versions": ">=4.0.0 <5.0.12",
+    "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+    "affected": [
+      {
+        "path": "node_modules/brace-expansion",
+        "version": "5.0.9",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "braces",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+    "vulnerable_versions": "<=3.0.3",
+    "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "affected": [
+      {
+        "path": "node_modules/braces",
+        "version": "3.0.3",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "morgan",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "morgan vulnerable to Log Forging via unescaped Unicode line separators",
+    "vulnerable_versions": "<1.12.0",
+    "url": "https://github.com/advisories/GHSA-jxfw-x594-9x9m",
+    "affected": [
+      {
+        "path": "node_modules/morgan",
+        "version": "1.11.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "morgan",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "morgan vulnerable to Log Injection via unescaped double quote in quoted log fields",
+    "vulnerable_versions": "<1.12.1",
+    "url": "https://github.com/advisories/GHSA-9f6g-j8ch-79g4",
+    "affected": [
+      {
+        "path": "node_modules/morgan",
+        "version": "1.11.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "multer",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "multer vulnerable to Denial of Service via crafted multipart field names",
+    "vulnerable_versions": "<2.3.0",
+    "url": "https://github.com/advisories/GHSA-wc9g-mqfw-jrwm",
+    "affected": [
+      {
+        "path": "node_modules/multer",
+        "version": "2.2.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "multer",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "multer vulnerable to Denial of Service via file descriptor leak on aborted uploads",
+    "vulnerable_versions": "=2.2.0",
+    "url": "https://github.com/advisories/GHSA-qfvm-cv95-jqjf",
+    "affected": [
+      {
+        "path": "node_modules/multer",
+        "version": "2.2.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "multer",
+    "directRuntimeDependency": true,
+    "severity": "low",
+    "title": "multer vulnerable to file size limit bypass via async fileFilter race condition",
+    "vulnerable_versions": "<2.3.0",
+    "url": "https://github.com/advisories/GHSA-qvfw-j98x-7q72",
+    "affected": [
+      {
+        "path": "node_modules/multer",
+        "version": "2.2.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "multer",
+    "directRuntimeDependency": true,
+    "severity": "high",
+    "title": "multer vulnerable to Denial of Service via oversized array index in field names",
+    "vulnerable_versions": "<2.3.0",
+    "url": "https://github.com/advisories/GHSA-535w-7cp7-47q4",
+    "affected": [
+      {
+        "path": "node_modules/multer",
+        "version": "2.2.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "multer",
+    "directRuntimeDependency": true,
+    "severity": "moderate",
+    "title": "multer vulnerable to Denial of Service via orphaned disk writes on aborted uploads",
+    "vulnerable_versions": ">=2.2.0 <2.4.0",
+    "url": "https://github.com/advisories/GHSA-3pph-fpjx-jg34",
+    "affected": [
+      {
+        "path": "node_modules/multer",
+        "version": "2.2.0",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "proxy-addr",
+    "directRuntimeDependency": false,
+    "severity": "critical",
+    "title": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+    "vulnerable_versions": ">=1.1.0 <2.0.8",
+    "url": "https://github.com/advisories/GHSA-jqcg-44mw-7w3h",
+    "affected": [
+      {
+        "path": "node_modules/proxy-addr",
+        "version": "2.0.7",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "qs",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "qs array-limit bypass via bracket-key comma parsing",
+    "vulnerable_versions": ">=6.14.2 <=6.15.3",
+    "url": "https://github.com/advisories/GHSA-x5fp-wj9c-mxmx",
+    "affected": [
+      {
+        "path": "node_modules/qs",
+        "version": "6.15.3",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "qs",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "qs: Denial of Service via Attacker Controlled isBuffer",
+    "vulnerable_versions": ">=2.2.5 <6.16.0",
+    "url": "https://github.com/advisories/GHSA-4mjr-xmp4-gh2g",
+    "affected": [
+      {
+        "path": "node_modules/qs",
+        "version": "6.15.3",
+        "dev": false
+      }
+    ]
+  },
+  {
+    "package": "source-map-js",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+    "vulnerable_versions": ">=1.0.0 <1.2.2",
+    "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+    "affected": [
+      {
+        "path": "node_modules/source-map-js",
+        "version": "1.2.1",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "vite",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+    "vulnerable_versions": ">=8.2.0 <=8.2.3",
+    "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+    "affected": [
+      {
+        "path": "node_modules/vite",
+        "version": "8.2.1",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "vite",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+    "vulnerable_versions": ">=8.2.0 <=8.2.3",
+    "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+    "affected": [
+      {
+        "path": "node_modules/vite",
+        "version": "8.2.1",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "vite",
+    "directRuntimeDependency": false,
+    "severity": "high",
+    "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+    "vulnerable_versions": ">=8.2.0 <=8.2.3",
+    "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+    "affected": [
+      {
+        "path": "node_modules/vite",
+        "version": "8.2.1",
+        "dev": true
+      }
+    ]
+  },
+  {
+    "package": "vitest",
+    "directRuntimeDependency": false,
+    "severity": "moderate",
+    "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+    "vulnerable_versions": ">=2.1.0 <4.1.11",
+    "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+    "affected": [
+      {
+        "path": "node_modules/vitest",
+        "version": "4.1.10",
+        "dev": true
+      }
+    ]
+  }
+]

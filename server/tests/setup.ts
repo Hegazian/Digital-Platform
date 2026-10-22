@@ -1,15 +1,16 @@
 import { beforeAll, afterAll } from 'vitest';
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.test', override: true });
+dotenv.config({ path: '.env.test', override: false });
 
 import { prisma } from '../src/prisma';
+import { assertDedicatedTestDatabase } from '../src/utils/test-database';
 
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET ||= 'test_jwt_secret_at_least_32_characters_long_12345';
-process.env.JWT_REFRESH_SECRET ||= 'test_refresh_secret_at_least_32_characters_12345';
+process.env.JWT_SECRET = 'test_secret';
+process.env.JWT_REFRESH_SECRET = 'test_refresh_secret';
 
 beforeAll(async () => {
-  // Session level SET commands are not supported on PgBouncer transaction mode poolers
+  assertDedicatedTestDatabase();
+  await prisma.$connect();
 });
 
 afterAll(async () => {

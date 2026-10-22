@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BookOpen,
   CheckCircle,
@@ -65,6 +65,7 @@ interface CourseItem {
   subjectId?: string;
   subject?: { id: string; nameEn?: string; nameAr?: string };
   teacher?: { id: string; name: string; email: string };
+  modules?: UnitItem[];
   sections?: UnitItem[];
   createdAt?: string;
   updatedAt?: string;
@@ -81,6 +82,8 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+  const [inspection, setInspection] = useState<{ id: string; data?: CourseItem; error?: string; loading: boolean }>();
+  const inspectionRequest = useRef(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,7 +130,21 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
 
   useEffect(() => {
     loadData();
+    return () => { inspectionRequest.current += 1; };
   }, []);
+
+  const loadInspection = async (courseId: string) => {
+    const request = ++inspectionRequest.current;
+    setInspection({ id: courseId, loading: true });
+    try {
+      // The list DTO intentionally omits lesson bodies. Only the authorized
+      // detail route supplies the curriculum needed for an editorial review.
+      const res = await fetchApi(`/courses/${courseId}`);
+      if (request === inspectionRequest.current) setInspection({ id: courseId, data: res.data, loading: false });
+    } catch (err) {
+      if (request === inspectionRequest.current) setInspection({ id: courseId, error: errorMessage(err, 'Unable to load course details'), loading: false });
+    }
+  };
 
   const handleReviewDecision = async (courseId: string, decision: 'APPROVED' | 'REJECTED', reason?: string) => {
     setActionLoading(courseId);
@@ -402,7 +419,11 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
         <div className="space-y-4">
           {filteredCourses.map((course) => {
             const isExpanded = expandedCourseId === course.id;
-            const allUnits = course.sections || [];
+            const details = inspection?.id === course.id ? inspection : undefined;
+            const inspectedCourse = details?.data || course;
+            const modules = inspectedCourse.modules || [];
+            const sections = inspectedCourse.sections || [];
+            const allUnits = modules.length > 0 ? modules : sections;
             const isActing = actionLoading === course.id;
 
             return (
@@ -469,7 +490,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                       </span>
                       <span className="flex items-center gap-1">
                         <Layers className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{allUnits.length} Chapters / Sections</span>
+                        <span>{details?.data ? `${allUnits.length} Chapters / Modules` : 'Inspect curriculum'}</span>
                       </span>
                     </div>
                   </div>
@@ -478,7 +499,11 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                   <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
                     {/* Inspect Button */}
                     <button
-                      onClick={() => setExpandedCourseId(isExpanded ? null : course.id)}
+                      onClick={() => {
+                        setExpandedCourseId(isExpanded ? null : course.id);
+                        if (isExpanded) inspectionRequest.current += 1;
+                        else void loadInspection(course.id);
+                      }}
                       className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -545,8 +570,15 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                       <span>Curriculum Breakdown ({allUnits.length} Chapters)</span>
                     </h4>
 
-                    {allUnits.length === 0 ? (
-                      <p className="text-xs text-slate-500 italic">No sections found in this course.</p>
+                    {details?.loading ? (
+                      <p role="status" className="text-sm text-slate-400">Loading course details…</p>
+                    ) : details?.error ? (
+                      <div role="alert" className="text-sm text-rose-300 space-y-2">
+                        <p>{details.error}</p>
+                        <button onClick={() => void loadInspection(course.id)} className="px-3 py-2 rounded-lg bg-slate-800 text-white">Retry details</button>
+                      </div>
+                    ) : allUnits.length === 0 ? (
+                      <p className="text-xs text-slate-500 italic">No modules or sections found in this course.</p>
                     ) : (
                       <div className="space-y-4">
                         {allUnits.map((unit: UnitItem, uIdx: number) => {
@@ -567,7 +599,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                               </div>
 
                               {lessons.length === 0 ? (
-                                <p className="text-xs text-slate-500 italic pl-3">No lessons in this section.</p>
+                                <p className="text-xs text-slate-500 italic pl-3">No lessons in this module.</p>
                               ) : (
                                 <div className="space-y-2 pl-3">
                                   {lessons.map((lesson: LessonItem, lIdx: number) => {

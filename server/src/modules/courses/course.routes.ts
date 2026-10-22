@@ -10,7 +10,9 @@ import {
   createSubjectSchema,
   updateSubjectSchema,
   updateSubjectPricingSchema,
+  reorderModulesSchema,
   reorderLessonsSchema,
+  updateModuleSchema,
   updateLessonSchema,
 } from '../../utils/schemas';
 
@@ -38,6 +40,7 @@ subjectRouter.put(
 courseRouter.get('/', optionalAuth, CourseController.getAllCourses);
 courseRouter.get('/teacher/dashboard', authenticate, requireApprovedTeacher, CourseController.getTeacherDashboard);
 courseRouter.get('/teacher/my-courses', authenticate, requireApprovedTeacher, CourseController.getTeacherCourses);
+courseRouter.get('/:id/learning', authenticate, CourseController.getLearningCourse);
 courseRouter.get('/:id', optionalAuth, CourseController.getCourseById);
 courseRouter.post('/', authenticate, requireApprovedTeacher, validateBody(createCourseSchema), CourseController.createCourse);
 courseRouter.patch('/:id', authenticate, requireApprovedTeacher, validateBody(updateCourseSchema), CourseController.updateCourse);
@@ -60,8 +63,19 @@ courseRouter.post(
   requireApprovedTeacher,
   CourseController.reorderSections
 );
+courseRouter.post('/:courseId/modules', authenticate, requireApprovedTeacher, CourseController.createModule);
+courseRouter.patch('/modules/:moduleId', authenticate, requireApprovedTeacher, validateBody(updateModuleSchema), CourseController.updateModule);
+courseRouter.delete('/modules/:moduleId', authenticate, requireApprovedTeacher, CourseController.deleteModule);
+courseRouter.post(
+  '/:courseId/modules/reorder',
+  authenticate,
+  requireApprovedTeacher,
+  validateBody(reorderModulesSchema),
+  CourseController.reorderModules
+);
 
-// Lesson & Resource Routes
+// Module Lessons & Resources Routes
+courseRouter.post('/modules/:moduleId/lessons', authenticate, requireApprovedTeacher, CourseController.createLesson);
 courseRouter.patch('/lessons/:lessonId', authenticate, requireApprovedTeacher, validateBody(updateLessonSchema), CourseController.updateLesson);
 courseRouter.post(
   '/lessons/reorder',

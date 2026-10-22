@@ -262,22 +262,23 @@ describe('AssignmentService Unit Tests', () => {
   });
 
   describe('submitAssignmentSchema validation', () => {
-    it('should accept local /uploads/... relative path as fileUrl', () => {
+    it('accepts an uploaded submission reference with its required token', () => {
       const parsed = submitAssignmentSchema.parse({
         submissionText: 'Done',
         files: [
           {
-            fileUrl: '/uploads/submission-files/123-hw.pdf',
+            fileUrl: '/uploads/submission-files/00000000-0000-0000-0000-000000000000.pdf',
+            uploadToken: 'schema-fixture-token-not-a-delivery-grant',
             fileName: 'hw.pdf',
             sizeBytes: 1024,
           },
         ],
       });
-      expect(parsed.files?.[0].fileUrl).toBe('/uploads/submission-files/123-hw.pdf');
+      expect(parsed.files?.[0].fileUrl).toBe('/uploads/submission-files/00000000-0000-0000-0000-000000000000.pdf');
     });
 
-    it('should accept standard http/https URL as fileUrl', () => {
-      const parsed = submitAssignmentSchema.parse({
+    it('rejects arbitrary external URLs as submission upload references', () => {
+      const parsed = submitAssignmentSchema.safeParse({
         submissionText: 'Done',
         files: [
           {
@@ -287,7 +288,7 @@ describe('AssignmentService Unit Tests', () => {
           },
         ],
       });
-      expect(parsed.files?.[0].fileUrl).toBe('https://example.com/files/hw.pdf');
+      expect(parsed.success).toBe(false);
     });
   });
 });

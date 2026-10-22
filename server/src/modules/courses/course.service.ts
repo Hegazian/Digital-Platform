@@ -1,61 +1,63 @@
 import { prisma } from '../../prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
-import { VideoStatus, Role, LessonBlockType } from '@prisma/client';
+import { VideoStatus, Role } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
 import { egpToUsd, usdToEgp } from '../../utils/currency';
+import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
+import { externalMaterialUrl, materialDeliveryUrl } from '../materials/material-reference';
+import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
 
 export class CourseService {
+  private static async suppliedVideo(data: { videoUrl: string; title?: string; duration?: number }, actorId: string, role?: Role) {
+    if (typeof data.videoUrl !== 'string' || !data.videoUrl.trim()) throw new BadRequestError('A video reference is required');
+    if (/^https?:\/\//i.test(data.videoUrl)) {
+      return prisma.video.create({ data: {
+        teacherId: actorId, status: VideoStatus.READY, videoUrl: externalContentUrl(data.videoUrl),
+        durationSec: data.duration || 0, originalFileName: data.title || 'lesson-video.mp4',
+      } });
+    }
+    const uploaded = await prisma.video.findFirst({ where: { videoUrl: data.videoUrl, ...(role !== Role.ADMIN && { teacherId: actorId }) } });
+    if (!uploaded) throw new BadRequestError('Upload the video using your account before attaching it');
+    boundObjectKey(uploaded.videoUrl, 'lesson-videos', uploaded.id);
+    return uploaded;
+  }
   /**
-   * Strip answer keys from embedded quiz questions and private media URLs.
-   * Required for any response delivered to users who cannot manage the course
-   * or do not have an active entitlement to paid content.
+   * Strip answer keys from embedded quiz questions. Required for any
+   * response delivered to users who cannot manage the course, otherwise
+   * correct answers / explanations leak to students (NFR-001).
    */
-  private static sanitizeCourseContent<T extends { isFree?: boolean; sections?: any[] }>(
-    course: T,
-    hasFullAccess: boolean = false
-  ): T {
-    const isCourseFree = Boolean(course.isFree);
-
-    const stripLesson = (lesson: any, isPreview: boolean = false) => {
-      if (!lesson) return lesson;
-      const stripped = { ...lesson };
-
-      // 1. Strip answer keys from embedded quiz
-      if (stripped.quiz?.questions) {
-        stripped.quiz = {
-          ...stripped.quiz,
-          questions: stripped.quiz.questions.map((q: any) => ({
-            ...q,
-            options: Array.isArray(q.options)
-              ? q.options.map(({ isCorrect: _isCorrect, ...opt }: any) => opt)
-              : q.options,
-            correctAnswer: null,
-            explanation: null,
-          })),
-        };
+  private static sanitizeCourseContent<T extends Record<string, any>>(course: T, includeCurriculum = false): T {
+    const scrub = (value: any): any => {
+      if (Array.isArray(value)) return value.map(scrub);
+      if (!value || typeof value !== 'object') return value;
+      if (value instanceof Date) return value.toISOString();
+      if ('quizId' in value && 'questionText' in value && typeof value.id === 'string') {
+        const options = Array.isArray(value.options) ? value.options.map((option: any) => {
+          if (!option || typeof option !== 'object') return option;
+          return { ...(option.id !== undefined && { id: option.id }), ...(option.text !== undefined && { text: option.text }) };
+        }) : value.options;
+        return { id: value.id, questionText: value.questionText, type: value.type, orderIndex: value.orderIndex, points: value.points, options };
       }
-
-      // 2. Strip media URLs if not entitled and not a free preview / free course
-      if (!hasFullAccess && !isCourseFree && !isPreview) {
-        if (stripped.video) {
-          const { videoUrl: _vUrl, ...safeVideo } = stripped.video;
-          stripped.video = safeVideo;
-        }
-        if (Array.isArray(stripped.materials)) {
-          stripped.materials = stripped.materials.map(({ fileUrl: _fUrl, ...safeMat }: any) => safeMat);
-        }
+      if ('fileUrl' in value && 'lessonId' in value && typeof value.id === 'string') {
+        value = { ...value, fileUrl: materialDeliveryUrl(value) };
       }
-
-      return stripped;
+      const forbidden = new Set(['correctAnswer', 'correctAnswerJson', 'isCorrect', 'explanation', 'questionsSnapshotJson', 'email', 'videoUrl']);
+      return Object.fromEntries(Object.entries(value).filter(([key]) => !forbidden.has(key)).map(([key, item]) => [key, scrub(item)]));
     };
+    if (includeCurriculum) return scrub(course) as T;
+    const catalogFields = ['id', 'titleEn', 'titleAr', 'description', 'teacherId', 'subjectId', 'academicYearId', 'gradeId', 'slug', 'thumbnail', 'status', 'isPublished', 'isFree', 'createdAt', 'updatedAt', 'teacher', 'subject', 'grade', 'priceEgp', 'priceUsd', 'productId'];
+    return scrub(Object.fromEntries(catalogFields.filter((key) => key in course).map((key) => [key, course[key]]))) as T;
+  }
 
-    return {
-      ...course,
-      sections: course.sections?.map((s: any) => ({
-        ...s,
-        lessons: s.lessons?.map((l: any) => stripLesson(l, Boolean(s.isFreePreview))),
-      })),
-    };
+  static async getLearningCourse(id: string, user: { userId: string; role: Role }) {
+    const catalog = await this.getCourseById(id, user);
+    await EntitlementResolver.assertLearningAccess(user.userId, user.role, {
+      courseId: catalog.id,
+      teacherId: catalog.teacherId,
+    });
+    // Load curriculum only after entitlement succeeds, through the manager-only query shape.
+    const curriculum = await this.getCourseById(id, { userId: catalog.teacherId, role: Role.TEACHER });
+    return this.sanitizeCourseContent(curriculum, true);
   }
 
   private static canManageCourse(course: { teacherId: string }, user?: { userId: string; role: Role } | null): boolean {
@@ -119,22 +121,6 @@ export class CourseService {
         grade: {
           select: { id: true, nameEn: true, nameAr: true, code: true },
         },
-        sections: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            lessons: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                video: true,
-                quiz: {
-                  include: { questions: true },
-                },
-                materials: true,
-                blocks: true,
-              },
-            },
-          },
-        },
       },
       skip,
       take: limitNum,
@@ -162,7 +148,7 @@ export class CourseService {
         priceUsd,
         productId: prod?.id,
       };
-      return this.canManageCourse(c, user) ? enriched : this.sanitizeCourseContent(enriched, false);
+      return this.canManageCourse(c, user) ? enriched : this.sanitizeCourseContent(enriched);
     });
 
     return {
@@ -176,65 +162,57 @@ export class CourseService {
     };
   }
 
-  static async getCourseById(id: string, user?: { userId: string; role: Role } | null) {
-    const course = await prisma.course.findUnique({
+  static async getCourseById(id: string, user?: { userId: string; role: Role } | null): Promise<any> {
+    const visibility = await prisma.course.findUnique({
       where: { id },
-      include: {
-        teacher: {
-          select: { id: true, name: true, avatar: true, email: true },
-        },
-        subject: true,
-        grade: true,
-        sections: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            lessons: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                video: true,
-                quiz: {
-                  include: { questions: true },
-                },
-                materials: true,
-                blocks: true,
-              },
-            },
-          },
-        },
-      },
+      select: { id: true, teacherId: true, status: true, isPublished: true },
     });
+    if (!visibility) throw new NotFoundError('Course not found');
+    const canManage = this.canManageCourse(visibility, user);
+    if (!canManage && (visibility.status !== 'PUBLISHED' || !visibility.isPublished)) throw new NotFoundError('Course not found');
 
-    if (!course) {
-      throw new NotFoundError('Course not found');
-    }
+    const curriculumInclude = {
+      teacher: { select: { id: true, name: true, avatar: true, email: true } },
+      subject: true,
+      grade: true,
+      modules: {
+        orderBy: { sortOrder: 'asc' as const },
+        include: { lessons: {
+          orderBy: { orderIndex: 'asc' as const },
+          include: { video: true, quiz: { include: { questions: true } }, materials: true, blocks: true },
+        } },
+      },
+      sections: {
+        orderBy: { orderIndex: 'asc' as const },
+        include: { lessons: {
+          orderBy: { orderIndex: 'asc' as const },
+          include: { video: true, quiz: { include: { questions: true } }, materials: true, blocks: true },
+        } },
+      },
+    };
 
-    // Visibility: only admins and the owning teacher may read unpublished
-    // courses. Everyone else gets a 404 (no existence leak) for drafts.
-    const canManage = this.canManageCourse(course, user);
-    if (!canManage && (course.status !== 'PUBLISHED' || !course.isPublished)) {
-      throw new NotFoundError('Course not found');
-    }
-
-    let hasFullAccess = canManage || Boolean(course.isFree);
-    if (!hasFullAccess && user?.userId) {
-      const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
-      hasFullAccess = await EntitlementResolver.hasCourseAccess(user.userId, course.id);
-    }
+    const course = canManage
+      ? await prisma.course.findUnique({ where: { id }, include: curriculumInclude })
+      : await prisma.course.findUnique({
+          where: { id },
+          include: {
+            teacher: { select: { id: true, name: true, avatar: true } },
+            subject: { select: { id: true, nameEn: true, nameAr: true } },
+            grade: { select: { id: true, nameEn: true, nameAr: true, code: true } },
+          },
+        });
+    if (!course) throw new NotFoundError('Course not found');
 
     const product = prisma.product
-      ? await prisma.product.findFirst({
-          where: { productType: 'COURSE', resourceId: course.id },
-        })
+      ? await prisma.product.findFirst({ where: { productType: 'COURSE', resourceId: course.id } })
       : null;
-
     const enriched = {
       ...course,
       priceEgp: course.isFree ? 0 : product ? Number(product.priceEgp) : 150,
       priceUsd: course.isFree ? 0 : product ? Number(product.priceUsd) : 10,
       productId: product?.id,
     };
-
-    return canManage ? enriched : this.sanitizeCourseContent(enriched, hasFullAccess);
+    return canManage ? enriched : this.sanitizeCourseContent(enriched);
   }
 
   /**
@@ -483,6 +461,11 @@ export class CourseService {
       });
     }
 
+    if (prisma.collectionCourse?.deleteMany) {
+      await prisma.collectionCourse.deleteMany({
+        where: { courseId: id },
+      });
+    }
 
     await prisma.course.delete({ where: { id } });
     return { id, success: true };
@@ -580,6 +563,7 @@ export class CourseService {
     const course = await prisma.course.findUnique({
       where: { id },
       include: {
+        modules: { include: { lessons: { include: { blocks: true, materials: true } } } },
         sections: { include: { lessons: { include: { blocks: true, materials: true } } } },
       },
     });
@@ -596,10 +580,13 @@ export class CourseService {
     }
 
     // Completeness gate — identical rules to submit-for-review.
-    const allLessons = (course.sections || []).flatMap((s) => s.lessons || []);
-    const hasUnits = (course.sections?.length ?? 0) > 0;
+    const allLessons = [
+      ...(course.modules || []).flatMap((m) => m.lessons || []),
+      ...(course.sections || []).flatMap((s) => s.lessons || []),
+    ];
+    const hasUnits = ((course.modules?.length ?? 0) + (course.sections?.length ?? 0)) > 0;
     if (!hasUnits || allLessons.length === 0) {
-      throw new BadRequestError('Cannot publish an incomplete course: at least one section and lesson are required');
+      throw new BadRequestError('Cannot publish an incomplete course: at least one module and lesson are required');
     }
     const emptyLessons = allLessons.filter((l) => {
       return !(l.videoId || l.quizId || ((l as any).materials?.length ?? 0) > 0 || ((l as any).blocks?.length ?? 0) > 0);
@@ -630,6 +617,16 @@ export class CourseService {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
+        modules: {
+          include: {
+            lessons: {
+              include: {
+                blocks: true,
+                materials: true,
+              },
+            },
+          },
+        },
         sections: {
           include: {
             lessons: {
@@ -651,19 +648,23 @@ export class CourseService {
       throw new ForbiddenError('You do not have permission to submit this course');
     }
 
-    const hasUnits = course.sections && course.sections.length > 0;
+    const hasUnits = (course.modules && course.modules.length > 0) || (course.sections && course.sections.length > 0);
     const hasLessons =
-      course.sections && course.sections.some((s) => s.lessons && s.lessons.length > 0);
+      (course.modules && course.modules.some((m) => m.lessons && m.lessons.length > 0)) ||
+      (course.sections && course.sections.some((s) => s.lessons && s.lessons.length > 0));
 
     if (!hasUnits || !hasLessons) {
       throw new BadRequestError(
-        'Course must contain at least one section and lesson before submitting for review'
+        'Course must contain at least one module and lesson before submitting for review'
       );
     }
 
     // Every lesson must carry at least one learning resource
     // (video, material, quiz, or content block).
-    const allLessons = (course.sections || []).flatMap((s) => s.lessons || []);
+    const allLessons = [
+      ...(course.modules || []).flatMap((m) => m.lessons || []),
+      ...(course.sections || []).flatMap((s) => s.lessons || []),
+    ];
     const emptyLessons = allLessons.filter((l) => {
       const hasResources =
         Boolean(l.videoId) || Boolean(l.quizId) || ((l as any).materials?.length ?? 0) > 0 || ((l as any).blocks?.length ?? 0) > 0;
@@ -698,8 +699,7 @@ export class CourseService {
   static async reviewCourseStatus(
     courseId: string,
     decision: 'APPROVED' | 'REJECTED',
-    rejectionReason?: string,
-    reviewerUserId?: string
+    rejectionReason?: string
   ) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) {
@@ -718,22 +718,122 @@ export class CourseService {
       },
     });
 
-    if (reviewerUserId) {
-      await logAuditAction(
-        reviewerUserId,
-        decision === 'APPROVED' ? 'COURSE_APPROVED' : 'COURSE_REJECTED',
-        courseId,
-        'Course',
-        { decision, rejectionReason }
-      );
-    }
+    await logAuditAction(
+      'ADMIN',
+      decision === 'APPROVED' ? 'COURSE_APPROVED' : 'COURSE_REJECTED',
+      courseId,
+      'Course',
+      { decision, rejectionReason }
+    );
 
     return updated;
   }
 
+  // Module Management
+  static async createModule(
+    courseId: string,
+    data: { titleEn: string; titleAr: string; description?: string; sortOrder?: number },
+    teacherId?: string,
+    userRole?: Role
+  ) {
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+
+    if (teacherId && course.teacherId !== teacherId && userRole !== Role.ADMIN) {
+      throw new ForbiddenError('Only the course owner can add modules to this course');
+    }
+
+    return await prisma.courseModule.create({
+      data: {
+        courseId,
+        titleEn: data.titleEn,
+        titleAr: data.titleAr,
+        description: data.description,
+        sortOrder: data.sortOrder ?? 0,
+      },
+    });
+  }
+
+  static async updateModule(
+    moduleId: string,
+    data: { titleEn?: string; titleAr?: string; description?: string; sortOrder?: number },
+    teacherId?: string,
+    userRole?: Role
+  ) {
+    const module = await prisma.courseModule.findUnique({
+      where: { id: moduleId },
+      include: { course: true },
+    });
+    if (!module) {
+      throw new NotFoundError('Module not found');
+    }
+
+    if (teacherId && module.course.teacherId !== teacherId && userRole !== Role.ADMIN) {
+      throw new ForbiddenError('Only the course owner can update this module');
+    }
+
+    return await prisma.courseModule.update({ where: { id: moduleId }, data });
+  }
+
+  static async deleteModule(moduleId: string, teacherId?: string, userRole?: Role) {
+    const module = await prisma.courseModule.findUnique({
+      where: { id: moduleId },
+      include: { course: true },
+    });
+    if (!module) {
+      throw new NotFoundError('Module not found');
+    }
+
+    if (teacherId && module.course.teacherId !== teacherId && userRole !== Role.ADMIN) {
+      throw new ForbiddenError('Only the course owner can delete modules from this course');
+    }
+
+    await prisma.courseModule.delete({ where: { id: moduleId } });
+    return true;
+  }
+
+  static async reorderModules(
+    courseId: string,
+    items: Array<{ id: string; sortOrder: number }>,
+    teacherId?: string,
+    userRole?: Role
+  ) {
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+
+    // Ownership: only the owning teacher (or an admin) may reorder modules.
+    if (teacherId && course.teacherId !== teacherId && userRole !== Role.ADMIN) {
+      throw new ForbiddenError('Only the course owner can reorder this course\'s modules');
+    }
+
+    // All modules must belong to the given course.
+    const moduleIds = await prisma.courseModule.findMany({
+      where: { id: { in: items.map((i) => i.id) } },
+      select: { id: true, courseId: true },
+    });
+    const foreign = moduleIds.find((m) => m.courseId !== courseId);
+    if (foreign || moduleIds.length !== items.length) {
+      throw new BadRequestError('One or more modules do not belong to this course');
+    }
+
+    await prisma.$transaction(
+      items.map((item) =>
+        prisma.courseModule.update({
+          where: { id: item.id },
+          data: { sortOrder: item.sortOrder },
+        })
+      )
+    );
+    return true;
+  }
+
   // Lesson & Resource Management
   static async createLesson(
-    sectionId: string,
+    moduleId: string | null,
     data: {
       titleEn: string;
       titleAr?: string;
@@ -745,16 +845,34 @@ export class CourseService {
       quiz?: { title: string; passingScore?: number; timeLimit?: number; questions: Array<{ questionText: string; points?: number; orderIndex?: number; options: Array<{ optionText: string; isCorrect: boolean; orderIndex?: number }> }> };
     },
     teacherId?: string,
-    userRole?: Role
+    userRole?: Role,
+    sectionId?: string
   ) {
-    const section = await prisma.section.findUnique({
-      where: { id: sectionId },
-      select: { id: true, course: { select: { teacherId: true } } },
-    });
-    if (!section) {
-      throw new NotFoundError('Section not found');
+    // Lessons hang off EITHER a module OR a section (dual curriculum layout).
+    let ownerTeacherId: string;
+    const lessonParent: { moduleId?: string; sectionId?: string } = {};
+
+    if (sectionId) {
+      const section = await prisma.section.findUnique({
+        where: { id: sectionId },
+        select: { id: true, course: { select: { teacherId: true } } },
+      });
+      if (!section) {
+        throw new NotFoundError('Section not found');
+      }
+      ownerTeacherId = section.course.teacherId;
+      lessonParent.sectionId = sectionId;
+    } else {
+      const module = await prisma.courseModule.findUnique({
+        where: { id: moduleId! },
+        include: { course: true },
+      });
+      if (!module) {
+        throw new NotFoundError('Module not found');
+      }
+      ownerTeacherId = module.course.teacherId;
+      lessonParent.moduleId = moduleId!;
     }
-    const ownerTeacherId = section.course.teacherId;
 
     if (teacherId && ownerTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can add lessons to this course');
@@ -762,20 +880,14 @@ export class CourseService {
 
     let videoId: string | undefined;
     if (data.video && data.video.videoUrl) {
-      const video = await prisma.video.create({
-        data: {
-          teacherId: teacherId || ownerTeacherId,
-          status: VideoStatus.READY,
-          videoUrl: data.video.videoUrl,
-          durationSec: data.video.duration || 0,
-          originalFileName: data.video.title || 'lesson-video.mp4',
-        },
-      });
+      const video = await this.suppliedVideo(data.video, teacherId || ownerTeacherId, userRole);
       videoId = video.id;
     }
 
     let quizId: string | undefined;
     if (data.quiz && data.quiz.title) {
+      // Delegate to QuizService so embedded quizzes get the same per-type
+      // validation and normalization as standalone ones (quiz engine v2).
       const { QuizService } = await import('../quizzes/quiz.service');
       const quiz = await QuizService.createQuiz({
         titleEn: data.quiz.title,
@@ -790,7 +902,7 @@ export class CourseService {
 
     const lesson = await prisma.lesson.create({
       data: {
-        sectionId,
+        ...lessonParent,
         titleEn: data.titleEn,
         titleAr: data.titleAr || data.titleEn,
         content: data.content,
@@ -801,7 +913,7 @@ export class CourseService {
         materials: data.materials && data.materials.length > 0 ? {
           create: data.materials.map((m) => ({
             title: m.title,
-            fileUrl: m.fileUrl,
+            fileUrl: externalMaterialUrl(m.fileUrl),
             fileType: m.fileType || 'pdf',
             sizeBytes: m.fileSize || 1024,
           })),
@@ -827,6 +939,7 @@ export class CourseService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -834,20 +947,12 @@ export class CourseService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can attach videos to this lesson');
     }
 
-    const video = await prisma.video.create({
-      data: {
-        teacherId: teacherId || courseTeacherId || '',
-        status: VideoStatus.READY,
-        videoUrl: data.videoUrl,
-        durationSec: data.duration || 0,
-        originalFileName: data.title || 'lesson-video.mp4',
-      },
-    });
+    const video = await this.suppliedVideo(data, teacherId || courseTeacherId || '', userRole);
 
     await prisma.lesson.update({
       where: { id: lessonId },
@@ -866,6 +971,7 @@ export class CourseService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -873,7 +979,7 @@ export class CourseService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can attach materials to this lesson');
     }
@@ -882,7 +988,7 @@ export class CourseService {
       data: {
         lessonId,
         title: data.title,
-        fileUrl: data.fileUrl,
+        fileUrl: externalMaterialUrl(data.fileUrl),
         fileType: data.fileType || 'pdf',
         sizeBytes: data.fileSize || 1024,
       },
@@ -898,6 +1004,7 @@ export class CourseService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -905,7 +1012,7 @@ export class CourseService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can attach quizzes to this lesson');
     }
@@ -935,6 +1042,7 @@ export class CourseService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -942,7 +1050,7 @@ export class CourseService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can delete lessons from this course');
     }
@@ -1006,6 +1114,7 @@ export class CourseService {
     const lessons = await prisma.lesson.findMany({
       where: { id: { in: items.map((i) => i.id) } },
       include: {
+        module: { select: { course: { select: { teacherId: true } } } },
         section: { select: { course: { select: { teacherId: true } } } },
       },
     });
@@ -1015,7 +1124,7 @@ export class CourseService {
     }
 
     for (const lesson of lessons) {
-      const owner = lesson.section?.course?.teacherId;
+      const owner = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
       if (teacherId && owner && owner !== teacherId && userRole !== Role.ADMIN) {
         throw new ForbiddenError('Only the course owner can reorder these lessons');
       }
@@ -1036,6 +1145,7 @@ export class CourseService {
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
+        module: { include: { course: true } },
         section: { include: { course: true } },
       },
     });
@@ -1043,7 +1153,7 @@ export class CourseService {
       throw new NotFoundError('Lesson not found');
     }
 
-    const courseTeacherId = lesson.section?.course?.teacherId;
+    const courseTeacherId = lesson.module?.course?.teacherId || lesson.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can modify this lesson');
     }
@@ -1051,28 +1161,18 @@ export class CourseService {
     return { lesson, courseTeacherId };
   }
 
-  private static readonly VALID_LESSON_BLOCK_TYPES = new Set<string>(
-    Object.values(LessonBlockType)
-  );
-
   static async addLessonBlock(
     lessonId: string,
     data: { blockType: string; configuration: any; sortOrder?: number; isRequired?: boolean },
     teacherId?: string,
     userRole?: Role
   ) {
-    if (!data?.blockType || !this.VALID_LESSON_BLOCK_TYPES.has(data.blockType)) {
-      throw new BadRequestError(
-        `Invalid blockType "${data?.blockType}". Allowed values: ${Array.from(this.VALID_LESSON_BLOCK_TYPES).join(', ')}`
-      );
-    }
-
     await this.getOwnedLessonOrThrow(lessonId, teacherId, userRole);
 
     return await prisma.lessonBlock.create({
       data: {
         lessonId,
-        blockType: data.blockType as LessonBlockType,
+        blockType: data.blockType as any,
         configurationJson: JSON.stringify(data.configuration || {}),
         sortOrder: data.sortOrder ?? 0,
         isRequired: data.isRequired ?? true,
@@ -1088,7 +1188,9 @@ export class CourseService {
         id: true,
         lesson: {
           select: {
+            moduleId: true,
             sectionId: true,
+            module: { select: { course: { select: { teacherId: true } } } },
             section: { select: { course: { select: { teacherId: true } } } },
           },
         },
@@ -1098,7 +1200,9 @@ export class CourseService {
       throw new NotFoundError('Block not found');
     }
 
-    const courseTeacherId = block.lesson?.section?.course?.teacherId;
+    const courseTeacherId =
+      (block.lesson as any)?.module?.course?.teacherId ||
+      (block.lesson as any)?.section?.course?.teacherId;
     if (teacherId && courseTeacherId && courseTeacherId !== teacherId && userRole !== Role.ADMIN) {
       throw new ForbiddenError('Only the course owner can modify this block');
     }
@@ -1112,18 +1216,12 @@ export class CourseService {
     teacherId?: string,
     userRole?: Role
   ) {
-    if (data.blockType !== undefined && !this.VALID_LESSON_BLOCK_TYPES.has(data.blockType)) {
-      throw new BadRequestError(
-        `Invalid blockType "${data.blockType}". Allowed values: ${Array.from(this.VALID_LESSON_BLOCK_TYPES).join(', ')}`
-      );
-    }
-
     await this.getOwnedBlockOrThrow(blockId, teacherId, userRole);
 
     return await prisma.lessonBlock.update({
       where: { id: blockId },
       data: {
-        ...(data.blockType !== undefined && { blockType: data.blockType as LessonBlockType }),
+        ...(data.blockType !== undefined && { blockType: data.blockType as any }),
         ...(data.configuration !== undefined && {
           configurationJson: JSON.stringify(data.configuration),
         }),
@@ -1133,7 +1231,7 @@ export class CourseService {
     });
   }
 
-  /** Deletes a lesson block. */
+  /** Deletes a block; its Board/Playground rows cascade (schema-level). */
   static async deleteLessonBlock(blockId: string, teacherId?: string, userRole?: Role) {
     await this.getOwnedBlockOrThrow(blockId, teacherId, userRole);
 
@@ -1194,7 +1292,10 @@ export class CourseService {
     const myLessonIds = (
       await prisma.lesson.findMany({
         where: {
-          section: { course: { teacherId } },
+          OR: [
+            { module: { course: { teacherId } } },
+            { section: { course: { teacherId } } },
+          ],
         },
         select: { id: true },
       })

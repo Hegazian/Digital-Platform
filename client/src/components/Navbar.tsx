@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import MfaSetupModal from './settings/MfaSetupModal';
-import NotificationBell from './NotificationBell';
 import { LogoMark } from './brand/Logo';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { lang, setLang, user, setUser, t } = useAppStore();
@@ -72,12 +72,13 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-3 group text-left focus:outline-none"
+            aria-label={siteName}
+            className="flex shrink-0 items-center gap-3 group text-left focus:outline-none"
           >
             <span className="group-hover:scale-105 transition-transform duration-300 drop-shadow-lg drop-shadow-indigo-500/25">
               <LogoMark size={42} />
             </span>
-            <div>
+            <div className="hidden sm:block">
               <span className="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
                 {siteName}
               </span>
@@ -111,7 +112,7 @@ export default function Navbar() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             {/* Language Switcher */}
             <button
               id="lang-toggle-btn"
@@ -125,19 +126,20 @@ export default function Navbar() {
 
             {/* Auth / User */}
             {user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-3">
                 <NotificationBell />
-                <div
+                <button
+                  type="button"
                   onClick={() => router.push('/profile')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition-all"
-                  title="Edit profile"
+                  title={lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit profile'}
                 >
                   <UserIcon className="w-4 h-4 text-indigo-400" />
-                  <div className="text-xs">
-                    <span className="block font-bold text-slate-200">{user.name}</span>
+                  <span className="hidden sm:block max-w-32 text-xs text-start">
+                    <span className="block truncate font-bold text-slate-200">{user.name}</span>
                     <span className="block text-[10px] text-indigo-400 font-semibold">{user.role}</span>
-                  </div>
-                </div>
+                  </span>
+                </button>
                 {!user.mfaEnabled && (
                   <button
                     onClick={() => setShowMfaModal(true)}
@@ -162,7 +164,9 @@ export default function Navbar() {
                     localStorage.removeItem('accessToken');
                     setUser(null, null);
                     queryClient.clear();
-                    router.push('/');
+                    // Match the protected-page guard's signed-out destination
+                    // so logout cannot race a second navigation to home.
+                    router.replace('/login');
                   }}
                   className="p-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all"
                   title={t('logout')}
@@ -188,14 +192,12 @@ export default function Navbar() {
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       {showMfaModal && (
         <MfaSetupModal
-          isOpen={showMfaModal}
           onClose={() => setShowMfaModal(false)}
           onEnabled={() => {
             if (user) {
               setUser({ ...user, mfaEnabled: true }, useAppStore.getState().token);
             }
           }}
-          isAlreadyEnabled={Boolean(user?.mfaEnabled)}
         />
       )}
     </>

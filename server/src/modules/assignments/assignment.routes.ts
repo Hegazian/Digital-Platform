@@ -1,3 +1,4 @@
+import { validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { AssignmentController } from './assignment.controller';
@@ -54,11 +55,15 @@ const assertAssignmentLearningAccess = async (req: AuthRequest, _res: Response, 
 
 // Student endpoints
 router.get('/my-submissions', authenticate, AssignmentController.getStudentSubmissions);
+router.get('/submission-files/:fileId/content', authenticate, AssignmentController.getSubmissionFile);
 // Submission file upload (students) — returns a hosted fileUrl.
 router.post(
   '/uploads',
   authenticate,
+  requireUploadScanner,
   upload.single('file'),
+  validateUploadedFile,
+  scanUploadedFile,
   (req: Request, res: Response, next: NextFunction) => AssignmentController.uploadSubmissionFile(req as AuthRequest, res, next)
 );
 // NOTE: literal-path routes MUST be declared before parameterized '/:id'

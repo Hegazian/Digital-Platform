@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 
 /**
  * Absolute uploads root, deliberately independent of process.cwd().
@@ -30,98 +31,128 @@ export function getUploadsRoot(): string {
 }
 
 /**
- * Returns the path to the temporary uploads directory (.tmp inside uploads root).
- * Ensures the directory exists.
- */
-export function getTempUploadsDir(): string {
-  const tempDir = path.join(getUploadsRoot(), '.tmp');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-  return tempDir;
-}
-
-/**
- * Storage Utility for handling file uploads (Supabase Storage with local fallback).
+ * Storage Utility for handling file uploads through the explicitly selected driver.
  */
 export class StorageService {
+  private static driver(): 'filesystem' | 'supabase' {
+    const configured = process.env.STORAGE_DRIVER;
+    if (configured === 'filesystem' || configured === 'supabase') {
+      if (process.env.NODE_ENV === 'production' && configured !== 'supabase') throw new Error('Production requires STORAGE_DRIVER=supabase');
+      return configured;
+    }
+    if (configured) throw new Error('STORAGE_DRIVER must be filesystem or supabase');
+    if (process.env.NODE_ENV === 'production') throw new Error('STORAGE_DRIVER must be explicitly set to supabase in production');
+    return 'filesystem';
+  }
+
+  private static supabaseConfig(): { base: string; key: string } {
+    const base = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!base || !key || !base.startsWith('https://')) throw new Error('Private Supabase storage configuration is required');
+    return { base: base.replace(/\/$/, ''), key };
+  }
+
+  private static async verifyPrivateBuckets(timeoutMs: number): Promise<void> {
+    const { base, key } = this.supabaseConfig();
+    let response: Response;
+    try {
+      response = await fetch(`${base}/storage/v1/bucket`, {
+        headers: { Authorization: `Bearer ${key}`, apikey: key },
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+    } catch {
+      throw new Error('Unable to verify private production storage');
+    }
+    if (!response.ok) throw new Error('Unable to verify private production storage');
+    const buckets = await response.json();
+    if (!Array.isArray(buckets) || ['lesson-videos', 'lesson-materials', 'submission-files'].some((id) => !buckets.some((bucket: any) => bucket.id === id && bucket.public === false))) {
+      throw new Error('Educational and submission storage buckets must exist and be private');
+    }
+  }
+
+  /** A bounded health probe for the explicitly selected storage backend. */
+  static async checkAvailability(timeoutMs = 3_000): Promise<void> {
+    const driver = this.driver();
+    if (driver === 'supabase') return this.verifyPrivateBuckets(timeoutMs);
+    if (process.env.NODE_ENV === 'production') throw new Error('Production cannot use filesystem storage');
+
+    const root = getUploadsRoot();
+    fs.mkdirSync(root, { recursive: true });
+    const probePath = path.join(root, `.health-${randomUUID()}`);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        fs.promises.writeFile(probePath, 'ok', { flag: 'wx' }),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(() => reject(new Error('Filesystem readiness probe timed out')), timeoutMs);
+          timeout.unref?.();
+        })
+      ]);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+      try { await fs.promises.unlink(probePath); } catch { /* no file was created */ }
+    }
+  }
+
+  /** A production process must never expose teaching/submission files from a public bucket. */
+  static async assertPrivateProductionStorage(): Promise<void> {
+    if (process.env.NODE_ENV !== 'production') return;
+    if (this.driver() !== 'supabase') throw new Error('Production requires STORAGE_DRIVER=supabase');
+    await this.verifyPrivateBuckets(10_000);
+  }
+
   /**
-   * Upload a file buffer or disk path to Supabase Storage or local fallback.
-   * If a disk path is provided, moves/copies the file and cleans up the temp file.
+   * Upload a file buffer to the explicitly selected storage backend.
    */
-  static async uploadFile(
-    fileBufferOrPath: Buffer | string,
-    fileName: string,
-    mimeType: string,
-    bucketName: string = 'lesson-materials'
-  ): Promise<string> {
-    const isDiskPath = typeof fileBufferOrPath === 'string';
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+  static async uploadFile(fileBuffer: Buffer, fileName: string, mimeType: string, bucketName: string = 'lesson-materials', scope?: string): Promise<string> {
+    const driver = this.driver();
+    const { base: supabaseUrl, key: supabaseKey } = driver === 'supabase' ? this.supabaseConfig() : { base: '', key: '' };
 
-    const uniqueFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const extension = path.extname(fileName).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    if (scope && !/^[a-f0-9-]+$/i.test(scope)) throw new Error('Invalid storage scope');
+    const uniqueFileName = `${scope ? `${scope}/` : ''}${randomUUID()}${extension}`;
 
-    if (supabaseUrl && supabaseKey) {
+    if (driver === 'supabase') {
       try {
         const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${uniqueFileName}`;
-        const body = isDiskPath ? fs.readFileSync(fileBufferOrPath) : fileBufferOrPath;
         const response = await fetch(uploadUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${supabaseKey}`,
             'API-Key': supabaseKey,
             'Content-Type': mimeType,
-            'x-upsert': 'true',
+            'x-upsert': 'false',
           },
-          body: body as any,
+          body: fileBuffer as any,
         });
 
-        if (response.ok) {
-          if (isDiskPath && fs.existsSync(fileBufferOrPath)) {
-            try { fs.unlinkSync(fileBufferOrPath); } catch {}
-          }
-          // For materials we return public URL, for videos we return the raw object path to be signed later
-          if (bucketName === 'lesson-materials') {
-            return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${uniqueFileName}`;
-          } else {
-            return `${bucketName}/${uniqueFileName}`; // internal path for signed URLs
-          }
-        }
-      } catch (error) {
-        console.warn('Supabase storage upload failed, falling back to local storage:', error);
+        if (!response.ok) throw new Error('Storage upload rejected');
+        // Persist only private bucket paths. Delivery always goes through an authorized adapter.
+        return `${bucketName}/${uniqueFileName}`;
+      } catch {
+        throw new Error('Private storage upload failed');
       }
     }
 
-    // Fallback to local uploads directory
+    // Local-only development fallback
     const uploadDir = path.join(getUploadsRoot(), bucketName);
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
     const localFilePath = path.join(uploadDir, uniqueFileName);
-
-    if (isDiskPath) {
-      try {
-        fs.renameSync(fileBufferOrPath, localFilePath);
-      } catch (err: any) {
-        // Fallback for cross-device moves
-        fs.copyFileSync(fileBufferOrPath, localFilePath);
-        try { fs.unlinkSync(fileBufferOrPath); } catch {}
-      }
-    } else {
-      fs.writeFileSync(localFilePath, fileBufferOrPath);
-    }
+    fs.mkdirSync(path.dirname(localFilePath), { recursive: true });
+    fs.writeFileSync(localFilePath, fileBuffer);
 
     return `/uploads/${bucketName}/${uniqueFileName}`;
   }
 
   /**
    * Generates a secure, temporary signed URL for private bucket objects.
-   * Expires in 7200 seconds (2 hours) by default.
+   * Expires only for the requested, bounded delivery interval.
    */
-  static async getSignedUrl(internalPath: string, expiresIn: number = 7200): Promise<string> {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL?.match(/https:\/\/[^/]+/)?.[0];
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+  static async getSignedUrl(internalPath: string, expiresIn: number = 120): Promise<string> {
+    const driver = this.driver();
 
     if (internalPath.startsWith('/uploads/')) {
       // It's a local file. We return a backend API route that streams the file securely.
@@ -129,8 +160,10 @@ export class StorageService {
       return internalPath;
     }
 
-    if (supabaseUrl && supabaseKey) {
+    if (driver === 'supabase') {
+      const { base: supabaseUrl, key: supabaseKey } = this.supabaseConfig();
       try {
+        const boundedExpiry = Math.min(120, Math.max(1, Math.floor(expiresIn)));
         // internalPath format: "lesson-videos/163000000-video.mp4"
         const signUrl = `${supabaseUrl}/storage/v1/object/sign/${internalPath}`;
         const response = await fetch(signUrl, {
@@ -140,7 +173,7 @@ export class StorageService {
             'API-Key': supabaseKey,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ expiresIn }),
+          body: JSON.stringify({ expiresIn: boundedExpiry }),
         });
 
         if (response.ok) {
@@ -151,7 +184,7 @@ export class StorageService {
           }
         }
       } catch (error) {
-        console.error('Error generating Supabase signed URL:', error);
+        console.error('Error generating Supabase signed URL');
       }
     }
     
@@ -163,13 +196,12 @@ export class StorageService {
    */
   static async deleteFile(fileUrl: string): Promise<void> {
     if (fileUrl.startsWith('/uploads/')) {
-      const parts = fileUrl.split('/');
-      const fileName = parts.pop()!;
-      const bucketName = parts.pop()!;
-      const localFilePath = path.join(getUploadsRoot(), bucketName, fileName);
-      if (fs.existsSync(localFilePath)) {
-        fs.unlinkSync(localFilePath);
-      }
+      const root = path.resolve(getUploadsRoot());
+      const localFilePath = path.resolve(root, fileUrl.slice('/uploads/'.length));
+      if (!localFilePath.startsWith(root + path.sep) || !fs.existsSync(localFilePath)) return;
+      const realRoot = fs.realpathSync(root);
+      const realFilePath = fs.realpathSync(localFilePath);
+      if (realFilePath.startsWith(realRoot + path.sep)) fs.unlinkSync(realFilePath);
     }
     // Note: Supabase deletion can be added here if needed
   }

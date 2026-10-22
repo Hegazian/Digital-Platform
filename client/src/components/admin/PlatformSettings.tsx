@@ -40,6 +40,8 @@ interface PlatformConfig {
   exchangeRateUsdToEgp?: number | string;
   requireCourseApproval: boolean;
   allowTeacherRegistration: boolean;
+  enableCodePlaygrounds: boolean;
+  enableCollaborativeBoards: boolean;
   primaryColor: string;
   homeContent?: HomeContentConfig;
 }
@@ -59,6 +61,8 @@ export default function PlatformSettings() {
     exchangeRateUsdToEgp: 48,
     requireCourseApproval: true,
     allowTeacherRegistration: true,
+    enableCodePlaygrounds: false,
+    enableCollaborativeBoards: false,
     primaryColor: '#4f46e5',
     homeContent: DEFAULT_HOME_CONTENT,
   });
@@ -76,10 +80,6 @@ export default function PlatformSettings() {
         setConfig((prev) => ({
           ...prev,
           ...res.data,
-          siteDescriptionEn: res.data.siteDescriptionEn ?? prev.siteDescriptionEn,
-          siteDescriptionAr: res.data.siteDescriptionAr ?? prev.siteDescriptionAr,
-          sloganEn: res.data.sloganEn ?? prev.sloganEn,
-          sloganAr: res.data.sloganAr ?? prev.sloganAr,
           homeContent: res.data.homeContent ? {
             ...DEFAULT_HOME_CONTENT,
             ...res.data.homeContent,
@@ -1103,7 +1103,7 @@ export default function PlatformSettings() {
                   <input
                     type="checkbox"
                     checked={config.requireCourseApproval}
-                    onChange={(e) => setConfig({ ...config, requireCourseApproval: e.target.checked })}
+                    disabled
                     className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
                   />
                   <div>
@@ -1125,6 +1125,36 @@ export default function PlatformSettings() {
                     <span className="text-xs font-bold text-white block">Allow Teacher Applications</span>
                     <span className="text-[11px] text-slate-400">
                       Allow new educators to submit teacher registration requests from the login modal.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-3 cursor-pointer hover:border-slate-700 transition">
+                  <input
+                    type="checkbox"
+                    checked={config.enableCodePlaygrounds}
+                    disabled
+                    className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-white block">Code Runner (staged)</span>
+                    <span className="text-[11px] text-slate-400">
+                      Code execution is unavailable until a separate isolated runner passes its security review.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-3 cursor-pointer hover:border-slate-700 transition">
+                  <input
+                    type="checkbox"
+                    checked={config.enableCollaborativeBoards}
+                    disabled
+                    className="mt-1 w-4 h-4 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-0"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-white block">Collaborative Whiteboards (staged)</span>
+                    <span className="text-[11px] text-slate-400">
+                      Board APIs remain disabled until concurrency and collaboration gates pass.
                     </span>
                   </div>
                 </label>

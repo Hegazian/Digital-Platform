@@ -1,0 +1,66 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 D:/digital platform/server
+      Coverage enabled with v8
+
+
+ Test Files  16 passed (16)
+      Tests  108 passed (108)
+   Start at  00:53:45
+   Duration  22.99s (transform 2.13s, setup 4.17s, import 3.51s, tests 1.05s, environment 6ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    46.7 |    34.48 |   66.37 |   47.41 |                   
+ src               |   85.71 |    66.66 |     100 |   85.71 |                   
+  prisma.ts        |   85.71 |    66.66 |     100 |   85.71 | 5                 
+ src/modules/admin |   73.03 |    58.42 |   88.88 |   74.71 |                   
+  admin.service.ts |   73.03 |    58.42 |   88.88 |   74.71 | ...00-301,350-355 
+ ...es/assignments |   45.12 |    34.45 |      90 |   45.12 |                   
+  ...nt.service.ts |   45.12 |    34.45 |      90 |   45.12 | ...85,295,334-360 
+ src/modules/audit |    87.5 |       50 |      50 |     100 |                   
+  audit.service.ts |    87.5 |       50 |      50 |     100 | 20                
+ src/modules/auth  |   54.54 |    49.34 |   73.68 |   54.64 |                   
+  ...middleware.ts |   55.73 |    41.86 |    62.5 |   55.93 | ...10,116,132-149 
+  auth.service.ts  |   53.96 |    52.29 |   81.81 |   54.03 | ...83,346,363-372 
+ ...dules/commerce |    8.95 |     3.33 |      80 |    8.77 |                   
+  ...er.service.ts |    8.95 |     3.33 |      80 |    8.77 | 11-108,155-242    
+ ...odules/courses |   32.86 |    26.04 |      68 |   32.92 |                   
+  ...se.service.ts |   35.49 |    26.68 |    64.4 |   35.54 | ...1,711,744-1335 
+  ...on.service.ts |   15.78 |     20.4 |   66.66 |   16.21 | 44-158            
+  ...ct.service.ts |   23.33 |       25 |     100 |   23.33 | ...-84,95,128-187 
+ ...ules/materials |   80.48 |    71.42 |     100 |   80.48 |                   
+  ...al.service.ts |   80.48 |    71.42 |     100 |   80.48 | ...,89,99,128,134 
+ ...dules/progress |      15 |     7.89 |      25 |      16 |                   
+  ...ss.service.ts |      15 |     7.89 |      25 |      16 | 62-201            
+ ...odules/quizzes |   48.32 |    37.98 |   74.07 |   47.44 |                   
+  quiz.service.ts  |   48.32 |    37.98 |   74.07 |   47.44 | ...93-413,427,467 
+ .../subscriptions |   68.29 |    58.33 |     100 |   68.29 |                   
+  ...on.service.ts |   68.29 |    58.33 |     100 |   68.29 | ...37,141,154-186 
+ ...modules/videos |   58.62 |    66.66 |     100 |   58.62 |                   
+  video.service.ts |   58.62 |    66.66 |     100 |   58.62 | 57,78,92-109      
+ src/utils         |   60.52 |    26.34 |   50.98 |   61.46 |                   
+  currency.ts      |   82.35 |    57.14 |   66.66 |   82.35 | 30,48-49          
+  email.ts         |   65.51 |    46.15 |      75 |   65.51 | 31-48,74-76       
+  env.ts           |   76.92 |    55.55 |     100 |   76.92 | 21,28-31          
+  errors.ts        |      90 |       80 |   83.33 |   88.88 | 35                
+  jwt.ts           |      90 |       50 |      75 |      90 | 22                
+  schemas.ts       |   47.52 |     7.29 |    5.55 |   49.48 | ...92-395,421,474 
+  validate.ts      |   47.61 |       25 |      50 |   47.36 | 15,21-34          
+  ...k-security.ts |   70.37 |    55.55 |   88.88 |   70.83 | 16-22,59,103      
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 46.7% ( 659/1411 )
+Branches     : 34.48% ( 498/1444 )
+Functions    : 66.37% ( 154/232 )
+Lines        : 47.41% ( 641/1352 )
+================================================================================
+ERROR: Coverage for lines (47.41%) does not meet global threshold (80%)
+ERROR: Coverage for functions (66.37%) does not meet global threshold (80%)
+ERROR: Coverage for statements (46.7%) does not meet global threshold (80%)
+ERROR: Coverage for branches (34.48%) does not meet global threshold (75%)

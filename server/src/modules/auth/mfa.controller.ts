@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import bcrypt from 'bcrypt';
 import { AuthRequest } from './auth.middleware';
 import { prisma } from '../../prisma';
 import { generateSecret, generateURI } from 'otplib';
@@ -14,39 +13,21 @@ export const setupMfa = async (req: AuthRequest, res: Response) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // Re-enrolling on an MFA-active account effectively disables the existing
-    // factor, so it demands proof of identity: current password AND a code
-    // from the currently enrolled authenticator. A stolen access token alone
-    // must not be able to strip a victim's second factor.
-    if (user.mfaEnabled && user.mfaSecret) {
-      const { currentPassword, currentToken } = req.body || {};
-      if (!currentPassword || !currentToken) {
-        return res.status(400).json({
-          success: false,
-          message:
-            'MFA is already enabled. Provide your current password and a valid authenticator code to modify it.',
-        });
-      }
-
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({ success: false, message: 'Incorrect password' });
-      }
-
-      const isCodeValid = await verifyTotpToken(userId, user.mfaSecret, String(currentToken));
-      if (!isCodeValid) {
-        return res.status(401).json({ success: false, message: 'Invalid MFA token' });
-      }
+    // Factor replacement needs a separate pending enrollment (SEC-14). Until
+    // that workflow exists, setup must never disable an established factor.
+    if (user.mfaEnabled) {
+      return res.status(409).json({ success: false, message: 'MFA is already enabled. Factor replacement is currently unavailable.' });
     }
 
     const secret = generateSecret();
     const otpauth = generateURI({ label: user.email, issuer: 'EduPlatform', secret });
     const qrCode = await QRCode.toDataURL(otpauth);
 
-    await prisma.user.update({
-      where: { id: userId },
+    const initialized = await prisma.user.updateMany({
+      where: { id: userId, mfaEnabled: false },
       data: { mfaSecret: secret, mfaEnabled: false }, // Not fully enabled until verified
     });
+    if (initialized.count !== 1) return res.status(409).json({ success: false, message: 'MFA enrollment changed. Reload your profile.' });
 
     return res.status(200).json({
       success: true,

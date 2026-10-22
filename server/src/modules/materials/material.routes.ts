@@ -1,3 +1,4 @@
+import { validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
 import { Router } from 'express';
 import multer from 'multer';
 import { BadRequestError } from '../../utils/errors';
@@ -41,11 +42,11 @@ const upload = multer({
 const materialRouter = Router();
 
 // Teacher routes
-materialRouter.post('/upload', authenticate, requireApprovedTeacher, upload.single('file'), MaterialController.uploadMaterial);
+materialRouter.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, upload.single('file'), validateUploadedFile, scanUploadedFile, MaterialController.uploadMaterial);
 materialRouter.delete('/:id', authenticate, requireApprovedTeacher, MaterialController.deleteMaterial);
 
 // Student / Access route
 materialRouter.get('/lesson/:lessonId', authenticate, MaterialController.getMaterialsByLesson);
-materialRouter.get('/:id/download', authenticate, MaterialController.downloadMaterial);
+materialRouter.get('/:id/content', authenticate, MaterialController.getMaterialContent);
 
 export default materialRouter;

@@ -6,6 +6,8 @@ import { useAppStore } from '../lib/store';
 import {
   FileText,
   AlertCircle,
+  Code,
+  Pencil,
   Video as VideoIcon,
   MessageSquare,
   HelpCircle,
@@ -13,9 +15,11 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
+import { usePlaybackSource } from '../lib/usePlaybackSource';
 import { errorMessage } from '../lib/apiTypes';
+import CodePlaygroundBlock from './editor/CodePlaygroundBlock';
+import CollaborativeBoardBlock from './editor/CollaborativeBoardBlock';
 import DiscussionForum from './discussions/DiscussionForum';
-import AITutorDrawer from './ai/AITutorDrawer';
 import LMSPlayerHeader from './player/LMSPlayerHeader';
 import CurriculumSidebar, { CurriculumLesson, CurriculumModule } from './player/CurriculumSidebar';
 import PDFDocumentViewer from './player/PDFDocumentViewer';
@@ -62,15 +66,17 @@ export default function VideoPlayerSection() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<
-    'video' | 'materials' | 'quiz' | 'assignments' | 'discussions'
+    'video' | 'materials' | 'quiz' | 'assignments' | 'playground' | 'board' | 'discussions'
   >('video');
 
   // Video Player Controls
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const courseRequest = useRef(0);
+  const playback = usePlaybackSource(videoRef, activeLesson?.videoId || undefined, activeLesson?.video?.videoUrl);
+  const videoUrl = playback.url;
 
   /**
    * Access policy (TC-STUDENT-032/033): admins, the owning teacher, and
@@ -98,18 +104,49 @@ export default function VideoPlayerSection() {
 
   // Fetch Course & Curriculum Tree
   const loadCourseData = useCallback(async () => {
-    if (!selectedCourseId) return;
+    const selection = useAppStore.getState();
+    if (!selectedCourseId || selection.selectedCourseId !== selectedCourseId || selection.user?.id !== user?.id) return;
+    const request = ++courseRequest.current;
+    const current = () => request === courseRequest.current;
     setError(null);
 
     try {
       const res = await fetchApi(`/courses/${selectedCourseId}`);
-      const courseData = res.data || res;
+      if (!current()) return;
+      let courseData = res.data || res;
+      const allowed = await computeAccess(courseData);
+      if (!current()) return;
+      if (allowed) {
+        const learning = await fetchApi(`/courses/${selectedCourseId}/learning`);
+        if (!current()) return;
+        courseData = learning.data || learning;
+      }
       setCourse(courseData);
 
-      // Extract sections & lessons
+      // Extract modules & lessons
       const extractedModules: CurriculumModule[] = [];
 
-      if (courseData.sections && courseData.sections.length > 0) {
+      if (courseData.modules && courseData.modules.length > 0) {
+        courseData.modules.forEach((mod: any) => {
+          extractedModules.push({
+            id: mod.id,
+            titleEn: mod.titleEn,
+            titleAr: mod.titleAr,
+            lessons: (mod.lessons || []).map((l: any) => ({
+              id: l.id,
+              titleEn: l.titleEn,
+              titleAr: l.titleAr,
+              duration: l.estimatedDuration || 15,
+              isFreePreview: l.isFreePreview || false,
+              videoId: l.videoId,
+              video: l.video,
+              materials: l.materials || [],
+              quiz: l.quiz,
+              blocks: l.blocks || [],
+            })),
+          });
+        });
+      } else if (courseData.sections && courseData.sections.length > 0) {
         courseData.sections.forEach((sec: any) => {
           extractedModules.push({
             id: sec.id,
@@ -119,7 +156,7 @@ export default function VideoPlayerSection() {
               id: l.id,
               titleEn: l.titleEn,
               titleAr: l.titleAr,
-              duration: l.estimatedDuration || 15,
+              duration: 15,
               isFreePreview: sec.isFreePreview,
               videoId: l.videoId,
               video: l.video,
@@ -134,13 +171,13 @@ export default function VideoPlayerSection() {
       setModules(extractedModules);
 
       // Access + prior-progress hydration
-      const allowed = await computeAccess(courseData);
       setHasAccess(allowed);
       setAccessChecked(true);
 
       if (allowed && user) {
         try {
           const prog = await fetchApi(`/progress/course/${courseData.id}`);
+          if (!current()) return;
           setCompletedLessonIds(new Set(prog.data?.completedLessonIds || []));
         } catch {
           // Progress hydration is best-effort
@@ -148,48 +185,30 @@ export default function VideoPlayerSection() {
       }
 
       // Select first lesson by default
+      if (!current()) return;
       if (allowed && extractedModules.length > 0 && extractedModules[0].lessons.length > 0) {
         const firstLesson = extractedModules[0].lessons[0];
         setActiveLesson(firstLesson);
-        loadLessonVideo(firstLesson);
       }
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to load course curriculum'));
+      if (current()) setError(errorMessage(err, 'Failed to load course curriculum'));
     }
   }, [selectedCourseId, user, computeAccess]);
 
   useEffect(() => {
-    loadCourseData();
+    setCourse(null);
+    setModules([]);
+    setActiveLesson(null);
+    setCompletedLessonIds(new Set());
+    setHasAccess(false);
+    setAccessChecked(false);
+    setActiveTab('video');
+    setShowCheckout(false);
+    setEnrolling(false);
+    setMessage(null);
+    void loadCourseData();
+    return () => { courseRequest.current += 1; };
   }, [loadCourseData]);
-
-  // Load video for active lesson
-  const loadLessonVideo = async (lesson: CurriculumLesson) => {
-    setError(null);
-    setVideoUrl(null);
-
-    // Absolute http(s) URLs (e.g. Supabase public assets) are playable as-is.
-    if (lesson.video?.videoUrl && /^https?:\/\//i.test(lesson.video.videoUrl)) {
-      setVideoUrl(lesson.video.videoUrl);
-      return;
-    }
-
-    if (lesson.videoId) {
-      try {
-        // Secure flow: server checks entitlement and returns either a signed
-        // cloud URL or a short-lived token-gated stream URL for local files.
-        // Raw '/uploads/...' paths are NEVER playable from the client origin.
-        const res = await fetchApi(`/videos/${lesson.videoId}/playback-url`);
-        if (res.data?.playbackUrl) {
-          setVideoUrl(res.data.playbackUrl);
-          return;
-        }
-      } catch {
-        // fall through to empty state below
-      }
-      setVideoUrl(null);
-      // No demo fallback: lessons without a playable video show an empty state.
-    }
-  };
 
   const handleEnroll = async () => {
     if (!user) {
@@ -205,20 +224,22 @@ export default function VideoPlayerSection() {
 
     setEnrolling(true);
     setError(null);
+    const current = () => useAppStore.getState().selectedCourseId === selectedCourseId && useAppStore.getState().user?.id === user.id;
     try {
       await fetchApi(`/courses/${selectedCourseId}/enroll`, { method: 'POST' });
-      setHasAccess(true);
-      setMessage('Enrolled successfully — start learning below!');
+      if (!current()) return;
+      await loadCourseData();
+      if (current()) setMessage('Enrolled successfully — start learning below!');
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to enroll'));
+      if (current()) setError(errorMessage(err, 'Failed to enroll'));
     } finally {
-      setEnrolling(false);
+      if (current()) setEnrolling(false);
     }
   };
 
   const handleSelectLesson = (lesson: CurriculumLesson) => {
+    if (activeLesson?.id === lesson.id) playback.retry();
     setActiveLesson(lesson);
-    loadLessonVideo(lesson);
     // Switch to video tab by default on lesson change
     setActiveTab('video');
   };
@@ -388,6 +409,8 @@ export default function VideoPlayerSection() {
                 icon: HelpCircle,
               },
               { id: 'assignments', label: 'Assignments', icon: FileText },
+              { id: 'playground', label: 'Code Playground', icon: Code },
+              { id: 'board', label: 'Whiteboard', icon: Pencil },
               { id: 'discussions', label: 'Q&A Discussions', icon: MessageSquare },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -422,6 +445,7 @@ export default function VideoPlayerSection() {
                     playsInline
                     className="w-full h-full object-contain"
                     onEnded={handleLessonCompleted}
+                    onLoadedMetadata={playback.onLoadedMetadata}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 space-y-3">
@@ -429,7 +453,7 @@ export default function VideoPlayerSection() {
                       <VideoIcon className="w-7 h-7 text-slate-600" />
                     </div>
                     <div className="text-center space-y-1">
-                      <p className="text-xs font-semibold text-slate-400">No video stream loaded</p>
+                      <p role={playback.error ? 'alert' : undefined} className="text-xs font-semibold text-slate-400">{playback.error ? (lang === 'ar' ? 'تعذر تجديد الوصول إلى الفيديو. أعد اختيار الدرس للمحاولة.' : playback.error) : 'No video stream loaded'}</p>
                       <p className="text-[11px] text-slate-600">Select a lesson from the curriculum to begin</p>
                     </div>
                   </div>
@@ -509,6 +533,18 @@ export default function VideoPlayerSection() {
             <AssignmentRunner lessonId={activeLesson.id} />
           )}
 
+          {activeTab === 'playground' && (
+            <div className="glass-panel p-6 rounded-3xl border border-slate-800">
+              <CodePlaygroundBlock />
+            </div>
+          )}
+
+          {activeTab === 'board' && (
+            <div className="glass-panel p-6 rounded-3xl border border-slate-800">
+              <CollaborativeBoardBlock />
+            </div>
+          )}
+
           {activeTab === 'discussions' && selectedCourseId && (
             <div className="glass-panel p-6 rounded-3xl border border-slate-800">
               <DiscussionForum courseId={selectedCourseId} lessonId={activeLesson?.id} />
@@ -528,8 +564,6 @@ export default function VideoPlayerSection() {
         </div>
       </div>
 
-      {/* Embedded Gemini AI Tutor Floating Drawer */}
-      <AITutorDrawer />
       </>
       )}
 
@@ -546,18 +580,13 @@ export default function VideoPlayerSection() {
           onClose={() => setShowCheckout(false)}
           onAccessGranted={async () => {
             setShowCheckout(false);
-            setHasAccess(true);
+            await loadCourseData();
             setMessage('Payment verified — start learning below!');
             if (user) {
               try {
                 const prog = await fetchApi(`/progress/course/${course.id}`);
                 setCompletedLessonIds(new Set(prog.data?.completedLessonIds || []));
               } catch {}
-              const first = modules[0]?.lessons[0];
-              if (first && !activeLesson) {
-                setActiveLesson(first);
-                loadLessonVideo(first);
-              }
             }
           }}
         />

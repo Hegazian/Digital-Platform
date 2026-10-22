@@ -4,24 +4,22 @@ import { VideoStatus } from '@prisma/client';
 import { StorageService } from '../../utils/storage';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
+import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
 
 export class VideoService {
   /**
    * Upload a video to Supabase Storage (or local fallback) and create a record.
    */
-  static async uploadVideo(
-    teacherId: string,
-    fileBufferOrPath: Buffer | string,
-    fileName: string,
-    mimeType: string,
-    sizeBytes: number
-  ) {
+  static async uploadVideo(teacherId: string, fileBuffer: Buffer, fileName: string, mimeType: string, sizeBytes: number) {
     // 1. Upload to storage bucket "lesson-videos"
-    const videoUrl = await StorageService.uploadFile(fileBufferOrPath, fileName, mimeType, 'lesson-videos');
+    const videoId = randomUUID();
+    const videoUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-videos', videoId);
 
     // 2. Create database record
     return await prisma.video.create({
       data: {
+        id: videoId,
         teacherId,
         videoUrl,
         originalFileName: fileName,
@@ -49,6 +47,11 @@ export class VideoService {
                 course: true,
               },
             },
+            module: {
+              include: {
+                course: true,
+              },
+            },
           },
         },
       },
@@ -59,8 +62,9 @@ export class VideoService {
     }
 
     // Owner or admin bypass
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user && (user.role === 'ADMIN' || video.teacherId === userId)) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, isActive: true } });
+    if (!user?.isActive) return false;
+    if (user.role === 'ADMIN' || video.teacherId === userId) {
       return true;
     }
 
@@ -70,8 +74,8 @@ export class VideoService {
     }
 
     // Check active entitlement or subscription via EntitlementResolver
-    const courseId = video.lesson?.section?.courseId;
-    const subjectId = video.lesson?.section?.course?.subjectId;
+    const courseId = video.lesson?.module?.courseId || video.lesson?.section?.courseId;
+    const subjectId = video.lesson?.module?.course?.subjectId || video.lesson?.section?.course?.subjectId;
 
     if (courseId || subjectId) {
       const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
@@ -100,13 +104,15 @@ export class VideoService {
       throw new NotFoundError('Video file not found');
     }
 
+    if (/^https?:\/\//i.test(video.videoUrl)) return externalContentUrl(video.videoUrl);
+    const internalPath = boundObjectKey(video.videoUrl, 'lesson-videos', video.id);
     if (video.videoUrl.startsWith('/uploads/')) {
       // Local fallback: generate a short-lived JWT token that the frontend can use to hit our streaming endpoint
-      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '2h' });
+      const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '120s', jwtid: randomUUID() });
       return `/api/v1/videos/${video.id}/stream?token=${token}`;
     }
 
     // Supabase Storage: generate a signed URL
-    return await StorageService.getSignedUrl(video.videoUrl, 7200); // 2 hours
+    return await StorageService.getSignedUrl(internalPath, 120);
   }
 }

@@ -62,12 +62,16 @@ export class ProgressService {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       select: {
+        modules: { select: { lessons: { select: { id: true } } } },
         sections: { select: { lessons: { select: { id: true } } } },
       },
     });
     if (!course) throw new NotFoundError('Course not found');
 
-    const lessonIds = (course.sections || []).flatMap((s) => s.lessons.map((l) => l.id));
+    const lessonIds = [
+      ...(course.modules || []).flatMap((m) => m.lessons.map((l) => l.id)),
+      ...(course.sections || []).flatMap((s) => s.lessons.map((l) => l.id)),
+    ];
 
     if (lessonIds.length === 0) return { completedLessonIds: [], totalLessons: 0 };
 
@@ -98,6 +102,11 @@ export class ProgressService {
       },
       include: {
         subject: true,
+        modules: {
+          include: {
+            lessons: true,
+          },
+        },
         sections: {
           include: {
             lessons: true,
@@ -160,7 +169,10 @@ export class ProgressService {
       let lastLessonTitle = 'Get Started';
       let lastWatchedDate = new Date(0);
 
-      const allLessons = (course.sections || []).flatMap((s: any) => s.lessons || []);
+      const allLessons = [
+        ...(course.modules || []).flatMap((m: any) => m.lessons || []),
+        ...(course.sections || []).flatMap((s: any) => s.lessons || []),
+      ];
 
       allLessons.forEach((les: any) => {
         totalLessons++;

@@ -1,0 +1,117 @@
+{
+  "checkedAt": "2026-10-22T08:30:48.126Z",
+  "packages": [
+    {
+      "name": "server",
+      "lockSha256": "2b0810fab3257fe4ef16da1314bcbff201fafd46772b30e671639165a4cfb347",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "runtimeAdvisoryPackages": 0,
+      "issues": []
+    },
+    {
+      "name": "client",
+      "lockSha256": "1dea396cc0109f451585f840d674fed65274433cb4f72601177db2bf3203f4ed",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 2,
+        "high": 7,
+        "critical": 0,
+        "total": 9
+      },
+      "runtimeAdvisoryPackages": 0,
+      "exceptionExpiry": "2027-01-19T00:00:00Z",
+      "issues": [
+        {
+          "name": "@next/eslint-plugin-next",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/@next/eslint-plugin-next"
+          ]
+        },
+        {
+          "name": "braces",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/braces"
+          ]
+        },
+        {
+          "name": "chokidar",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/chokidar"
+          ]
+        },
+        {
+          "name": "eslint-config-next",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/eslint-config-next"
+          ]
+        },
+        {
+          "name": "fast-glob",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/fast-glob",
+            "node_modules/tailwindcss/node_modules/fast-glob"
+          ]
+        },
+        {
+          "name": "micromatch",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/micromatch"
+          ]
+        },
+        {
+          "name": "postcss-nested",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-nested"
+          ]
+        },
+        {
+          "name": "postcss-selector-parser",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-selector-parser"
+          ]
+        },
+        {
+          "name": "tailwindcss",
+          "severity": "high",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/tailwindcss"
+          ]
+        }
+      ]
+    }
+  ]
+}

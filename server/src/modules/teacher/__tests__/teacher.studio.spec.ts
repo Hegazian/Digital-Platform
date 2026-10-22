@@ -147,6 +147,14 @@ describe('Teacher Studio Facilities Integration Tests', () => {
   });
 
   describe('POST /api/v1/teacher/announcements', () => {
+    it('rejects attempts to supply a different teacher identity', async () => {
+      const res = await request(app)
+        .post('/api/v1/teacher/announcements')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({ courseId, teacherId: 'another-teacher', titleEn: 'x', titleAr: 'x', messageEn: 'x', messageAr: 'x' });
+      expect(res.status).toBe(400);
+    });
+
     it('should allow teacher to broadcast an announcement to enrolled students', async () => {
       const res = await request(app)
         .post('/api/v1/teacher/announcements')

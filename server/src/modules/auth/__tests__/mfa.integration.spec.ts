@@ -95,7 +95,8 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
     expect(res.body.success).toBe(false);
   });
 
-  it('POST /api/v1/mfa/setup - re-enrollment demands currentPassword and currentToken', async () => {
+  it('POST /api/v1/mfa/setup - preserves an enabled factor when replacement is unavailable', async () => {
+    const before = await prisma.user.findUniqueOrThrow({ where: { id: adminId }, select: { mfaEnabled: true, mfaSecret: true } });
     // Reset consumed time step so current time window is accepted as a new code
     await prisma.user.update({
       where: { id: adminId },
@@ -107,7 +108,7 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
       .post('/api/v1/mfa/setup')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({});
-    expect(resNoCreds.status).toBe(400);
+    expect(resNoCreds.status).toBe(409);
     expect(resNoCreds.body.message).toContain('MFA is already enabled');
 
     // 2. With wrong password
@@ -116,25 +117,23 @@ describe('Multi-Factor Authentication (MFA) API (TDD)', () => {
       .post('/api/v1/mfa/setup')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ currentPassword: 'WrongPassword!', currentToken: currentTotp });
-    expect(resWrongPass.status).toBe(401);
-    expect(resWrongPass.body.message).toContain('Incorrect password');
+    expect(resWrongPass.status).toBe(409);
 
     // 3. With wrong TOTP code
     const resWrongTotp = await request(app)
       .post('/api/v1/mfa/setup')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ currentPassword: 'password123', currentToken: '000000' });
-    expect(resWrongTotp.status).toBe(401);
-    expect(resWrongTotp.body.message).toContain('Invalid MFA token');
+    expect(resWrongTotp.status).toBe(409);
 
     // 4. With valid current password and valid current TOTP code
     const resSuccess = await request(app)
       .post('/api/v1/mfa/setup')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ currentPassword: 'password123', currentToken: currentTotp });
-    expect(resSuccess.status).toBe(200);
-    expect(resSuccess.body.success).toBe(true);
-    expect(resSuccess.body.data.secret).toBeDefined();
-    expect(resSuccess.body.data.qrCode).toBeDefined();
+    expect(resSuccess.status).toBe(409);
+    expect(resSuccess.body.data).toBeUndefined();
+    const after = await prisma.user.findUniqueOrThrow({ where: { id: adminId }, select: { mfaEnabled: true, mfaSecret: true } });
+    expect(after).toEqual(before);
   });
 });

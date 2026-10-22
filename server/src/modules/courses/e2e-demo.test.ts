@@ -18,7 +18,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
 
   let testSubject: any;
   let createdCourse: any;
-  let createdSection: any;
+  let createdModule: any;
   let createdLesson: any;
   let generatedVoucherCode: string;
 
@@ -38,7 +38,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     adminToken = jwt.sign(
-      { userId: adminUser.id, role: adminUser.role },
+      { userId: adminUser.id, role: adminUser.role, authVersion: adminUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -57,7 +57,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     teacherToken = jwt.sign(
-      { userId: teacherUser.id, role: teacherUser.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: teacherUser.id, role: teacherUser.role, teacherStatus: TeacherStatus.APPROVED, authVersion: teacherUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -76,7 +76,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     otherTeacherToken = jwt.sign(
-      { userId: otherTeacherUser.id, role: otherTeacherUser.role, teacherStatus: TeacherStatus.APPROVED },
+      { userId: otherTeacherUser.id, role: otherTeacherUser.role, teacherStatus: TeacherStatus.APPROVED, authVersion: otherTeacherUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -94,7 +94,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       },
     });
     studentToken = jwt.sign(
-      { userId: studentUser.id, role: studentUser.role },
+      { userId: studentUser.id, role: studentUser.role, authVersion: studentUser.authVersion },
       process.env.JWT_SECRET || 'test_secret',
       { expiresIn: '1h' }
     );
@@ -130,15 +130,15 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
     expect(createdCourse.teacherId).toBe(teacherUser.id);
     expect(createdCourse.status).toBe('DRAFT');
 
-    // 1.2 Verification: Another teacher CANNOT edit or add sections to this course (403 Forbidden)
-    const unauthorizedSectionRes = await request(app)
-      .post(`/api/v1/courses/${createdCourse.id}/sections`)
+    // 1.2 Verification: Another teacher CANNOT edit or add modules to this course (403 Forbidden)
+    const unauthorizedModuleRes = await request(app)
+      .post(`/api/v1/courses/${createdCourse.id}/modules`)
       .set('Authorization', `Bearer ${otherTeacherToken}`)
       .send({
-        titleEn: 'Malicious Injected Section',
-        titleAr: 'قسم غير مصرح به',
+        titleEn: 'Malicious Injected Module',
+        titleAr: 'وحدة غير مصرح بها',
       });
-    expect(unauthorizedSectionRes.status).toBe(403);
+    expect(unauthorizedModuleRes.status).toBe(403);
 
     const unauthorizedEditRes = await request(app)
       .patch(`/api/v1/courses/${createdCourse.id}`)
@@ -146,9 +146,9 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       .send({ titleEn: 'Hacked Title' });
     expect(unauthorizedEditRes.status).toBe(403);
 
-    // 1.3 Course Owner creates Chapter/Section
-    const sectionRes = await request(app)
-      .post(`/api/v1/courses/${createdCourse.id}/sections`)
+    // 1.3 Course Owner creates Chapter/Module
+    const moduleRes = await request(app)
+      .post(`/api/v1/courses/${createdCourse.id}/modules`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Unit 1: Linear Motion and Acceleration',
@@ -156,12 +156,12 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         description: 'Scalars, vectors, displacement-time graphs, and uniform acceleration equations.',
       });
 
-    expect(sectionRes.status).toBe(201);
-    createdSection = sectionRes.body.data;
+    expect(moduleRes.status).toBe(201);
+    createdModule = moduleRes.body.data;
 
     // 1.4 Course Owner creates Lesson with Video, PDFs, and Quiz
     const lessonRes = await request(app)
-      .post(`/api/v1/courses/sections/${createdSection.id}/lessons`)
+      .post(`/api/v1/courses/modules/${createdModule.id}/lessons`)
       .set('Authorization', `Bearer ${teacherToken}`)
       .send({
         titleEn: 'Lesson 1.1: Uniform Accelerated Motion & Vectors',
@@ -170,7 +170,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         estimatedDuration: 45,
         video: {
           title: 'kinematics-lecture-full-hd.mp4',
-          videoUrl: 'https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4',
+          videoUrl: 'https://content.example/physics-sec1-lesson1.mp4',
           duration: 2700,
         },
         materials: [
@@ -301,7 +301,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
 
     // 3.4 Student fetches published course and consumes lesson
     const courseDetailsRes = await request(app)
-      .get(`/api/v1/courses/${createdCourse.id}`)
+      .get(`/api/v1/courses/${createdCourse.id}/learning`)
       .set('Authorization', `Bearer ${studentToken}`);
 
     expect(courseDetailsRes.status).toBe(200);
@@ -309,8 +309,15 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
     expect(courseData.isPublished).toBe(true);
     expect(courseData.priceEgp).toBeDefined();
     expect(courseData.teacher.id).toBe(teacherUser.id);
-    expect(courseData.sections.length).toBeGreaterThan(0);
-    expect(courseData.sections[0].lessons[0].video.videoUrl).toBe('https://cdn.eduplatform.com/videos/physics-sec1-lesson1.mp4');
+    expect(courseData.modules.length).toBeGreaterThan(0);
+    const video = courseData.modules[0].lessons[0].video;
+    expect(video.id).toBeDefined();
+    expect(video.videoUrl).toBeUndefined();
+    const playback = await request(app)
+      .get(`/api/v1/videos/${video.id}/playback-url`)
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(playback.status).toBe(200);
+    expect(playback.body.data.playbackUrl).toBe('https://content.example/physics-sec1-lesson1.mp4');
   });
 
   // STEP 4: Admin Edit & Delete Powers

@@ -1,0 +1,7 @@
+* text=auto eol=lf
+# Historical evidence is hash-verified byte for byte on Windows and Linux.
+docs/archive/** -text -whitespace
+audit/** -text -whitespace
+# Advisory evidence identifies the exact lockfile bytes on every platform.
+**/package-lock.json -text whitespace=cr-at-eol
+client/e2e/fixtures/*.webm -text
