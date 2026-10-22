@@ -177,6 +177,38 @@ describe('Secure Video Playback Pipeline', () => {
     const sliced = Buffer.isBuffer(ranged.body) ? ranged.body : Buffer.from(ranged.body ?? []);
     expect(sliced.length).toBe(10);
 
+    const openEnded = await request(app)
+      .get(`/api/v1${streamPath}`)
+      .set('Range', 'bytes=10-')
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      });
+    expect(openEnded.status).toBe(206);
+    expect(openEnded.headers['content-range']).toBe(`bytes 10-${FIXTURE_BYTES.length - 1}/${FIXTURE_BYTES.length}`);
+    expect(Buffer.isBuffer(openEnded.body) ? openEnded.body : Buffer.from(openEnded.body ?? [])).toEqual(FIXTURE_BYTES.subarray(10));
+
+    const suffix = await request(app)
+      .get(`/api/v1${streamPath}`)
+      .set('Range', 'bytes=-10')
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      });
+    expect(suffix.status).toBe(206);
+    expect(suffix.headers['content-range']).toBe(`bytes ${FIXTURE_BYTES.length - 10}-${FIXTURE_BYTES.length - 1}/${FIXTURE_BYTES.length}`);
+    expect(Buffer.isBuffer(suffix.body) ? suffix.body : Buffer.from(suffix.body ?? [])).toEqual(FIXTURE_BYTES.subarray(-10));
+
+    for (const invalidRange of ['bytes=999999-', 'bytes=20-10', 'bytes=-0', 'bytes=0-1,4-5', 'items=0-1']) {
+      const rejected = await request(app).get(`/api/v1${streamPath}`).set('Range', invalidRange);
+      expect(rejected.status, invalidRange).toBe(416);
+      expect(rejected.headers['content-range']).toBe(`bytes */${FIXTURE_BYTES.length}`);
+    }
+
     const forged = await request(app).get(`/api/v1/videos/${videoId}/stream?token=forged-token`);
     expect(forged.status).toBe(401);
   });

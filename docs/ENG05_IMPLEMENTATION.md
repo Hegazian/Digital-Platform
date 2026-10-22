@@ -1,6 +1,6 @@
 # ENG-05 migration implementation evidence
 
-Status: **In Progress**. The baseline and synthetic migration tests are implemented. Remote Node 22 CI passed for this branch; an authorized representative backup/restore rehearsal and production adoption review remain open. See the [full ENG-05 acceptance criteria](tasks/ENG-05.md), [migration artifacts](../server/prisma/fixtures/migrations-readme.md) and [next steps](NEXT_STEPS.md#first-implementation-task--eng-05).
+Status: **In Progress**. The baseline and synthetic migration tests are implemented. Exact-head Node 22 CI passed for commit `b6dd8d462a1f4d111f94c6125259d0576738beb9`; an authorized representative backup/restore rehearsal and production adoption review remain open. See the [full ENG-05 acceptance criteria](tasks/ENG-05.md), [migration artifacts](../server/prisma/fixtures/migrations-readme.md) and [next steps](NEXT_STEPS.md#eng-05-operational-follow-through).
 
 ## Migration design
 

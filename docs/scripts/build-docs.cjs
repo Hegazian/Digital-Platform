@@ -32,7 +32,7 @@ const statusOverrides = {
   'SEC-01': 'Complete', 'SEC-02': 'Complete', 'SEC-03': 'Complete',
   'SEC-04': 'Complete', 'SEC-05': 'Complete', 'SEC-08': 'Complete',
   'SEC-09': 'Complete', 'SEC-10': 'Complete', 'SEC-11': 'Complete',
-  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-05': 'In Progress', 'ENG-06': 'In Progress', 'ENG-13': 'In Progress',
+  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-05': 'In Progress', 'ENG-06': 'In Progress', 'ENG-09': 'In Progress', 'ENG-13': 'In Progress',
   'ENG-15': 'Complete'
 };
 

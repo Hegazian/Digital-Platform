@@ -59,7 +59,7 @@ Every finding keeps its original ID in exactly one file, has a release milestone
 | ENG-06 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | M1 | In Progress | [A38](#a38); required before assigned milestone exit. Tests ENG-06-T01 onward and T90–T92. |
 | ENG-07 | [ENG-07](tasks/ENG-07.md) — Persist actual audit actors and durable outbox events | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-07-T01 onward and T90–T92. |
 | ENG-08 | [ENG-08](tasks/ENG-08.md) — Make public reads side-effect free and reference keys unique | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-08-T01 onward and T90–T92. |
-| ENG-09 | [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | M1 | Planned | [A29](#a29); required before assigned milestone exit. Tests ENG-09-T01 onward and T90–T92. |
+| ENG-09 | [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | M1 | In Progress | [A29](#a29); required before assigned milestone exit. Tests ENG-09-T01 onward and T90–T92. |
 | ENG-10 | [ENG-10](tasks/ENG-10.md) — Bound queries, shared rate limits and sensitive logging | M3 | Planned | [A04](#a04), [A38](#a38); required before assigned milestone exit. Tests ENG-10-T01 onward and T90–T92. |
 | ENG-11 | [ENG-11](tasks/ENG-11.md) — Add verification, password recovery and secure account changes | M3 | Planned | [A33](#a33); recovery launch; guardian portal ENH-11 M4. Tests ENG-11-T01 onward and T90–T92. |
 | ENG-12 | [ENG-12](tasks/ENG-12.md) — Gate developer integrations and specify complete later enablement | M4 | Planned | [A40](#a40); API disabled by ENG-03; implementation M4. Tests ENG-12-T01 onward and T90–T92. |

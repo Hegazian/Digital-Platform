@@ -52,7 +52,7 @@ The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with
 
 ## Production and later-release holds
 
-1. Run the remote CI workflow for the committed branch and preserve its artifacts. Accumulate the remaining M1–M3 journeys and meet the full-source release target; the latest M0 suite has 24 browser checks passing in each mode without skips, which does not cover every feature.
+1. Preserve the successful exact-head CI artifacts for `b6dd8d462a1f4d111f94c6125259d0576738beb9` ([run 39788280147](https://github.com/Hegazian/Digital-Platform/actions/runs/39788280147)); repeat on the exact release commit. Accumulate the remaining M1–M3 journeys and meet the full-source release target; the latest M0 suite has 24 browser checks passing in each mode without skips, which does not cover every feature.
 2. In the deployment environment, rotate any previously used or exposed credentials; verify the deployed secrets and remove bootstrap credentials.
 3. Provision the production private storage bucket and test that its origin denies anonymous reads; verify object migration and authorized playback/download end to end.
 4. Provision ClamAV, run clean/infected/unavailable/timeout upload checks through the production upload route, and ensure the reverse proxy enforces upload size limits.

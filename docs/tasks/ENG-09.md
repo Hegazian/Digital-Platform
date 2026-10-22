@@ -5,7 +5,7 @@
 | Stable ID | ENG-09 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Media transport containment; ENH-03 owns processing |
 | Dependencies | [SEC-03](SEC-03.md) |
 | Original finding / request | [ENG-09 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **d9c720f**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **22 October 2026** against application commit **d9c720f**. M1 implementation has started. The local protected stream now parses a single byte range strictly, supports suffix/open-ended ranges, clamps valid ends, returns 416 with Content-Range for malformed/multiple/unsatisfiable ranges, and stops file reads on client disconnect. The authenticated playback integration test covers these cases. Memory-bounded upload handling, processing status/MIME correctness, upload concurrency and full target-device playback remain open; ENH-03 owns the eventual managed-media pipeline. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

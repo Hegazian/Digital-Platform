@@ -1,8 +1,8 @@
 # Current implementation status
 
-Documentation refreshed **22 October 2026**. Latest M0 application/browser regression checkpoint: **d9c720f**, on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. ENG-05's schema migration and populated fixture were separately executed against this working tree; its exact branch CI run is recorded in [migration evidence](ENG05_IMPLEMENTATION.md). This page summarizes [22 October machine-readable M0 evidence](../audit/review-round-2/verification.json).
+Documentation refreshed **22 October 2026**. M0 application/browser regression checkpoint: **d9c720f**; latest reliability implementation and exact-head CI commit: **b6dd8d462a1f4d111f94c6125259d0576738beb9** on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. ENG-05's schema migration and populated fixture were separately executed against this working tree. This page summarizes [22 October machine-readable M0 evidence](../audit/review-round-2/verification.json) and the [latest exact-head CI run](https://github.com/Hegazian/Digital-Platform/actions/runs/39788280147).
 
-**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 3 In Progress, 59 Planned**. ENG-05, ENG-06 and ENG-13 are In Progress. ENG-05's exact branch CI passed; representative backup/restore and rollback evidence remain open. See [ENG-05 evidence](ENG05_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
+**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 4 In Progress, 58 Planned**. ENG-05, ENG-06 and ENG-13 are In Progress. ENG-05's exact branch CI passed; representative backup/restore and rollback evidence remain open. See [ENG-05 evidence](ENG05_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
 
 ## Latest local verification — 22 October
 
@@ -19,7 +19,7 @@ Documentation refreshed **22 October 2026**. Latest M0 application/browser regre
 | Client whole-source coverage, statements / branches / functions / lines | 11.29% / 11.33% / 6.57% / 10.88% |
 | NPM audit, both runtime trees | 0 reported advisory packages; server 0 total; client 9 development-only exceptions |
 | Migration install / populated-upgrade fixture | Passed locally in unique schemas in dedicated PostgreSQL test database; schemas cleaned up |
-| Remote CI / production deployment | Configured, not verified remotely / not performed |
+| Remote CI / production deployment | All five checks passed for b6dd8d462a1f4d111f94c6125259d0576738beb9 / not performed |
 
 Local environment: Windows, Node 26.7.0; CI is configured for Node 22. Browser runs use Chromium 156.0.8078.4, desktop and Pixel 5 emulation. These runs do not establish Firefox/WebKit or actual Android/iOS device acceptance. The two browser modes execute the same 24 checks; they are not 48 distinct feature cases.
 
@@ -43,4 +43,4 @@ Automated Paymob/Fawry, guardian portal, certificates, offline packs, realtime w
 
 ## Current execution frontier
 
-**Continue [ENG-05](tasks/ENG-05.md) through authorized restore/recovery evidence.** Its exact branch CI passed. [ENG-06](tasks/ENG-06.md) is In Progress as the next independent reliability task; other ready M1 work is [ENG-02](tasks/ENG-02.md), [ENG-09](tasks/ENG-09.md). Readiness means prerequisites permit starting, not that implementation or tests have passed. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining ENG-05 evidence.
+**M1 is active. Continue [ENG-09](tasks/ENG-09.md); its first change hardens byte-range playback.** [ENG-05](tasks/ENG-05.md) and [ENG-06](tasks/ENG-06.md) code and exact-head CI are green; both stay In Progress pending named operator/infrastructure rehearsals. Other dependency-ready M1 work is [ENG-02](tasks/ENG-02.md). Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining acceptance evidence.

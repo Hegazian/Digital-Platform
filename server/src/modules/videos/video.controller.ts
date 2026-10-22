@@ -113,28 +113,59 @@ export class VideoController {
       const fileSize = stat.size;
       const range = req.headers.range;
       const contentType = ({ '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.mpeg': 'video/mpeg', '.mpg': 'video/mpeg' } as Record<string, string>)[path.extname(realFilePath).toLowerCase()] || 'video/mp4';
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Type', contentType);
 
       if (range) {
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunksize = (end - start) + 1;
-        const file = fs.createReadStream(realFilePath, { start, end });
-        const head = {
+        const parsed = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+        let start: number;
+        let end: number;
+        if (!parsed || fileSize === 0 || (!parsed[1] && !parsed[2])) {
+          res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+          return;
+        }
+        if (!parsed[1]) {
+          const suffixLength = Number(parsed[2]);
+          if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) {
+            res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+            return;
+          }
+          start = Math.max(0, fileSize - suffixLength);
+          end = fileSize - 1;
+        } else {
+          start = Number(parsed[1]);
+          end = parsed[2] ? Number(parsed[2]) : fileSize - 1;
+          if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= fileSize || end < start) {
+            res.status(416).setHeader('Content-Range', `bytes */${fileSize}`).end();
+            return;
+          }
+          end = Math.min(end, fileSize - 1);
+        }
+        const chunksize = end - start + 1;
+        res.status(206).set({
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': contentType,
-        };
-        res.writeHead(206, head);
+          'Content-Length': String(chunksize),
+        });
+        const file = fs.createReadStream(realFilePath, { start, end });
+        file.on('error', (error) => {
+          if (res.headersSent) res.destroy(error);
+          else next(error);
+        });
+        res.on('close', () => {
+          if (!res.writableEnded) file.destroy();
+        });
         file.pipe(res);
       } else {
-        const head = {
-          'Content-Length': fileSize,
-          'Content-Type': contentType,
-        };
-        res.writeHead(200, head);
-        fs.createReadStream(realFilePath).pipe(res);
+        res.status(200).set('Content-Length', String(fileSize));
+        const file = fs.createReadStream(realFilePath);
+        file.on('error', (error) => {
+          if (res.headersSent) res.destroy(error);
+          else next(error);
+        });
+        res.on('close', () => {
+          if (!res.writableEnded) file.destroy();
+        });
+        file.pipe(res);
       }
     } catch (error) {
       next(error);

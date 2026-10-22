@@ -2242,7 +2242,7 @@
       "title": "Bound existing media handling and stream ranges correctly",
       "priority": "P1",
       "milestone": "M1",
-      "status": "Planned",
+      "status": "In Progress",
       "dependencies": [
         "SEC-03"
       ],
