@@ -13,11 +13,11 @@ Status: **In Progress**. This first implementation covers truthful liveness/read
 
 ## Verification
 
-The targeted server suite passed **37 tests across 7 files**, covering readiness responses and failure privacy, shutdown-state reporting, local marker cleanup, production storage selection, Supabase upload failure without local fallback, graceful/expired drains, and existing video/material/assignment upload behavior. Server typecheck and production build passed. The ENG-05 remote workflow at [run 39781488417](https://github.com/Hegazian/Digital-Platform/actions/runs/39781488417) confirms the previous branch revision's full test/build/browser matrix; this ENG-06 code has not yet been pushed or run remotely.
+The targeted server suite passed **37 tests across 7 files**, covering readiness responses and failure privacy, shutdown-state reporting, local marker cleanup, production storage selection, Supabase upload failure without local fallback, graceful/expired drains, and existing video/material/assignment upload behavior. Server typecheck and production build passed. Commit **b6dd8d462a1f4d111f94c6125259d0576738beb9** was pushed and all five Node 22 checks passed in [run 39788280147](https://github.com/Hegazian/Digital-Platform/actions/runs/39788280147). Later integration evidence is recorded in [the final M0 review](M0_FINAL_REVIEW.md); this historical run is not attributed to subsequent code.
 
 ## Remaining work
 
-- [ ] Push this implementation and retain its Node 22 CI evidence.
+- [x] Push this implementation and retain its Node 22 CI evidence.
 - [ ] Test readiness against real local PostgreSQL outage and configured Supabase outage, including recovery to ready.
 - [ ] Rehearse SIGTERM while an HTTP request is held open and while an upload is in progress; verify the request outcome is honest and no local fallback object is created.
 - [ ] Integrate a dispatcher readiness signal when ENG-07's durable outbox/worker exists; do not report queue health for a dispatcher that is not deployed.

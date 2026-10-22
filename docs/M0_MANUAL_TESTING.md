@@ -2,7 +2,7 @@
 
 Use synthetic accounts and the local test/development database. These steps verify the M0 safety changes; full authoring, payments, imports and progress acceptance remain in their M1–M3 tasks.
 
-Reviewed **22 October 2026** against **d9c720f**. The [current status](CURRENT_STATUS.md) records 397 server tests, 63 client tests and 24 browser checks passing in each production/development mode. Repeating these steps supplies evidence for your environment; the documentation refresh did not rerun them. After validating M0 locally, follow [ENG-05 and the M1 plan](NEXT_STEPS.md). Existing `db:push:test` usage below is confined to disposable test databases until the migration task replaces it.
+Reviewed **22 October 2026**. The [current status](CURRENT_STATUS.md) records the tested integration revision, fresh suite counts and browser modes. Repeating these steps supplies evidence for your environment. After validating M0 locally, follow [ENG-05 and the M1 plan](NEXT_STEPS.md). Empty installs use the reviewed migration chain. Existing populated databases require the [read-only comparison and history-adoption runbook](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold); never run baseline CREATE TABLE statements blindly.
 
 ## 1. Prepare the isolated automated environment
 
@@ -28,7 +28,8 @@ These are disposable test values, not production secrets. Both database URLs mus
 cd 'D:\digital platform\server'
 npm ci
 npx prisma generate
-npm run db:push:test
+npm run db:migrate:test
+npm run db:migrate:fixture
 npm run typecheck
 npm run test:coverage
 
@@ -80,6 +81,8 @@ The command refuses existing emails and never resets an existing account. Start 
 5. Open every admin and teacher dashboard tab. API & Webhooks / API & Docs shows a bilingual unavailable notice and sends no `/developer/tokens` or `/developer/webhooks` requests. Direct API calls remain denied by the server. Inspect a course as an admin: its actual modules/lessons must load, with an explicit error and retry if the detail request fails.
 6. At a mobile width (393px or narrower), verify profile, language and logout controls remain individually clickable. Log out and revisit a dashboard; it must reach login. An invalid or expired refresh cookie must also reach login without a redirect loop.
 7. With a valid refresh cookie, replace only the local access token with a disposable invalid value and open My Profile. Its request must refresh once, load the profile, save an edit and retain that edit after reload. A refresh 429/503 must preserve local session state; a definitive 401/403 ends the session.
+8. In My Profile, enroll a disposable account in MFA and verify a valid authenticator code. Reload: the enabled indicator remains. Replacement is unavailable; calling `POST /api/v1/mfa/setup` again returns 409 and must leave the enabled flag and existing secret unchanged. Closing the dialog cannot disable MFA. Full factor replacement/recovery is SEC-14 work.
+9. With two disposable active admins, concurrently deactivate/demote each through the other test session. One change must be rejected so at least one active admin remains. The PostgreSQL race regression forces both transactions to read the same initial count.
 
 ## 4. Check protected content and assignments
 
@@ -90,6 +93,8 @@ The command refuses existing emails and never resets an existing account. Start 
 5. Remove/change the upload token, change its file path, or replay student A's upload from student B's account. Expect 400 and no extra submission. Upload tokens expire after 24 hours; re-upload after expiry. Existing historical submission records remain intact.
 6. Read an assignment, read the lesson's assignment list, update it as its teacher, and grade a submission. Each request must succeed without the former unbound-class-method 500; response URLs remain protected.
 7. Rename an HTML file to an allowed document/image extension or provide a mismatched MIME/signature. Expect 400. Production upload routes return 503 when ClamAV is absent/unavailable; a malware rejection returns 400 before storage. Protocol fixtures verify clean/rejected/invalid scanner responses locally. Real scanner canaries belong to the deployment checklist.
+8. Attach a validated public HTTPS document: it remains a usable external link. A teacher's manual attachment request with a private submission/object key must fail. Newly uploaded private materials/videos must use their own resource-scoped keys; replacing that key with another resource's reference must produce a denial without bytes or a signed URL. Unverified legacy media remain recoverable but fail closed; use the [re-upload runbook](MIGRATION_OPERATIONS.md#private-media-object-binding-after-the-final-m0-review).
+9. In a paid course checkout, try a voucher for another course. It must show an error, retain checkout and leave voucher usage/grants unchanged. The request includes the selected `expectedCourseId`. A matching voucher is consumed only for its applicable scope; access success follows the actual course entitlement check. Full idempotent/concurrent voucher acceptance remains COM-08/M3; payment recovery/reconciliation remains COM-06.
 
 ## 5. Check playback and locale persistence
 

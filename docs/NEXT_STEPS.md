@@ -1,6 +1,6 @@
 # Next implementation steps
 
-Updated **22 October 2026**. M0/G0 is complete for internal synthetic-data work. The latest reliability commit **b6dd8d462a1f4d111f94c6125259d0576738beb9** is pushed and all five exact-head GitHub checks passed. ENG-05 and ENG-06 remain In Progress for their explicit external rehearsal evidence; M1 implementation starts with dependency-ready ENG-09. G1–G3 and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Updated **22 October 2026**. M0/G0 is complete for internal synthetic-data work. The latest reliability commit **34723cdded64a751b6a36c208a69421f4a57ac44** is pushed and all five exact-head GitHub checks passed. ENG-05 and ENG-06 remain In Progress for their explicit external rehearsal evidence; M1 implementation starts with dependency-ready ENG-09. G1–G3 and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## Start here
 
@@ -18,7 +18,7 @@ Owner: database migrations and operations. Status: **In Progress**, priority **P
 2. **Complete:** add migrate-deploy/test commands and replace CI's schema-push setup with reviewed migration application. Guard schema push to local development or the dedicated test database.
 3. **Complete locally:** the isolated fixture migrates an empty schema and verifies exact current-schema parity; builds the historical pre-M0 schema in a second unique schema; runs a read-only diff; seeds bilingual courses, grades, lessons, quiz/assessment attempts, assignment work/files, orders and entitlements; resolves the baseline; applies the bridge; and verifies every row and both auth versions survive a repeated deploy.
 4. **Remaining:** verify a restored representative copy using the runbook's read-only diff and practice the migration-history adoption procedure, including code rollback/forward repair and before/after counts/checksums. Do not apply baseline create-table SQL to populated tables.
-5. **Complete:** exact branch Node 22 CI passed all five checks for b6dd8d462a1f4d111f94c6125259d0576738beb9 in [GitHub Actions run 39788280147](https://github.com/Hegazian/Digital-Platform/actions/runs/39788280147), including the server empty/populated migration fixture and both browser modes.
+5. **Complete:** exact branch Node 22 CI passed all five checks for 34723cdded64a751b6a36c208a69421f4a57ac44 in [GitHub Actions run 39820430062](https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062), including the server empty/populated migration fixture and both browser modes.
 6. **Remaining:** restore an authorized representative copy, inspect it with read-only schema diff, rehearse baseline resolution plus rollback/forward repair and backup/restore, then obtain operator review before marking ENG-05 Complete.
 
 First-task exclusions: no taxonomy, canonical course migration, managed asset schema, new commerce model or assessment revision engine in this baseline task. Those owners add their own subsequent ordered migrations. No production database changes are authorized by this planning document.
@@ -72,7 +72,7 @@ Exit evidence: Concurrent price edits/purchases preserve snapshots; all M1 task 
 - Every implemented task adds meaningful positive/negative, cross-account, real database concurrency/recovery, migration and Arabic/English tests as applicable. Keep the 397-server/63-client and 24-per-mode browser checkpoint as historical regression evidence; record new counts for the new commit instead of treating them as a fixed test quota.
 - Use [M0 manual steps](M0_MANUAL_TESTING.md) for current flows. Recheck disabled developer tabs with no requests, malformed cookies, transient refresh failures, protected course inspection, rapid PDF/course switches, failed video renewal retry, mobile profile/logout, enrollment and assignment delivery in both locales.
 - Before local integration tests, verify the dedicated test target. Existing schema push is limited to local development and disposable test fixtures; install/upgrade workflows use reviewed migrations. Never use destructive fixture cleanup on a shared or real-student database.
-- Preserve exact CI artifacts and coverage denominators. The [coverage inventory](../audit/review-round-2/coverage-gaps.json) and [domain ownership table](TESTING_RELEASE_GATES.md#untested-and-incompletely-tested-domain-ownership) identify what still needs tests. Do not claim every feature tested because every dashboard tab opened.
+- Preserve exact CI artifacts and coverage denominators. The [coverage inventory](../audit/final-m0/coverage-gaps.json) and [domain ownership table](TESTING_RELEASE_GATES.md#untested-and-incompletely-tested-domain-ownership) identify what still needs tests. Do not claim every feature tested because every dashboard tab opened.
 - Regenerate docs using 'node docs/scripts/build-docs.cjs', validate using 'node docs/scripts/validate-docs.cjs', and update current evidence only when new checks actually run. Keep the 58 finding IDs, 42 acceptance dispositions and immutable archived originals.
 
 ## After M1

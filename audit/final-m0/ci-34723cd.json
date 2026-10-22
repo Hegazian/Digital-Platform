@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-10-22T17:21:11.011Z",
+  "provider": "Code Review plugin / GitHub Actions",
+  "pullRequest": "https://github.com/Hegazian/Digital-Platform/pull/3",
+  "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+  "runId": 39820430062,
+  "checks": [
+    {
+      "id": 119969953174,
+      "name": "M0 production desktop/mobile journeys",
+      "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062/job/119969953174"
+    },
+    {
+      "id": 119969953034,
+      "name": "Web - typecheck, lint & build",
+      "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062/job/119969953034"
+    },
+    {
+      "id": 119969952925,
+      "name": "API - typecheck & tests",
+      "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062/job/119969952925"
+    },
+    {
+      "id": 119969952907,
+      "name": "M0 development desktop/mobile journeys",
+      "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062/job/119969952907"
+    },
+    {
+      "id": 119969952529,
+      "name": "Documentation integrity and dependency policy",
+      "headRevision": "34723cdded64a751b6a36c208a69421f4a57ac44",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062/job/119969952529"
+    }
+  ],
+  "productionBrowserLog": [
+    "2026-10-22T17:14:19.4136391Z Running 24 tests using 1 worker",
+    "2026-10-22T17:14:50.2951434Z   24 passed (33.4s)"
+  ],
+  "developmentBrowserLog": [
+    "2026-10-22T17:12:28.5703943Z Running 24 tests using 1 worker",
+    "2026-10-22T17:13:20.3190459Z   24 passed (57.4s)"
+  ]
+}

@@ -1,6 +1,6 @@
 # Audit and acceptance traceability
 
-Audit baseline **2fbdc8e**, 21 October 2026. Current disposition refreshed **22 October** against **d9c720f**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+Audit baseline **2fbdc8e**, 21 October 2026. Current disposition refreshed **22 October** against **34723cd**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
 
 ## Finding disposition — 58 of 58
 

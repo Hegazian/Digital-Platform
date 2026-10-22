@@ -9,7 +9,7 @@ Refreshed: **22 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
 2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
 3. Continue [ENG-09](tasks/ENG-09.md), and retain [ENG-05](tasks/ENG-05.md) / [ENG-06](tasks/ENG-06.md) operational rehearsals. Follow the [M1 execution waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 continues the full-product coverage/release work.
-4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [M0 implementation status](archive/reviews/M0_IMPLEMENTATION_STATUS.md).
+4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [operations](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
 5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
 6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
 7. Rehearse [operations, migration and recovery](MIGRATION_OPERATIONS.md), resolve minor-consent/retention and license decisions, and collect [release gate evidence](TESTING_RELEASE_GATES.md) for a limited pilot.
