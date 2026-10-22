@@ -5,6 +5,7 @@ import { StorageService } from '../../utils/storage';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
+import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
 
 export class VideoService {
   /**
@@ -12,11 +13,13 @@ export class VideoService {
    */
   static async uploadVideo(teacherId: string, fileBuffer: Buffer, fileName: string, mimeType: string, sizeBytes: number) {
     // 1. Upload to storage bucket "lesson-videos"
-    const videoUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-videos');
+    const videoId = randomUUID();
+    const videoUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-videos', videoId);
 
     // 2. Create database record
     return await prisma.video.create({
       data: {
+        id: videoId,
         teacherId,
         videoUrl,
         originalFileName: fileName,
@@ -101,6 +104,8 @@ export class VideoService {
       throw new NotFoundError('Video file not found');
     }
 
+    if (/^https?:\/\//i.test(video.videoUrl)) return externalContentUrl(video.videoUrl);
+    const internalPath = boundObjectKey(video.videoUrl, 'lesson-videos', video.id);
     if (video.videoUrl.startsWith('/uploads/')) {
       // Local fallback: generate a short-lived JWT token that the frontend can use to hit our streaming endpoint
       const token = jwt.sign({ videoId, userId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '120s', jwtid: randomUUID() });
@@ -108,6 +113,6 @@ export class VideoService {
     }
 
     // Supabase Storage: generate a signed URL
-    return await StorageService.getSignedUrl(video.videoUrl, 120);
+    return await StorageService.getSignedUrl(internalPath, 120);
   }
 }

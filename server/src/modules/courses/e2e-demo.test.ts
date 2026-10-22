@@ -170,7 +170,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         estimatedDuration: 45,
         video: {
           title: 'kinematics-lecture-full-hd.mp4',
-          videoUrl: '/uploads/lesson-videos/physics-sec1-lesson1.mp4',
+          videoUrl: 'https://content.example/physics-sec1-lesson1.mp4',
           duration: 2700,
         },
         materials: [
@@ -317,7 +317,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       .get(`/api/v1/videos/${video.id}/playback-url`)
       .set('Authorization', `Bearer ${studentToken}`);
     expect(playback.status).toBe(200);
-    expect(playback.body.data.playbackUrl).toContain('/api/v1/videos/');
+    expect(playback.body.data.playbackUrl).toBe('https://content.example/physics-sec1-lesson1.mp4');
   });
 
   // STEP 4: Admin Edit & Delete Powers

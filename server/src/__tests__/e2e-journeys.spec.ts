@@ -188,7 +188,7 @@ describe('End-to-End Journeys', () => {
         .send({
           titleEn: 'Newton Laws',
           titleAr: 'قوانين نيوتن',
-          video: { title: 'Newton Lecture', videoUrl: '/uploads/e2e.mp4', duration: 1800 },
+          video: { title: 'Newton Lecture', videoUrl: 'https://content.example/e2e.mp4', duration: 1800 },
           quiz: {
             title: 'Newton Check',
             passingScore: 50,

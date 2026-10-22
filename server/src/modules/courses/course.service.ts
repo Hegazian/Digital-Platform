@@ -5,8 +5,22 @@ import { logAuditAction } from '../audit/audit.service';
 import { egpToUsd, usdToEgp } from '../../utils/currency';
 import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
 import { externalMaterialUrl, materialDeliveryUrl } from '../materials/material-reference';
+import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
 
 export class CourseService {
+  private static async suppliedVideo(data: { videoUrl: string; title?: string; duration?: number }, actorId: string, role?: Role) {
+    if (typeof data.videoUrl !== 'string' || !data.videoUrl.trim()) throw new BadRequestError('A video reference is required');
+    if (/^https?:\/\//i.test(data.videoUrl)) {
+      return prisma.video.create({ data: {
+        teacherId: actorId, status: VideoStatus.READY, videoUrl: externalContentUrl(data.videoUrl),
+        durationSec: data.duration || 0, originalFileName: data.title || 'lesson-video.mp4',
+      } });
+    }
+    const uploaded = await prisma.video.findFirst({ where: { videoUrl: data.videoUrl, ...(role !== Role.ADMIN && { teacherId: actorId }) } });
+    if (!uploaded) throw new BadRequestError('Upload the video using your account before attaching it');
+    boundObjectKey(uploaded.videoUrl, 'lesson-videos', uploaded.id);
+    return uploaded;
+  }
   /**
    * Strip answer keys from embedded quiz questions. Required for any
    * response delivered to users who cannot manage the course, otherwise
@@ -866,15 +880,7 @@ export class CourseService {
 
     let videoId: string | undefined;
     if (data.video && data.video.videoUrl) {
-      const video = await prisma.video.create({
-        data: {
-          teacherId: teacherId || ownerTeacherId,
-          status: VideoStatus.READY,
-          videoUrl: data.video.videoUrl,
-          durationSec: data.video.duration || 0,
-          originalFileName: data.video.title || 'lesson-video.mp4',
-        },
-      });
+      const video = await this.suppliedVideo(data.video, teacherId || ownerTeacherId, userRole);
       videoId = video.id;
     }
 
@@ -946,15 +952,7 @@ export class CourseService {
       throw new ForbiddenError('Only the course owner can attach videos to this lesson');
     }
 
-    const video = await prisma.video.create({
-      data: {
-        teacherId: teacherId || courseTeacherId || '',
-        status: VideoStatus.READY,
-        videoUrl: data.videoUrl,
-        durationSec: data.duration || 0,
-        originalFileName: data.title || 'lesson-video.mp4',
-      },
-    });
+    const video = await this.suppliedVideo(data, teacherId || courseTeacherId || '', userRole);
 
     await prisma.lesson.update({
       where: { id: lessonId },

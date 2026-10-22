@@ -7,6 +7,7 @@ import { getUploadsRoot } from '../../utils/storage';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import { boundObjectKey } from '../../utils/media-references';
 
 export class VideoController {
   /**
@@ -92,6 +93,7 @@ export class VideoController {
       if (!video || !video.videoUrl || !video.videoUrl.startsWith('/uploads/')) {
         throw new BadRequestError('Local video not found');
       }
+      boundObjectKey(video.videoUrl, 'lesson-videos', video.id);
 
       // Resolve the stored '/uploads/<bucket>/<file>' against the server's
       // real uploads root (cwd-independent - see getUploadsRoot) and pin it

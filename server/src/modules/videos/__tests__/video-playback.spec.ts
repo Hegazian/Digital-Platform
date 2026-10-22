@@ -5,6 +5,9 @@ import path from 'path';
 import app from '../../../app';
 import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
+import { randomUUID } from 'crypto';
+import jwt from 'jsonwebtoken';
+import { VIDEO_STREAM_SECRET } from '../../../utils/env';
 
 /**
  * Video playback pipeline (local-storage fallback):
@@ -23,6 +26,7 @@ describe('Secure Video Playback Pipeline', () => {
   let videoId: string;
   let subjectId: string;
   let studentToken: string;
+  let teacherToken: string;
   let outsiderToken: string;
   const cleanupUserIds: string[] = [];
   const cleanupVideoIds: string[] = [];
@@ -38,6 +42,7 @@ describe('Secure Video Playback Pipeline', () => {
         password: await bcrypt.hash('Password123!', 10),
         name: email.split('@')[0],
         role,
+        teacherStatus: role === 'TEACHER' ? 'APPROVED' : null,
         isActive: true,
       },
     });
@@ -56,6 +61,7 @@ describe('Secure Video Playback Pipeline', () => {
     cleanupUserIds.push(teacher.id, student.id, outsider.id);
 
     studentToken = await login(student.id, 'STUDENT');
+    teacherToken = await login(teacher.id, 'TEACHER');
     outsiderToken = await login(outsider.id, 'STUDENT');
 
     const subject = await prisma.subject.create({
@@ -94,17 +100,20 @@ describe('Secure Video Playback Pipeline', () => {
     moduleId = mod.id;
 
     // Physical local-storage fixture (what StorageService would have written)
-    const uploadDir = path.join(process.cwd(), 'uploads', 'lesson-videos');
+    const scopedVideoId = randomUUID();
+    const fileName = `${randomUUID()}.mp4`;
+    const uploadDir = path.join(process.cwd(), 'uploads', 'lesson-videos', scopedVideoId);
     fs.mkdirSync(uploadDir, { recursive: true });
-    tempFilePath = path.join(uploadDir, `pipeline-${ts}.mp4`);
+    tempFilePath = path.join(uploadDir, fileName);
     fs.writeFileSync(tempFilePath, FIXTURE_BYTES);
 
     const video = await prisma.video.create({
       data: {
+        id: scopedVideoId,
         teacherId,
         status: 'READY',
         durationSec: 60,
-        videoUrl: `/uploads/lesson-videos/pipeline-${ts}.mp4`,
+        videoUrl: `/uploads/lesson-videos/${scopedVideoId}/${fileName}`,
         originalFileName: `pipeline-${ts}.mp4`,
         sizeBytes: FIXTURE_BYTES.length,
       },
@@ -240,14 +249,36 @@ describe('Secure Video Playback Pipeline', () => {
     const res = await request(app)
       .get(`/api/v1/videos/${evil.id}/playback-url`)
       .set('Authorization', `Bearer ${studentToken}`);
-    const token = (res.body.data?.playbackUrl ?? '').split('token=')[1] ?? '';
+    expect(res.status).toBe(404);
+    const token = jwt.sign({ videoId: evil.id, userId: studentId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '120s' });
 
     const streamRes = await request(app)
       .get(`/api/v1/videos/${evil.id}/stream?token=${encodeURIComponent(token)}`);
 
     // Either the storage guard or missing-file handling kicks in - but the
     // response must never leak file contents outside uploads/.
-    expect([400, 403]).toContain(streamRes.status);
+    expect(streamRes.status).toBe(404);
     expect(streamRes.text).not.toContain('DATABASE_URL');
+  });
+
+  it('rejects unrelated private objects at authoring, signing and local delivery', async () => {
+    const privateDir = path.join(process.cwd(), 'uploads', 'submission-files');
+    const privateName = `${randomUUID()}.pdf`;
+    fs.mkdirSync(privateDir, { recursive: true });
+    fs.writeFileSync(path.join(privateDir, privateName), '%PDF-1.7 private student work');
+    try {
+      for (const videoUrl of [`submission-files/${privateName}`, `/uploads/submission-files/${privateName}`]) {
+        const attached = await request(app).post(`/api/v1/courses/lessons/${lessonId}/video`).set('Authorization', `Bearer ${teacherToken}`).send({ videoUrl });
+        expect(attached.status).toBe(400);
+        const forged = await prisma.video.create({ data: { teacherId, status: 'READY', videoUrl } });
+        cleanupVideoIds.push(forged.id);
+        const granted = await request(app).get(`/api/v1/videos/${forged.id}/playback-url`).set('Authorization', `Bearer ${teacherToken}`);
+        expect(granted.status).toBe(404);
+        const token = jwt.sign({ videoId: forged.id, userId: teacherId, purpose: 'stream' }, VIDEO_STREAM_SECRET, { expiresIn: '120s' });
+        const streamed = await request(app).get(`/api/v1/videos/${forged.id}/stream?token=${token}`);
+        expect([400, 404]).toContain(streamed.status);
+        expect(streamed.text).not.toContain('private student work');
+      }
+    } finally { fs.unlinkSync(path.join(privateDir, privateName)); }
   });
 });

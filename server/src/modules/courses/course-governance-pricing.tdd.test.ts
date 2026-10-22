@@ -200,7 +200,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
           estimatedDuration: 40,
           video: {
             title: 'gravitation_lesson1.mp4',
-            videoUrl: '/uploads/lesson-videos/gravitation1.mp4',
+            videoUrl: 'https://content.example/gravitation1.mp4',
             duration: 2400,
           },
           materials: [
@@ -378,7 +378,7 @@ describe('TDD Suite: Course Governance, Single Pricing & Role Isolation', () => 
         .get(`/api/v1/videos/${video.id}/playback-url`)
         .set('Authorization', `Bearer ${studentToken}`);
       expect(playback.status).toBe(200);
-      expect(playback.body.data.playbackUrl).toContain('/api/v1/videos/');
+      expect(playback.body.data.playbackUrl).toBe('https://content.example/gravitation1.mp4');
       expect(data.modules[0].lessons[0].materials.length).toBe(1);
       expect(data.modules[0].lessons[0].quiz.questions.length).toBe(1);
     });
