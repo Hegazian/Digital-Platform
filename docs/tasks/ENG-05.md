@@ -15,11 +15,17 @@
 
 
 
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. DIRECT_URL is now documented, database reset helpers reject unsafe targets, and M0 includes an additive auth-version bridge with a limited prior-schema test. A complete checked-in Prisma migration chain, populated full-schema upgrade and representative restore are still missing. This is the first M1 implementation task; follow the [ENG-05 handoff](../NEXT_STEPS.md#first-implementation-task--eng-05). Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+
 ## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
 
 No migration history is present. [CI](<../../.github/workflows/ci.yml>) uses `prisma db push`, testing the latest empty-schema shape rather than upgrades from an existing production database. The schema requires `DIRECT_URL`, omitted from the server environment example.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

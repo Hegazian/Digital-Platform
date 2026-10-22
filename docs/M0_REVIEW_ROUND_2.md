@@ -2,6 +2,8 @@
 
 This follow-up starts from `fbe5fbf` on `codex/finalize-milestone-0`. The reported development logs exposed gaps in the first checkpoint's browser coverage. This round fixes the confirmed issues below and expands regression checks to dashboard tabs, navigation, session recovery and interrupted delivery. It does not certify the unimplemented M1–M4 features.
 
+Implementation and verification were committed as **d9c720f**. The subsequent documentation refresh preserves the test artifacts below and links them from [current status](CURRENT_STATUS.md). Continue with [ENG-05 and the M1 execution plan](NEXT_STEPS.md); no additional application test run is implied by editing these documents.
+
 ## Findings and remedies
 
 | ID / priority | Confirmed behavior and implementation | Owning task / regression |

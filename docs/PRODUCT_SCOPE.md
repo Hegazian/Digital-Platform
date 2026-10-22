@@ -1,6 +1,6 @@
 # Product goal and scope
 
-Specification version: **1.0, 21 October 2026**. Decision status: agreed direction; the M0 internal engineering/G0 checkpoint is finalized, with exact evidence and remaining production holds in [M0 implementation status](M0_IMPLEMENTATION_STATUS.md). G1–G3 remain open. This document supersedes prior AI-production, narrow-track and parity-led requirements. The [historical audit](../audit/PRODUCT_READINESS_REVIEW.md) remains evidence about the prototype, not the current product mission.
+Specification version: **1.1, 22 October 2026**. The agreed 21 October product direction is unchanged. M0 internal engineering/G0 is finalized at application checkpoint **d9c720f**; [current status](CURRENT_STATUS.md) records latest verification and remaining production holds. G1–G3 remain open. The [next implementation plan](NEXT_STEPS.md) starts with ENG-05 and all 25 M1 tasks. This document supersedes prior AI-production, narrow-track and parity-led requirements. The [historical audit](../audit/PRODUCT_READINESS_REVIEW.md) remains evidence about the prototype, not the current product mission.
 
 ## Mission
 

@@ -13,16 +13,22 @@
 | Acceptance links | [A02](../AUDIT_TRACEABILITY.md#a02), [A22](../AUDIT_TRACEABILITY.md#a22) |
 | Release disposition | Required before completing this milestone; no release credit for documentation alone. |
 
-**M0 checkpoint evidence:** See [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [follow-up review fixes](../M0_REVIEW_RESOLUTION.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
+
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. The M0 engineering/containment deliverable is complete at **d9c720f**, including the follow-up regressions. See [current verification](../CURRENT_STATUS.md), [first review](../M0_REVIEW_RESOLUTION.md) and [second review](../M0_REVIEW_ROUND_2.md). Retain these regression checks. Deployment-specific credential, private-storage, scanner and restore evidence remains an explicit traffic hold; full acceptance scenarios below are not all claimed as executed. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
 
 [app.ts:72](<../../server/src/app.ts>) serves the entire uploads root without authentication. A local video fixture returned **HTTP 200 anonymously** despite the existence of a separate signed streaming endpoint. Materials and student submission files share the same public namespace. Cloud lesson materials also use public URLs in [storage.ts](<../../server/src/utils/storage.ts>).
 
 Move protected assets to private storage, remove the catch-all public upload mount, and issue narrowly scoped download/playback grants after checking the requesting user's access. Student submissions need student/assigned-grader authorization. Filename obscurity is insufficient.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

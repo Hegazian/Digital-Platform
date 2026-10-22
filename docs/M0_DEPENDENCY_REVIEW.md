@@ -4,6 +4,8 @@ Reviewed **21 October 2026**. Exact lockfile hashes, counts, paths and expiry ar
 
 Refreshed **22 October 2026** during the [second review round](M0_REVIEW_ROUND_2.md), with explicit user authorization for NPM metadata transfer. Lockfiles are unchanged; the policy still passes with zero runtime advisory packages and the same nine development-only exceptions.
 
+This evidence is included at application checkpoint **d9c720f** and summarized in [current status](CURRENT_STATUS.md). The [next-steps plan](NEXT_STEPS.md) keeps remediation under ENG-13, due before paid release or **19 January 2027**, whichever comes first. A documentation refresh does not constitute another advisory scan.
+
 ## Runtime remediation
 
 - Next.js **14.2.35 → 16.4.2**, React/React DOM **19.3.1**, and Tiptap **3.32.0** address the runtime framework/editor advisories. Existing lesson content is preserved; the editor uses explicit deferred browser rendering. The migration follows the official [Next 16 upgrade guide](https://nextjs.org/docs/app/guides/upgrading/version-16) and [Tiptap v2-to-v3 guide](https://tiptap.dev/docs/guides/upgrade-tiptap-v2).

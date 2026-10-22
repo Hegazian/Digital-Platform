@@ -1,5 +1,7 @@
 # API and data contracts
 
+Refreshed **22 October 2026** against application checkpoint **d9c720f**. See [current implementation and test evidence](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). M0 adapters below exist; C01–C10 remain target contracts until their owning task supplies implementation and compatibility evidence. ENH-02 owns contract/schema migration after ENG-05; consumers must not independently change envelopes.
+
 ## Implemented M0 compatibility adapters
 
 The normative asset-ID/revision/import contracts below remain the M1–M3 target. These protected adapters are implemented for existing resources while retaining their IDs/history:
@@ -13,7 +15,7 @@ The normative asset-ID/revision/import contracts below remain the M1–M3 target
 
 These adapters retain the existing success envelope. ENH-02 owns migration to the shared target DTO/error conventions; M0 does not claim every proposed endpoint below already exists.
 
-Version **1.0 — planned**, 21 October 2026. These are intended contracts to implement, not an assertion that the endpoints already exist. Preserve `/api/v1`, existing app identity and valid legacy IDs. New models/endpoints named here are proposed. Task examples are illustrative subsets; the shared rules and errors below take precedence. Security redactions are intentional breaking fixes and must not retain leaked fields for compatibility.
+Version **1.1 — target contracts**, 22 October 2026. These are intended contracts to implement, not an assertion that the endpoints already exist. Preserve `/api/v1`, existing app identity and valid legacy IDs. New models/endpoints named here are proposed. Task examples are illustrative subsets; the shared rules and errors below take precedence. Security redactions are intentional breaking fixes and must not retain leaked fields for compatibility.
 
 ## Contract register
 

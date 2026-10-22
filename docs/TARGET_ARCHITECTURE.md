@@ -1,6 +1,6 @@
 # Target architecture
 
-Version **1.0, 21 October 2026**. This is the target architecture. The completed M0 controls and exact tests are recorded in [M0 status](M0_IMPLEMENTATION_STATUS.md); managed assets, revision workflows and durable workers below remain later milestones. Baseline code evidence remains in [the audit](../audit/PRODUCT_READINESS_REVIEW.md). [API contracts](API_DATA_CONTRACTS.md) distinguish implemented compatibility endpoints from normative future boundaries.
+Version **1.1, 22 October 2026**. This is the target architecture. Completed M0 controls at **d9c720f**, exact tests and limits are recorded in [current status](CURRENT_STATUS.md); managed assets, revision workflows and durable workers below remain later milestones. The [M1 handoff](NEXT_STEPS.md) starts with versioned migrations, then shared contracts/data primitives before integrating access and assets. Baseline code evidence remains in [the audit](../audit/PRODUCT_READINESS_REVIEW.md). [API contracts](API_DATA_CONTRACTS.md) distinguish implemented compatibility endpoints from normative future boundaries.
 
 ## Deployment and trust boundaries
 

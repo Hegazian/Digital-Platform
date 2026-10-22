@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { date, implementationCommit, taskUpdate } = require('./current-state.cjs');
 const root = path.resolve(__dirname, '../..');
 const docs = path.join(root, 'docs');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
@@ -231,15 +232,21 @@ function taskText(t) {
 | Original finding / request | ${refs} |
 | Original evidence classification | ${finding ? finding.title : 'Agreed scope/enhancement request; no defect reproduction claimed.'} |
 | Acceptance links | ${acceptance.length ? acceptance.map(c => `[${c.id}](../AUDIT_TRACEABILITY.md#${c.id.toLowerCase()})`).join(', ') : 'Task-specific cases below; also the shared release protocol.'} |
-| Release disposition | ${t.milestone === 'M4' ? 'Post-launch; disabled at the API until this task and its enablement gate pass.' : (['SEC-15','LRN-08'].includes(t.id) ? 'Required launch containment; future enablement has a separate owning task.' : 'Required before completing this milestone; no release credit for documentation alone.')} |
+| Release disposition | ${t.id === 'ENG-13' ? 'M0 harness/dependency subgate Complete; full-product coverage and production CI evidence remain In Progress through G3.' : t.milestone === 'M4' ? 'Post-launch; disabled at the API until this task and its enablement gate pass.' : (['SEC-15','LRN-08'].includes(t.id) ? 'Required launch containment; future enablement has a separate owning task.' : 'Required before completing this milestone; no release credit for documentation alone.')} |
 
-${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [follow-up review fixes](../M0_REVIEW_RESOLUTION.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.\n' : ''}
+${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.\n' : ''}
+
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **${implementationCommit}**. ${taskUpdate(t)} The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
+**Original audit/request context; later implementation is recorded above.**
+
 ${evidence}
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 
@@ -302,7 +309,7 @@ for (const p of archiveFiles) {
   hashes.push({path:p, archive:dest, sha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(root,dest))).digest('hex')});
 }
 for (const t of tasks) write(`docs/tasks/${t.id}.md`, taskText(t));
-write('docs/task-manifest.json', JSON.stringify({schemaVersion:1,date:'2026-10-21',baseline:'2fbdc8e',milestones:milestoneNames,tasks:tasks.map(t=>({...t,originalFinding:findings.has(t.id)?t.id:null,originalEvidence:findings.get(t.id)?.title||null,acceptanceCases:cases.filter(c=>c.tasks.includes(t.id)).map(c=>c.id)})),acceptanceCases:cases},null,2));
+write('docs/task-manifest.json', JSON.stringify({schemaVersion:1,date,baseline:'2fbdc8e',implementationCommit,milestones:milestoneNames,tasks:tasks.map(t=>({...t,originalFinding:findings.has(t.id)?t.id:null,originalEvidence:findings.get(t.id)?.title||null,acceptanceCases:cases.filter(c=>c.tasks.includes(t.id)).map(c=>c.id)})),acceptanceCases:cases},null,2));
 write('docs/archive/manifest.json',JSON.stringify(hashes,null,2));
 writeShared({root,docs,read,write,tasks,findings,originalCases,cases,milestoneNames});
 console.log(`Wrote ${tasks.length} task documents, shared specifications and repository entry points.`);

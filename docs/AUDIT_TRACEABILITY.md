@@ -1,71 +1,71 @@
 # Audit and acceptance traceability
 
-Audit baseline **2fbdc8e**, 21 October 2026. The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+Audit baseline **2fbdc8e**, 21 October 2026. Current disposition refreshed **22 October** against **d9c720f**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
 
 ## Finding disposition — 58 of 58
 
 Every finding keeps its original ID in exactly one file, has a release milestone/dependencies, and has task-specific test IDs. R/S/C/G evidence labels retain their original meaning. A conditional finding remains conditional until real-environment verification.
 
-| Finding | Owning task / title | Milestone | Acceptance / disposition |
-|---|---|---|---|
-| SEC-01 | [SEC-01](tasks/SEC-01.md) — Replace known privileged seeds with safe provisioning | M0 | [A06](#a06); required before assigned milestone exit. Tests SEC-01-T01 onward and T90–T92. |
-| SEC-02 | [SEC-02](tasks/SEC-02.md) — Close raw-file bypasses with authorized private delivery | M0 | [A02](#a02), [A22](#a22); required before assigned milestone exit. Tests SEC-02-T01 onward and T90–T92. |
-| SEC-03 | [SEC-03](tasks/SEC-03.md) — Reject disguised active content and quarantine uploads | M0 | [A03](#a03); required before assigned milestone exit. Tests SEC-03-T01 onward and T90–T92. |
-| SEC-04 | [SEC-04](tasks/SEC-04.md) — Separate public catalog DTOs from protected learning DTOs | M0 | [A04](#a04); required before assigned milestone exit. Tests SEC-04-T01 onward and T90–T92. |
-| SEC-05 | [SEC-05](tasks/SEC-05.md) — Eliminate answer-key leaks through explicit question DTOs | M0 | [A05](#a05); required before assigned milestone exit. Tests SEC-05-T01 onward and T90–T92. |
-| SEC-06 | [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | M1 | [A04](#a04), [A12](#a12); required before assigned milestone exit. Tests SEC-06-T01 onward and T90–T92. |
-| SEC-07 | [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | M1 | [A05](#a05); required before assigned milestone exit. Tests SEC-07-T01 onward and T90–T92. |
-| SEC-08 | [SEC-08](tasks/SEC-08.md) — Use safe assessment result and expiry responses | M0 | [A05](#a05); required before assigned milestone exit. Tests SEC-08-T01 onward and T90–T92. |
-| SEC-09 | [SEC-09](tasks/SEC-09.md) — Bind teacher actions to the authenticated actor | M0 | [A07](#a07); required before assigned milestone exit. Tests SEC-09-T01 onward and T90–T92. |
-| SEC-10 | [SEC-10](tasks/SEC-10.md) — Revoke authorization on every security-sensitive account change | M0 | [A08](#a08); required before assigned milestone exit. Tests SEC-10-T01 onward and T90–T92. |
-| SEC-11 | [SEC-11](tasks/SEC-11.md) — Apply a consistent pending and rejected teacher policy | M0 | [A09](#a09); required before assigned milestone exit. Tests SEC-11-T01 onward and T90–T92. |
-| SEC-12 | [SEC-12](tasks/SEC-12.md) — Apply learning access to discussions, assignments and banks | M1 | [A11](#a11), [A27](#a27); required before assigned milestone exit. Tests SEC-12-T01 onward and T90–T92. |
-| SEC-13 | [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | M1 | [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests SEC-13-T01 onward and T90–T92. |
-| SEC-14 | [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | M1 | [A10](#a10); required before assigned milestone exit. Tests SEC-14-T01 onward and T90–T92. |
-| SEC-15 | [SEC-15](tasks/SEC-15.md) — Keep unisolated code execution unavailable at launch | M0 | [A40](#a40); launch containment; separate M4 owner. Tests SEC-15-T01 onward and T90–T92. |
-| COM-01 | [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | M1 | [A11](#a11); required before assigned milestone exit. Tests COM-01-T01 onward and T90–T92. |
-| COM-02 | [COM-02](tasks/COM-02.md) — Allow renewal after effective subscription expiry | M1 | [A12](#a12); required before assigned milestone exit. Tests COM-02-T01 onward and T90–T92. |
-| COM-03 | [COM-03](tasks/COM-03.md) — Define calendar durations and atomic subscription review | M1 | [A13](#a13); required before assigned milestone exit. Tests COM-03-T01 onward and T90–T92. |
-| COM-04 | [COM-04](tasks/COM-04.md) — Disable simulated gateways and implement official adapters later | M3 | [A14](#a14), [A15](#a15); launch disabled; providers M4. Tests COM-04-T01 onward and T90–T92. |
-| COM-05 | [COM-05](tasks/COM-05.md) — Scope checkout idempotency by actor and payload | M1 | [A16](#a16); required before assigned milestone exit. Tests COM-05-T01 onward and T90–T92. |
-| COM-06 | [COM-06](tasks/COM-06.md) — Make payment transitions auditable and fulfillment recoverable | M1 | [A15](#a15), [A18](#a18); required before assigned milestone exit. Tests COM-06-T01 onward and T90–T92. |
-| COM-07 | [COM-07](tasks/COM-07.md) — Validate products and snapshot explicit access durations | M1 | [A13](#a13), [A18](#a18); required before assigned milestone exit. Tests COM-07-T01 onward and T90–T92. |
-| COM-08 | [COM-08](tasks/COM-08.md) — Make voucher redemption unique per student | M3 | [A17](#a17); required before assigned milestone exit. Tests COM-08-T01 onward and T90–T92. |
-| COM-09 | [COM-09](tasks/COM-09.md) — Define effective dates, archival and retraction semantics | M1 | [A12](#a12); required before assigned milestone exit. Tests COM-09-T01 onward and T90–T92. |
-| COM-10 | [COM-10](tasks/COM-10.md) — Use effective audiences and real ledger metrics | M2 | [A11](#a11), [A30](#a30); required before assigned milestone exit. Tests COM-10-T01 onward and T90–T92. |
-| COM-11 | [COM-11](tasks/COM-11.md) — Make course pricing atomic and preserve purchase history | M1 | [A15](#a15); required before assigned milestone exit. Tests COM-11-T01 onward and T90–T92. |
-| COM-12 | [COM-12](tasks/COM-12.md) — Complete resumable manual checkout and receipt review | M3 | [A16](#a16), [A18](#a18); required before assigned milestone exit. Tests COM-12-T01 onward and T90–T92. |
-| LRN-01 | [LRN-01](tasks/LRN-01.md) — Persist expiry before returning a quiz error | M2 | [A23](#a23); required before assigned milestone exit. Tests LRN-01-T01 onward and T90–T92. |
-| LRN-02 | [LRN-02](tasks/LRN-02.md) — Unify versioned assessment definitions and frozen attempts | M2 | [A25](#a25); required before assigned milestone exit. Tests LRN-02-T01 onward and T90–T92. |
-| LRN-03 | [LRN-03](tasks/LRN-03.md) — Implement per-type grading and human rubric review | M2 | [A05](#a05), [A26](#a26); required before assigned milestone exit. Tests LRN-03-T01 onward and T90–T92. |
-| LRN-04 | [LRN-04](tasks/LRN-04.md) — Serialize assignment attempts and assessment submission | M2 | [A23](#a23), [A25](#a25), [A27](#a27); required before assigned milestone exit. Tests LRN-04-T01 onward and T90–T92. |
-| LRN-05 | [LRN-05](tasks/LRN-05.md) — Publish only exact reviewed immutable content revisions | M2 | [A19](#a19), [A35](#a35); required before assigned milestone exit. Tests LRN-05-T01 onward and T90–T92. |
-| LRN-06 | [LRN-06](tasks/LRN-06.md) — Render every supported ordered lesson block | M2 | [A20](#a20); required before assigned milestone exit. Tests LRN-06-T01 onward and T90–T92. |
-| LRN-07 | [LRN-07](tasks/LRN-07.md) — Migrate sections to one canonical module hierarchy | M1 | [A21](#a21); required before assigned milestone exit. Tests LRN-07-T01 onward and T90–T92. |
-| LRN-08 | [LRN-08](tasks/LRN-08.md) — Contain incomplete boards and preserve block identity | M2 | [A20](#a20); launch containment; separate M4 owner. Tests LRN-08-T01 onward and T90–T92. |
-| LRN-09 | [LRN-09](tasks/LRN-09.md) — Authorize previews per lesson | M2 | [A22](#a22); required before assigned milestone exit. Tests LRN-09-T01 onward and T90–T92. |
-| LRN-10 | [LRN-10](tasks/LRN-10.md) — Resume attempts from server deadlines and saved answers | M2 | [A24](#a24); required before assigned milestone exit. Tests LRN-10-T01 onward and T90–T92. |
-| LRN-11 | [LRN-11](tasks/LRN-11.md) — Handle already-expired assessment timer responses safely | M2 | [A24](#a24); required before assigned milestone exit. Tests LRN-11-T01 onward and T90–T92. |
-| LRN-12 | [LRN-12](tasks/LRN-12.md) — Persist bounded watch progress and reliable completion | M2 | [A28](#a28); required before assigned milestone exit. Tests LRN-12-T01 onward and T90–T92. |
-| LRN-13 | [LRN-13](tasks/LRN-13.md) — Send validated announcements to owned-course audiences | M2 | [A07](#a07), [A30](#a30); required before assigned milestone exit. Tests LRN-13-T01 onward and T90–T92. |
-| LRN-14 | [LRN-14](tasks/LRN-14.md) — Use validated teacher-provided live meeting links | M2 | [A07](#a07), [A31](#a31); required before assigned milestone exit. Tests LRN-14-T01 onward and T90–T92. |
-| LRN-15 | [LRN-15](tasks/LRN-15.md) — Repair catalog routing, search, filters and pagination | M2 | [A41](#a41); required before assigned milestone exit. Tests LRN-15-T01 onward and T90–T92. |
-| LRN-16 | [LRN-16](tasks/LRN-16.md) — Complete Arabic/English interface and uploader-supplied locales | M2 | [A32](#a32), [A42](#a42); required before assigned milestone exit. Tests LRN-16-T01 onward and T90–T92. |
-| ENG-01 | [ENG-01](tasks/ENG-01.md) — Repair the Zod 4 build blocker and nested config schema | M0 | [A01](#a01); required before assigned milestone exit. Tests ENG-01-T01 onward and T90–T92. |
-| ENG-02 | [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | M1 | [A18](#a18); required before assigned milestone exit. Tests ENG-02-T01 onward and T90–T92. |
-| ENG-03 | [ENG-03](tasks/ENG-03.md) — Enforce server capability controls for staged features | M0 | [A14](#a14); required before assigned milestone exit. Tests ENG-03-T01 onward and T90–T92. |
-| ENG-04 | [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | M1 | [A04](#a04); required before assigned milestone exit. Tests ENG-04-T01 onward and T90–T92. |
-| ENG-05 | [ENG-05](tasks/ENG-05.md) — Introduce versioned migrations and upgrade verification | M1 | [A01](#a01), [A39](#a39); required before assigned milestone exit. Tests ENG-05-T01 onward and T90–T92. |
-| ENG-06 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | M1 | [A38](#a38); required before assigned milestone exit. Tests ENG-06-T01 onward and T90–T92. |
-| ENG-07 | [ENG-07](tasks/ENG-07.md) — Persist actual audit actors and durable outbox events | M1 | [A38](#a38); required before assigned milestone exit. Tests ENG-07-T01 onward and T90–T92. |
-| ENG-08 | [ENG-08](tasks/ENG-08.md) — Make public reads side-effect free and reference keys unique | M1 | [A38](#a38); required before assigned milestone exit. Tests ENG-08-T01 onward and T90–T92. |
-| ENG-09 | [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | M1 | [A29](#a29); required before assigned milestone exit. Tests ENG-09-T01 onward and T90–T92. |
-| ENG-10 | [ENG-10](tasks/ENG-10.md) — Bound queries, shared rate limits and sensitive logging | M3 | [A04](#a04), [A38](#a38); required before assigned milestone exit. Tests ENG-10-T01 onward and T90–T92. |
-| ENG-11 | [ENG-11](tasks/ENG-11.md) — Add verification, password recovery and secure account changes | M3 | [A33](#a33); recovery launch; guardian portal ENH-11 M4. Tests ENG-11-T01 onward and T90–T92. |
-| ENG-12 | [ENG-12](tasks/ENG-12.md) — Gate developer integrations and specify complete later enablement | M4 | [A40](#a40); API disabled by ENG-03; implementation M4. Tests ENG-12-T01 onward and T90–T92. |
-| ENG-13 | [ENG-13](tasks/ENG-13.md) — Build trustworthy isolated tests and production CI gates | M0 | [A01](#a01), [A40](#a40); required before assigned milestone exit. Tests ENG-13-T01 onward and T90–T92. |
-| ENG-14 | [ENG-14](tasks/ENG-14.md) — Recover client sessions without discarding retryable failures | M1 | [A08](#a08), [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests ENG-14-T01 onward and T90–T92. |
-| ENG-15 | [ENG-15](tasks/ENG-15.md) — Align capability claims, runbooks and software-license status | M0 | [A36](#a36); claims corrected; license owner decision recorded. Tests ENG-15-T01 onward and T90–T92. |
+| Finding | Owning task / title | Milestone | Status | Acceptance / disposition |
+|---|---|---|---|---|
+| SEC-01 | [SEC-01](tasks/SEC-01.md) — Replace known privileged seeds with safe provisioning | M0 | Complete | [A06](#a06); required before assigned milestone exit. Tests SEC-01-T01 onward and T90–T92. |
+| SEC-02 | [SEC-02](tasks/SEC-02.md) — Close raw-file bypasses with authorized private delivery | M0 | Complete | [A02](#a02), [A22](#a22); required before assigned milestone exit. Tests SEC-02-T01 onward and T90–T92. |
+| SEC-03 | [SEC-03](tasks/SEC-03.md) — Reject disguised active content and quarantine uploads | M0 | Complete | [A03](#a03); required before assigned milestone exit. Tests SEC-03-T01 onward and T90–T92. |
+| SEC-04 | [SEC-04](tasks/SEC-04.md) — Separate public catalog DTOs from protected learning DTOs | M0 | Complete | [A04](#a04); required before assigned milestone exit. Tests SEC-04-T01 onward and T90–T92. |
+| SEC-05 | [SEC-05](tasks/SEC-05.md) — Eliminate answer-key leaks through explicit question DTOs | M0 | Complete | [A05](#a05); required before assigned milestone exit. Tests SEC-05-T01 onward and T90–T92. |
+| SEC-06 | [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | M1 | Planned | [A04](#a04), [A12](#a12); required before assigned milestone exit. Tests SEC-06-T01 onward and T90–T92. |
+| SEC-07 | [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | M1 | Planned | [A05](#a05); required before assigned milestone exit. Tests SEC-07-T01 onward and T90–T92. |
+| SEC-08 | [SEC-08](tasks/SEC-08.md) — Use safe assessment result and expiry responses | M0 | Complete | [A05](#a05); required before assigned milestone exit. Tests SEC-08-T01 onward and T90–T92. |
+| SEC-09 | [SEC-09](tasks/SEC-09.md) — Bind teacher actions to the authenticated actor | M0 | Complete | [A07](#a07); required before assigned milestone exit. Tests SEC-09-T01 onward and T90–T92. |
+| SEC-10 | [SEC-10](tasks/SEC-10.md) — Revoke authorization on every security-sensitive account change | M0 | Complete | [A08](#a08); required before assigned milestone exit. Tests SEC-10-T01 onward and T90–T92. |
+| SEC-11 | [SEC-11](tasks/SEC-11.md) — Apply a consistent pending and rejected teacher policy | M0 | Complete | [A09](#a09); required before assigned milestone exit. Tests SEC-11-T01 onward and T90–T92. |
+| SEC-12 | [SEC-12](tasks/SEC-12.md) — Apply learning access to discussions, assignments and banks | M1 | Planned | [A11](#a11), [A27](#a27); required before assigned milestone exit. Tests SEC-12-T01 onward and T90–T92. |
+| SEC-13 | [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | M1 | Planned | [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests SEC-13-T01 onward and T90–T92. |
+| SEC-14 | [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | M1 | Planned | [A10](#a10); required before assigned milestone exit. Tests SEC-14-T01 onward and T90–T92. |
+| SEC-15 | [SEC-15](tasks/SEC-15.md) — Keep unisolated code execution unavailable at launch | M0 | Complete | [A40](#a40); launch containment; separate M4 owner. Tests SEC-15-T01 onward and T90–T92. |
+| COM-01 | [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | M1 | Planned | [A11](#a11); required before assigned milestone exit. Tests COM-01-T01 onward and T90–T92. |
+| COM-02 | [COM-02](tasks/COM-02.md) — Allow renewal after effective subscription expiry | M1 | Planned | [A12](#a12); required before assigned milestone exit. Tests COM-02-T01 onward and T90–T92. |
+| COM-03 | [COM-03](tasks/COM-03.md) — Define calendar durations and atomic subscription review | M1 | Planned | [A13](#a13); required before assigned milestone exit. Tests COM-03-T01 onward and T90–T92. |
+| COM-04 | [COM-04](tasks/COM-04.md) — Disable simulated gateways and implement official adapters later | M3 | Planned | [A14](#a14), [A15](#a15); launch disabled; providers M4. Tests COM-04-T01 onward and T90–T92. |
+| COM-05 | [COM-05](tasks/COM-05.md) — Scope checkout idempotency by actor and payload | M1 | Planned | [A16](#a16); required before assigned milestone exit. Tests COM-05-T01 onward and T90–T92. |
+| COM-06 | [COM-06](tasks/COM-06.md) — Make payment transitions auditable and fulfillment recoverable | M1 | Planned | [A15](#a15), [A18](#a18); required before assigned milestone exit. Tests COM-06-T01 onward and T90–T92. |
+| COM-07 | [COM-07](tasks/COM-07.md) — Validate products and snapshot explicit access durations | M1 | Planned | [A13](#a13), [A18](#a18); required before assigned milestone exit. Tests COM-07-T01 onward and T90–T92. |
+| COM-08 | [COM-08](tasks/COM-08.md) — Make voucher redemption unique per student | M3 | Planned | [A17](#a17); required before assigned milestone exit. Tests COM-08-T01 onward and T90–T92. |
+| COM-09 | [COM-09](tasks/COM-09.md) — Define effective dates, archival and retraction semantics | M1 | Planned | [A12](#a12); required before assigned milestone exit. Tests COM-09-T01 onward and T90–T92. |
+| COM-10 | [COM-10](tasks/COM-10.md) — Use effective audiences and real ledger metrics | M2 | Planned | [A11](#a11), [A30](#a30); required before assigned milestone exit. Tests COM-10-T01 onward and T90–T92. |
+| COM-11 | [COM-11](tasks/COM-11.md) — Make course pricing atomic and preserve purchase history | M1 | Planned | [A15](#a15); required before assigned milestone exit. Tests COM-11-T01 onward and T90–T92. |
+| COM-12 | [COM-12](tasks/COM-12.md) — Complete resumable manual checkout and receipt review | M3 | Planned | [A16](#a16), [A18](#a18); required before assigned milestone exit. Tests COM-12-T01 onward and T90–T92. |
+| LRN-01 | [LRN-01](tasks/LRN-01.md) — Persist expiry before returning a quiz error | M2 | Planned | [A23](#a23); required before assigned milestone exit. Tests LRN-01-T01 onward and T90–T92. |
+| LRN-02 | [LRN-02](tasks/LRN-02.md) — Unify versioned assessment definitions and frozen attempts | M2 | Planned | [A25](#a25); required before assigned milestone exit. Tests LRN-02-T01 onward and T90–T92. |
+| LRN-03 | [LRN-03](tasks/LRN-03.md) — Implement per-type grading and human rubric review | M2 | Planned | [A05](#a05), [A26](#a26); required before assigned milestone exit. Tests LRN-03-T01 onward and T90–T92. |
+| LRN-04 | [LRN-04](tasks/LRN-04.md) — Serialize assignment attempts and assessment submission | M2 | Planned | [A23](#a23), [A25](#a25), [A27](#a27); required before assigned milestone exit. Tests LRN-04-T01 onward and T90–T92. |
+| LRN-05 | [LRN-05](tasks/LRN-05.md) — Publish only exact reviewed immutable content revisions | M2 | Planned | [A19](#a19), [A35](#a35); required before assigned milestone exit. Tests LRN-05-T01 onward and T90–T92. |
+| LRN-06 | [LRN-06](tasks/LRN-06.md) — Render every supported ordered lesson block | M2 | Planned | [A20](#a20); required before assigned milestone exit. Tests LRN-06-T01 onward and T90–T92. |
+| LRN-07 | [LRN-07](tasks/LRN-07.md) — Migrate sections to one canonical module hierarchy | M1 | Planned | [A21](#a21); required before assigned milestone exit. Tests LRN-07-T01 onward and T90–T92. |
+| LRN-08 | [LRN-08](tasks/LRN-08.md) — Contain incomplete boards and preserve block identity | M2 | Planned | [A20](#a20); launch containment; separate M4 owner. Tests LRN-08-T01 onward and T90–T92. |
+| LRN-09 | [LRN-09](tasks/LRN-09.md) — Authorize previews per lesson | M2 | Planned | [A22](#a22); required before assigned milestone exit. Tests LRN-09-T01 onward and T90–T92. |
+| LRN-10 | [LRN-10](tasks/LRN-10.md) — Resume attempts from server deadlines and saved answers | M2 | Planned | [A24](#a24); required before assigned milestone exit. Tests LRN-10-T01 onward and T90–T92. |
+| LRN-11 | [LRN-11](tasks/LRN-11.md) — Handle already-expired assessment timer responses safely | M2 | Planned | [A24](#a24); required before assigned milestone exit. Tests LRN-11-T01 onward and T90–T92. |
+| LRN-12 | [LRN-12](tasks/LRN-12.md) — Persist bounded watch progress and reliable completion | M2 | Planned | [A28](#a28); required before assigned milestone exit. Tests LRN-12-T01 onward and T90–T92. |
+| LRN-13 | [LRN-13](tasks/LRN-13.md) — Send validated announcements to owned-course audiences | M2 | Planned | [A07](#a07), [A30](#a30); required before assigned milestone exit. Tests LRN-13-T01 onward and T90–T92. |
+| LRN-14 | [LRN-14](tasks/LRN-14.md) — Use validated teacher-provided live meeting links | M2 | Planned | [A07](#a07), [A31](#a31); required before assigned milestone exit. Tests LRN-14-T01 onward and T90–T92. |
+| LRN-15 | [LRN-15](tasks/LRN-15.md) — Repair catalog routing, search, filters and pagination | M2 | Planned | [A41](#a41); required before assigned milestone exit. Tests LRN-15-T01 onward and T90–T92. |
+| LRN-16 | [LRN-16](tasks/LRN-16.md) — Complete Arabic/English interface and uploader-supplied locales | M2 | Planned | [A32](#a32), [A42](#a42); required before assigned milestone exit. Tests LRN-16-T01 onward and T90–T92. |
+| ENG-01 | [ENG-01](tasks/ENG-01.md) — Repair the Zod 4 build blocker and nested config schema | M0 | Complete | [A01](#a01); required before assigned milestone exit. Tests ENG-01-T01 onward and T90–T92. |
+| ENG-02 | [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | M1 | Planned | [A18](#a18); required before assigned milestone exit. Tests ENG-02-T01 onward and T90–T92. |
+| ENG-03 | [ENG-03](tasks/ENG-03.md) — Enforce server capability controls for staged features | M0 | Complete | [A14](#a14); required before assigned milestone exit. Tests ENG-03-T01 onward and T90–T92. |
+| ENG-04 | [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | M1 | Planned | [A04](#a04); required before assigned milestone exit. Tests ENG-04-T01 onward and T90–T92. |
+| ENG-05 | [ENG-05](tasks/ENG-05.md) — Introduce versioned migrations and upgrade verification | M1 | Planned | [A01](#a01), [A39](#a39); required before assigned milestone exit. Tests ENG-05-T01 onward and T90–T92. |
+| ENG-06 | [ENG-06](tasks/ENG-06.md) — Make readiness, shutdown and storage outages honest | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-06-T01 onward and T90–T92. |
+| ENG-07 | [ENG-07](tasks/ENG-07.md) — Persist actual audit actors and durable outbox events | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-07-T01 onward and T90–T92. |
+| ENG-08 | [ENG-08](tasks/ENG-08.md) — Make public reads side-effect free and reference keys unique | M1 | Planned | [A38](#a38); required before assigned milestone exit. Tests ENG-08-T01 onward and T90–T92. |
+| ENG-09 | [ENG-09](tasks/ENG-09.md) — Bound existing media handling and stream ranges correctly | M1 | Planned | [A29](#a29); required before assigned milestone exit. Tests ENG-09-T01 onward and T90–T92. |
+| ENG-10 | [ENG-10](tasks/ENG-10.md) — Bound queries, shared rate limits and sensitive logging | M3 | Planned | [A04](#a04), [A38](#a38); required before assigned milestone exit. Tests ENG-10-T01 onward and T90–T92. |
+| ENG-11 | [ENG-11](tasks/ENG-11.md) — Add verification, password recovery and secure account changes | M3 | Planned | [A33](#a33); recovery launch; guardian portal ENH-11 M4. Tests ENG-11-T01 onward and T90–T92. |
+| ENG-12 | [ENG-12](tasks/ENG-12.md) — Gate developer integrations and specify complete later enablement | M4 | Planned | [A40](#a40); API disabled by ENG-03; implementation M4. Tests ENG-12-T01 onward and T90–T92. |
+| ENG-13 | [ENG-13](tasks/ENG-13.md) — Build trustworthy isolated tests and production CI gates | M0 | In Progress | [A01](#a01), [A40](#a40); required before assigned milestone exit. Tests ENG-13-T01 onward and T90–T92. |
+| ENG-14 | [ENG-14](tasks/ENG-14.md) — Recover client sessions without discarding retryable failures | M1 | Planned | [A08](#a08), [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests ENG-14-T01 onward and T90–T92. |
+| ENG-15 | [ENG-15](tasks/ENG-15.md) — Align capability claims, runbooks and software-license status | M0 | Complete | [A36](#a36); claims corrected; license owner decision recorded. Tests ENG-15-T01 onward and T90–T92. |
 
 ## Original acceptance cases — 42 of 42
 

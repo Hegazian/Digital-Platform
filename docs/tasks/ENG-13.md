@@ -11,16 +11,22 @@
 | Original finding / request | [ENG-13 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
 | Original evidence classification | P1 / S |
 | Acceptance links | [A01](../AUDIT_TRACEABILITY.md#a01), [A40](../AUDIT_TRACEABILITY.md#a40) |
-| Release disposition | Required before completing this milestone; no release credit for documentation alone. |
+| Release disposition | M0 harness/dependency subgate Complete; full-product coverage and production CI evidence remain In Progress through G3. |
 
-**M0 checkpoint evidence:** See [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [follow-up review fixes](../M0_REVIEW_RESOLUTION.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
+**M0 checkpoint evidence:** See [current verification](../CURRENT_STATUS.md), [implementation results and task disposition](../M0_IMPLEMENTATION_STATUS.md), [second-round fixes](../M0_REVIEW_ROUND_2.md), and [manual checks](../M0_MANUAL_TESTING.md). Completion refers to the internal engineering/containment deliverable. Production canaries, live rotations and G1–G3 evidence are not claimed. ENG-13 keeps its broader release obligation In Progress. The task scenarios/checklists below retain the full acceptance scope; an unchecked later operational scenario is not represented as executed.
 
+
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. The isolated PostgreSQL harness, whole-source reporting, client component tests, production/development browser jobs and dependency policy are implemented. The latest evidence is 397 server tests, 63 client tests and 24 browser checks per mode. Full-source G3 coverage, migration/concurrency/domain breadth, actual-device coverage and a successful remote CI run remain open. Use the [coverage-gap inventory](../../audit/review-round-2/coverage-gaps.json), domain owners and [next steps](../NEXT_STEPS.md); do not lower release thresholds to mark this Complete. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
+**Original audit/request context; later implementation is recorded above.**
+
 CI runs backend tests without coverage and has no Playwright job, dependency advisory gate, or migration-upgrade test. Browser tests skip video access, conditionally skip admin paths, and sometimes accept an empty catalog. The RTL assertion accepts either direction after toggling.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

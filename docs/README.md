@@ -1,14 +1,14 @@
 # Implementation documentation — start here
 
-Version: **21 October 2026**. Baseline code: **2fbdc8e**. The M0 internal engineering checkpoint is finalized; [implementation status](M0_IMPLEMENTATION_STATUS.md) records verification, ENG-13's continuing release obligation and the production holds. G1–G3 remain open.
+Refreshed: **22 October 2026**. Original audit baseline: **2fbdc8e**. Latest verified application commit: **d9c720f**. The M0 internal engineering checkpoint is finalized; [current status](CURRENT_STATUS.md) records the latest tests, coverage, ENG-13's continuing release obligation and production holds. G1–G3 remain open. **Next implementation: ENG-05 migration baseline**, following [the M1 handoff](NEXT_STEPS.md).
 
 > A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
 ## Ordered start checklist
 
 1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
-2. Read [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); keep external onboarding disabled until safety gate G0.
-3. Review the completed M0 evidence, then follow M1–M3 dependencies in [roadmap](ROADMAP_BACKLOG.md). ENG-13 continues the full-product coverage/release work.
+2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
+3. Start [ENG-05](tasks/ENG-05.md), then follow the [M1 execution waves](NEXT_STEPS.md#m1-implementation-waves) and M1–M3 dependencies in [roadmap](ROADMAP_BACKLOG.md). ENG-13 continues the full-product coverage/release work.
 4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [M0 implementation status](M0_IMPLEMENTATION_STATUS.md).
 5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
 6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
@@ -19,6 +19,8 @@ Version: **21 October 2026**. Baseline code: **2fbdc8e**. The M0 internal engine
 
 | Document | Purpose |
 |---|---|
+| [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
+| [Next implementation steps](NEXT_STEPS.md) | ENG-05 handoff, all 25 M1 tasks in dependency waves, ongoing test work and later gates |
 | [Product goal and scope](PRODUCT_SCOPE.md) | Audiences, permissions, all-school curriculum, launch scope and exclusions |
 | [Target architecture](TARGET_ARCHITECTURE.md) | Module/data ownership, workers, deployment and safety boundaries |
 | [API and data contracts](API_DATA_CONTRACTS.md) | Normative DTOs, schemas, actions, errors, validation and compatibility |

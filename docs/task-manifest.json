@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "date": "2026-10-21",
+  "date": "2026-10-22",
   "baseline": "2fbdc8e",
+  "implementationCommit": "d9c720f",
   "milestones": {
     "M0": "Scope and immediate safety",
     "M1": "Foundation and content delivery",

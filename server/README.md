@@ -1,6 +1,6 @@
 # API server — prototype and planned architecture
 
-**Current direction: 21 October 2026.** M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [M0 implementation status](../docs/M0_IMPLEMENTATION_STATUS.md). Previous content is [superseded and preserved](../docs/archive/server/README.md).
+**Updated: 22 October 2026**, application checkpoint **d9c720f**. M0 engineering is finalized for internal synthetic data; production onboarding remains gated by G1–G3 and operator verification. See [current results and remaining gaps](../docs/CURRENT_STATUS.md). **Next: [ENG-05 migration baseline](../docs/NEXT_STEPS.md#first-implementation-task--eng-05)**, then the ordered M1 waves while ENG-13 continues testing. Previous content is [superseded and preserved](../docs/archive/server/README.md).
 
 Express/Prisma/PostgreSQL modular monolith with existing JWT/refresh-session authentication. [Current scope](../docs/PRODUCT_SCOPE.md), [contracts](../docs/API_DATA_CONTRACTS.md), [tasks](../docs/ROADMAP_BACKLOG.md), [test safety](../docs/TESTING_RELEASE_GATES.md) and [operations](../docs/MIGRATION_OPERATIONS.md) are authoritative.
 

@@ -15,11 +15,17 @@
 
 
 
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+
 ## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
 
 [discussion.controller.ts](<../../server/src/modules/discussions/discussion.controller.ts>) allows any authenticated account to list a course's complete threads/replies and post to it, without validating membership or the relationship between submitted course and lesson IDs. Assignment detail and lesson-assignment listing in [assignment.routes.ts](<../../server/src/modules/assignments/assignment.routes.ts>) similarly lack the learning-access guard applied to submission. Question pools are globally readable and writable by approved teachers with no ownership field. Apply a shared content/ownership policy to reads and writes, not just attempts and submissions.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

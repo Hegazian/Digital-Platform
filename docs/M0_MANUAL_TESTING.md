@@ -2,6 +2,8 @@
 
 Use synthetic accounts and the local test/development database. These steps verify the M0 safety changes; full authoring, payments, imports and progress acceptance remain in their M1–M3 tasks.
 
+Reviewed **22 October 2026** against **d9c720f**. The [current status](CURRENT_STATUS.md) records 397 server tests, 63 client tests and 24 browser checks passing in each production/development mode. Repeating these steps supplies evidence for your environment; the documentation refresh did not rerun them. After validating M0 locally, follow [ENG-05 and the M1 plan](NEXT_STEPS.md). Existing `db:push:test` usage below is confined to disposable test databases until the migration task replaces it.
+
 ## 1. Prepare the isolated automated environment
 
 From `D:\digital platform`, start the dedicated database:

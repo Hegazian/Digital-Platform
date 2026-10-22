@@ -15,11 +15,17 @@
 
 
 
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. Uploaded code samples are now readable as inert Arabic/English-presented content while execution remains API-disabled. A complete ordered renderer for all supported block types and accessible error/preview behavior remains planned. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+
 ## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
 
 [VideoPlayerSection](<../../client/src/components/VideoPlayerSection.tsx>) copies resource/block data but has no renderer for lesson `content`, TEXT/LINK/DOCUMENT/LIVE_SESSION blocks, or their required ordering. Teachers can author content that students cannot consume.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

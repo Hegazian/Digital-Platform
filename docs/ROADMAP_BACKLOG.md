@@ -2,6 +2,8 @@
 
 Tasks begin **Planned**. Priorities P0=immediate blocker, P1=required correctness/security, P2=important completeness/quality. Milestones are dependency gates, not calendar estimates. Status changes require exact implementation/test evidence; the documentation delivery does not complete engineering tasks.
 
+Updated **22 October 2026** against verified application commit **d9c720f**: **15 Complete / 1 In Progress / 61 Planned**. See [current evidence](CURRENT_STATUS.md) and [the actionable next-steps handoff](NEXT_STEPS.md); completed M0 tasks are retained for traceability, not queued for reimplementation.
+
 ## Milestones and release assignment
 
 | Milestone | Exit / scope | Gate |
@@ -97,6 +99,16 @@ M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 
 | [ENH-15](tasks/ENH-15.md) — Move untrusted code to a separate isolated executor | P1 | M4 | Planned | [SEC-15](tasks/SEC-15.md), [ENG-07](tasks/ENG-07.md), [COM-01](tasks/COM-01.md) |
 | [ENH-16](tasks/ENH-16.md) — Provide support and operational privacy/retention workflows | P1 | M3 | Planned | [ENG-07](tasks/ENG-07.md), [ENH-05](tasks/ENH-05.md) |
 | [ENH-17](tasks/ENH-17.md) — Measure real educational, editorial and commercial outcomes | P2 | M3 | Planned | [COM-10](tasks/COM-10.md), [LRN-03](tasks/LRN-03.md), [LRN-12](tasks/LRN-12.md), [LRN-05](tasks/LRN-05.md), [ENG-07](tasks/ENG-07.md) |
+
+## Remaining execution queue
+
+**Start ENG-05**, continue ENG-13, then use the [five M1 waves](NEXT_STEPS.md#m1-implementation-waves). The dependency graph below is the complete reference; this queue excludes Complete tasks:
+
+- **M0:** [ENG-13](tasks/ENG-13.md) (continuing)
+- **M1:** [ENG-05](tasks/ENG-05.md), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md), [COM-01](tasks/COM-01.md), [SEC-06](tasks/SEC-06.md), [SEC-07](tasks/SEC-07.md), [SEC-12](tasks/SEC-12.md), [SEC-13](tasks/SEC-13.md), [SEC-14](tasks/SEC-14.md), [COM-03](tasks/COM-03.md), [COM-02](tasks/COM-02.md), [COM-05](tasks/COM-05.md), [ENG-07](tasks/ENG-07.md), [COM-06](tasks/COM-06.md), [COM-07](tasks/COM-07.md), [COM-11](tasks/COM-11.md), [LRN-07](tasks/LRN-07.md), [ENG-02](tasks/ENG-02.md), [ENG-04](tasks/ENG-04.md), [ENG-06](tasks/ENG-06.md), [ENH-01](tasks/ENH-01.md), [ENG-08](tasks/ENG-08.md), [ENG-09](tasks/ENG-09.md), [ENG-14](tasks/ENG-14.md), [ENH-03](tasks/ENH-03.md)
+- **M2:** [COM-10](tasks/COM-10.md), [LRN-01](tasks/LRN-01.md), [LRN-02](tasks/LRN-02.md), [LRN-03](tasks/LRN-03.md), [LRN-04](tasks/LRN-04.md), [LRN-05](tasks/LRN-05.md), [LRN-06](tasks/LRN-06.md), [LRN-08](tasks/LRN-08.md), [LRN-09](tasks/LRN-09.md), [LRN-10](tasks/LRN-10.md), [LRN-11](tasks/LRN-11.md), [LRN-12](tasks/LRN-12.md), [ENH-10](tasks/ENH-10.md), [LRN-13](tasks/LRN-13.md), [LRN-14](tasks/LRN-14.md), [LRN-15](tasks/LRN-15.md), [LRN-16](tasks/LRN-16.md), [ENH-04](tasks/ENH-04.md), [ENH-05](tasks/ENH-05.md), [ENH-06](tasks/ENH-06.md), [ENH-07](tasks/ENH-07.md)
+- **M3:** [COM-04](tasks/COM-04.md), [COM-08](tasks/COM-08.md), [COM-12](tasks/COM-12.md), [ENG-10](tasks/ENG-10.md), [ENG-11](tasks/ENG-11.md), [ENH-16](tasks/ENH-16.md), [ENH-11](tasks/ENH-11.md), [ENH-17](tasks/ENH-17.md)
+- **M4:** [ENG-12](tasks/ENG-12.md), [ENH-08](tasks/ENH-08.md), [ENH-09](tasks/ENH-09.md), [ENH-12](tasks/ENH-12.md), [ENH-13](tasks/ENH-13.md), [ENH-14](tasks/ENH-14.md), [ENH-15](tasks/ENH-15.md)
 
 ## Ordered implementation sequence
 

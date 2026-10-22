@@ -1,6 +1,6 @@
 # Documentation verification report
 
-Package date: **2026-10-21**. Check type: static documentation integrity; no application tests, migrations or deployment executed.
+Package date: **2026-10-22**. Check type: static documentation integrity; no application tests, migrations or deployment executed.
 
 Status: **PASSED**.
 
@@ -10,9 +10,10 @@ Status: **PASSED**.
 | Original finding owners | 58 / 58 |
 | Original acceptance dispositions | 42 / 42 |
 | Dependency edges / cycles | 158 / none |
-| Local links / heading links checked | 1987 / 480 |
+| Local links / heading links checked | 2293 / 500 |
 | Exact archived originals / SHA-256 | 13 / preserved |
 | Required task sections, source paths and tests | passed |
+| Current checkpoint/counts/coverage and M1 wave ownership/order | passed |
 | Contract-owner register / disabled API matrix | passed |
 | Active AI requirement scan | 0 suspect lines |
 

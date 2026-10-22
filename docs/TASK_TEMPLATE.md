@@ -2,12 +2,20 @@
 
 Use one stable ID/file per task. All initial tasks are **Planned**. Link to an owning shared implementation rather than repeating an access/revision/asset/assessment engine. Preserve original findings and evidence uncertainty.
 
+Updated **22 October 2026**. Existing task states and evidence are in [current status](CURRENT_STATUS.md); the [next-steps plan](NEXT_STEPS.md) defines the remaining execution order. Task descriptions preserve baseline observations separately from later repairs so implementers do not redo completed work.
+
 ```text
 # ID — Concrete outcome title
 
 Metadata: stable ID, title, priority, milestone/subgate, status, implementation owner,
 dependencies (stable task links), original finding/request, acceptance IDs,
 launch versus staged disposition.
+
+## Current delivery and next action
+Latest verified application commit/date, already implemented subparts, remaining
+scope and named evidence. Distinguish the internal engineering checkpoint from
+production verification and later feature gates. Never mark work Complete solely
+because this document exists or a neighboring task fixed one symptom.
 
 ## Current behavior and evidence
 Exact source locations and baseline/commit; R/S/C/G label; reproduce steps/results
@@ -57,4 +65,4 @@ Explain genuinely inapplicable dimensions, never silently omit them.
 - [ ] Attach exact commit/environment/commands/test artifacts and review sign-off.
 ```
 
-Statuses may later progress Planned → In progress → In review → Complete only with evidence. “Blocked” needs a concrete dependency/owner, not vague uncertainty. A staged task or subdeliverable stays incomplete until its enablement gate passes even if launch containment is done. Required release gates cannot be checked from this document-generation exercise.
+Serialized task statuses are exactly **Planned → In Progress → Complete**, matching the manifest and validator. Record review and blocking dependencies in evidence/notes; do not invent unsupported status values. Completion requires reviewed implementation evidence. A staged task or subdeliverable stays incomplete until its enablement gate passes even if launch containment is done. M0 containment tasks can be Complete for their explicit internal scope while separate production holds and future owning tasks remain open. Required release gates cannot be checked from a documentation-generation exercise.

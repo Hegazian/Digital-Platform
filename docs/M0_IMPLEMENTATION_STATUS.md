@@ -1,10 +1,10 @@
 # M0 implementation status
 
-Finalized **21 October 2026** on `codex/finalize-milestone-0`. **The M0 engineering/G0 checkpoint is complete for internal synthetic-data work.** G1–G3 and production onboarding remain gated. ENG-13 retains its broader release-coverage obligation as In Progress; its M0 harness/dependency subgate is complete. No production deployment, secret rotation or cloud-object migration is claimed.
+Initial checkpoint finalized **21 October 2026** at **fbe5fbf**, with follow-up fixes verified **22 October** at **d9c720f**, on `codex/finalize-milestone-0`. **The M0 engineering/G0 checkpoint is complete for internal synthetic-data work.** G1–G3 and production onboarding remain gated. ENG-13 retains its broader release-coverage obligation as In Progress; its M0 harness/dependency subgate is complete. No production deployment, secret rotation or cloud-object migration is claimed.
 
 All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_RESOLUTION.md) and the [step-by-step manual guide](M0_MANUAL_TESTING.md).
 
-**Latest review: 22 October 2026.** The [second review round](M0_REVIEW_ROUND_2.md) records additional confirmed fixes, expanded dashboard/session/cancellation coverage and the latest results. The counts below preserve the original 21 October checkpoint evidence; use the second-round record for the current branch.
+**Latest review: 22 October 2026.** The [second review round](M0_REVIEW_ROUND_2.md) records twelve additional confirmed fixes and expanded dashboard/session/cancellation coverage. [Current status](CURRENT_STATUS.md) summarizes 397 server tests, 63 client tests and 24 browser checks in each of production/development modes. Only the explicitly labeled original-checkpoint section below preserves the earlier counts. **Next: [ENG-05 and the M1 handoff](NEXT_STEPS.md)**.
 
 ## Implemented in this working tree
 
@@ -44,15 +44,15 @@ All five follow-up review findings are fixed; see [review resolution](M0_REVIEW_
 
 ## Coverage and release limits
 
-All production TS/TSX files are included in reports; tests are excluded deliberately. Backend: **71.99% statements, 63.16% branches, 91.86% functions, 72.83% lines**. Client: **6.19% statements, 6.23% branches, 3.58% functions, 6.06% lines**. These are whole-source results, not feature-completeness percentages.
+Latest 22 October results include all production TS/TSX files; tests are excluded deliberately. Backend: **71.99% statements, 63.18% branches, 91.87% functions, 72.84% lines**. Client: **11.29% statements, 11.33% branches, 6.57% functions, 10.88% lines**. These are whole-source unit/component results, not feature-completeness percentages. The [portable evidence](../audit/review-round-2/verification.json) and [gap inventory](../audit/review-round-2/coverage-gaps.json) retain denominators and uncovered paths.
 
-The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with stricter per-file guards: current authorization **98.07% statements/branches and 100% lines/functions**, uploader token validation **100% lines/statements/functions**, and the scan/signature gate's explicit minimums. Client protected-file delivery has **100%** coverage in all dimensions; renewal has **96.82% statements, 90.62% branches and 100% lines/functions**. These narrow gates do not replace full-product coverage.
+The M0 server ratchet is 70/60/90/70 (statements/branches/functions/lines), with stricter per-file guards for current authorization, uploader token validation and scanning/signatures. Client protected-file, renewal, API transport and proxy paths have explicit gates. Exact current per-file results are in the [second review](M0_REVIEW_ROUND_2.md) and its reports. These narrow gates do not replace full-product coverage.
 
 `npm run test:coverage:release` in each package retains the agreed **80% statements/lines/functions and 75% branches** G3 target. That target is **not met** and is an explicit paid-release hold. M1–M3 owners add the remaining feature tests; the broader legacy browser suite is opt-in and is not counted as passing M0 evidence.
 
 ## Production and later-release holds
 
-1. Run the remote CI workflow for the committed branch and preserve its artifacts. Accumulate the remaining M1–M3 journeys and meet the full-source release target; M0's ten required browser tests already run without skips.
+1. Run the remote CI workflow for the committed branch and preserve its artifacts. Accumulate the remaining M1–M3 journeys and meet the full-source release target; the latest M0 suite has 24 browser checks passing in each mode without skips, which does not cover every feature.
 2. In the deployment environment, rotate any previously used or exposed credentials; verify the deployed secrets and remove bootstrap credentials.
 3. Provision the production private storage bucket and test that its origin denies anonymous reads; verify object migration and authorized playback/download end to end.
 4. Provision ClamAV, run clean/infected/unavailable/timeout upload checks through the production upload route, and ensure the reverse proxy enforces upload size limits.

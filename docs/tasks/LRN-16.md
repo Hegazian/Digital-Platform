@@ -15,11 +15,17 @@
 
 
 
+## Current delivery and next action
+
+Updated **22 October 2026** against application commit **d9c720f**. M0 repaired persisted Arabic hydration and mobile profile/logout overlap; the expanded desktop/mobile smoke suite passes. Full Arabic/English labels, authoring/assessment/payment flows, keyboard/screen-reader and actual-device acceptance remain planned. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+
 ## Current behavior and evidence
+
+**Original audit/request context; later implementation is recorded above.**
 
 Arabic support is partial: core player, quizzes, board, AI errors, catalog title, and many management controls contain English-only text. Persisted Arabic/RTL state does not rerun `setLang` on hydration; the root remains `lang="en"` unless toggled. There is no `/ar`/`/en` URL or server-rendered locale metadata. Quiz question text, lesson body, and many descriptions have one language field.
 
-Evidence is tied to baseline commit **2fbdc8e**, 21 October 2026. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
+The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 21 October 2026; the current-delivery section above records later changes. R means a local fixture/double reproduction, S source/compiler evidence, C conditional risk and G incomplete capability. Conditional claims require the verification below before reporting a reproduced production defect. See the [baseline and limits](../TESTING_RELEASE_GATES.md#baseline-evidence).
 
 ## Intended behavior and ownership boundary
 

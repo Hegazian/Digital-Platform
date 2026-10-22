@@ -1,5 +1,7 @@
 # Migration and operations plan
 
+Refreshed **22 October 2026** against application checkpoint **d9c720f**. [Current status](CURRENT_STATUS.md) distinguishes local evidence from external holds. **Next implementation is [ENG-05](NEXT_STEPS.md#first-implementation-task--eng-05)**: reviewed migration history, populated upgrade and restore verification. This plan does not record a production operation as completed.
+
 ## M0 upgrade and production hold
 
 M0 is an internal synthetic-data safety checkpoint. Production configuration, live credential rotation, object checksums/cutover and representative backup/restore sign-off remain mandatory before real traffic. Local tests and CI configuration do not certify those external systems.
@@ -18,7 +20,7 @@ Before traffic, operators must:
 
 No production deployment, credential rotation or bucket mutation was performed during this M0 implementation. The [manual guide](M0_MANUAL_TESTING.md) covers local verification.
 
-Version **1.0 — planned**, 21 October 2026. This document defines work to implement and rehearse; no production migration, deployment, secret rotation or data deletion is authorized by merely generating this package. Domain task details and C01–C10 govern exact commands and schemas.
+Version **1.1 — planned operations**, 22 October 2026. This document defines work to implement and rehearse; no production migration, deployment, secret rotation or data deletion is authorized by merely generating this package. Domain task details and C01–C10 govern exact commands and schemas. CI is configured for Node 22 and separate production/development browser jobs; preserve a successful remote run for the actual release commit before onboarding.
 
 ## Preflight and preservation inventory
 

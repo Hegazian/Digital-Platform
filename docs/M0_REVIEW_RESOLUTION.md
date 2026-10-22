@@ -1,6 +1,6 @@
 # M0 follow-up review resolution
 
-The read-only review against baseline `2fbdc8e65a5bd5c33f749ed04b65155e9e06e1e2` identified five introduced regressions. All five are fixed in this branch. They extend existing owning tasks instead of creating duplicate task engines.
+The first read-only review against baseline `2fbdc8e65a5bd5c33f749ed04b65155e9e06e1e2` identified five introduced regressions, resolved at **fbe5fbf**. These remain fixed at the **22 October d9c720f** checkpoint. This document preserves that first review's evidence; the [second review](M0_REVIEW_ROUND_2.md) records twelve additional fixes. [Current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md) are the active handoff. Findings extend existing owning tasks instead of creating duplicate task engines.
 
 | Review finding | Implementation / owner | Regression evidence |
 |---|---|---|

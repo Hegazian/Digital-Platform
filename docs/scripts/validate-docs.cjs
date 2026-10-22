@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {date,implementationCommit,evidence,waves} = require('./current-state.cjs');
 const root = path.resolve(__dirname,'../..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const manifest = JSON.parse(read('docs/task-manifest.json'));
@@ -16,6 +17,19 @@ const expected = [
 ];
 const tasks = manifest.tasks;
 const byId = new Map(tasks.map(t=>[t.id,t]));
+check(manifest.date===date && manifest.implementationCommit===implementationCommit,'Manifest/current application checkpoint differs');
+const waveIds=waves.flatMap(w=>w.ids);
+const m1=tasks.filter(t=>t.milestone==='M1').map(t=>t.id);
+check(waveIds.length===m1.length && new Set(waveIds).size===m1.length && m1.every(id=>waveIds.includes(id)),'M1 waves must include each M1 task exactly once');
+check(waveIds[0]==='ENG-05','M1 handoff must start with ENG-05');
+const available=new Set(tasks.filter(t=>t.status==='Complete').map(t=>t.id));
+for(const w of waves) {
+ for(const id of w.ids) {
+  const t=byId.get(id);
+  check(t?.dependencies.every(d=>available.has(d)),`Wave ${w.name} starts ${id} before its dependencies`);
+ }
+ for(const id of w.ids)available.add(id);
+}
 const files = fs.readdirSync(path.join(root,'docs/tasks')).filter(p=>p.endsWith('.md'));
 check(tasks.length===77 && byId.size===77,'Expected 77 unique task records');
 check(files.length===77,'Expected exactly 77 task Markdown files');
@@ -24,7 +38,7 @@ const sourceAudit = read('audit/PRODUCT_READINESS_REVIEW.md');
 const findingIds = new Set([...sourceAudit.matchAll(/(?:^### |^\| )((?:SEC|COM|LRN|ENG)-\d{2})(?: —| \/)/gm)].map(m=>m[1]));
 check(findingIds.size===58,'Expected 58 original finding headings/rows in preserved audit');
 for(const id of findingIds) check(byId.get(id)?.originalFinding===id,'Missing exact finding owner '+id);
-const sections = ['Current behavior and evidence','Intended behavior and ownership boundary','Ordered implementation changes','API, type and schema contract','Authorization, concurrency and failure handling','Migration, compatibility and rollback','Verification and acceptance tests'];
+const sections = ['Current delivery and next action','Current behavior and evidence','Intended behavior and ownership boundary','Ordered implementation changes','API, type and schema contract','Authorization, concurrency and failure handling','Migration, compatibility and rollback','Verification and acceptance tests'];
 for(const t of tasks) {
  const docPath=`docs/tasks/${t.id}.md`;
  check(fs.existsSync(path.join(root,docPath)),'Missing task file '+t.id);
@@ -72,7 +86,7 @@ for(const a of archives) {
  check(crypto.createHash('sha256').update(b).digest('hex')===a.sha256,'Archived original changed: '+a.archive);
 }
 check(archives.length===13,'Expected 13 exact archived original guides');
-const shared=['README.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
+const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,'docs',p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>'docs/'+p),...files.map(p=>'docs/tasks/'+p),...archives.map(a=>a.path),'docs/archive/INDEX.md'];
 let links=0,anchors=0;
@@ -118,9 +132,19 @@ for(const p of activePaths.filter(p=>!p.includes('/tasks/') && !p.endsWith('AUDI
  }
 }
 check(suspicious.length===0,'Review active AI requirement matches: '+suspicious.join('\n'));
+const current=read('docs/CURRENT_STATUS.md');
+check(current.includes(`**${implementationCommit}**`),'Current status omits the verified application commit');
+for(const app of ['server','client']) {
+ const label=app==='server'?'Server':'Client';
+ check(current.includes(`| ${label} tests | ${evidence[app].files} files / ${evidence[app].tests} tests passed |`),'Current test counts differ from evidence: '+app);
+ const values=['statements','branches','functions','lines'].map(d=>evidence[app].coverage[d].pct+'%').join(' / ');
+ check(current.includes(values),'Current coverage differs from evidence: '+app);
+}
+for(const mode of ['production','development'])check(current.includes(`${evidence.browser[mode].tests} passed / ${evidence.browser[mode].skipped} skipped`),'Current browser counts differ from evidence: '+mode);
+check(current.includes(`**${tasks.length}: ${tasks.filter(t=>t.status==='Complete').length} Complete, ${tasks.filter(t=>t.status==='In Progress').length} In Progress, ${tasks.filter(t=>t.status==='Planned').length} Planned**`),'Current status counts differ from manifest');
 const summary={tasks:tasks.length,findings:findingIds.size,acceptanceCases:ac.length,dependencyEdges:edges,localLinks:links,headingLinks:anchors,archivedOriginals:archives.length,errors:errors.length};
 const statusCounts=Object.fromEntries(['Complete','In Progress','Planned'].map(s=>[s,tasks.filter(t=>t.status===s).length]));
-const report=`# Documentation verification report\n\nPackage date: **2026-10-21**. Check type: static documentation integrity; no application tests, migrations or deployment executed.\n\nStatus: **${errors.length?'FAILED':'PASSED'}**.\n\n| Check | Result |\n|---|---|\n| Individual task files / status counts | ${tasks.length} / ${statusCounts.Complete} complete, ${statusCounts['In Progress']} in progress, ${statusCounts.Planned} planned |\n| Original finding owners | ${findingIds.size} / 58 |\n| Original acceptance dispositions | ${ac.length} / 42 |\n| Dependency edges / cycles | ${edges} / ${errors.some(e=>e.startsWith('Dependency cycle'))?'found':'none'} |\n| Local links / heading links checked | ${links} / ${anchors} |\n| Exact archived originals / SHA-256 | ${archives.length} / ${errors.some(e=>e.startsWith('Archived'))?'failed':'preserved'} |\n| Required task sections, source paths and tests | ${errors.some(e=>/Missing section|Missing implementation|Missing test|Insufficient/.test(e))?'failed':'passed'} |\n| Contract-owner register / disabled API matrix | ${errors.some(e=>/contract|owning|matrix|API policy/.test(e))?'failed':'passed'} |\n| Active AI requirement scan | ${suspicious.length} suspect lines |\n\n${errors.length?'## Errors\n\n'+errors.map(e=>'- '+e).join('\n'):'All 58 findings have one preserved-ID task, release disposition, dependencies and acceptance tests. All 42 acceptance cases have current criteria; A34/A35/A37 are uploader-driven replacements and A36 is superseded by removal checks. Current statuses are recorded above. Shared-owner boundaries and contract semantics were also reviewed editorially; static checks cannot prove an implementation is correct.'}\n\nReproduce: run node docs/scripts/build-docs.cjs, then node docs/scripts/validate-docs.cjs from the repository. Archived historical documents are intentionally excluded from active-link/requirement checks; their bytes are hash-verified. Static link checks do not assert that proposed endpoints already exist or that remote websites remain available.\n`;
+const report=`# Documentation verification report\n\nPackage date: **${manifest.date}**. Check type: static documentation integrity; no application tests, migrations or deployment executed.\n\nStatus: **${errors.length?'FAILED':'PASSED'}**.\n\n| Check | Result |\n|---|---|\n| Individual task files / status counts | ${tasks.length} / ${statusCounts.Complete} complete, ${statusCounts['In Progress']} in progress, ${statusCounts.Planned} planned |\n| Original finding owners | ${findingIds.size} / 58 |\n| Original acceptance dispositions | ${ac.length} / 42 |\n| Dependency edges / cycles | ${edges} / ${errors.some(e=>e.startsWith('Dependency cycle'))?'found':'none'} |\n| Local links / heading links checked | ${links} / ${anchors} |\n| Exact archived originals / SHA-256 | ${archives.length} / ${errors.some(e=>e.startsWith('Archived'))?'failed':'preserved'} |\n| Required task sections, source paths and tests | ${errors.some(e=>/Missing section|Missing implementation|Missing test|Insufficient/.test(e))?'failed':'passed'} |\n| Current checkpoint/counts/coverage and M1 wave ownership/order | ${errors.some(e=>/Current |M1 |Wave |checkpoint/.test(e))?'failed':'passed'} |\n| Contract-owner register / disabled API matrix | ${errors.some(e=>/contract|owning|matrix|API policy/.test(e))?'failed':'passed'} |\n| Active AI requirement scan | ${suspicious.length} suspect lines |\n\n${errors.length?'## Errors\n\n'+errors.map(e=>'- '+e).join('\n'):'All 58 findings have one preserved-ID task, release disposition, dependencies and acceptance tests. All 42 acceptance cases have current criteria; A34/A35/A37 are uploader-driven replacements and A36 is superseded by removal checks. Current statuses are recorded above. Shared-owner boundaries and contract semantics were also reviewed editorially; static checks cannot prove an implementation is correct.'}\n\nReproduce: run node docs/scripts/build-docs.cjs, then node docs/scripts/validate-docs.cjs from the repository. Archived historical documents are intentionally excluded from active-link/requirement checks; their bytes are hash-verified. Static link checks do not assert that proposed endpoints already exist or that remote websites remain available.\n`;
 fs.writeFileSync(path.join(root,'docs/VERIFICATION_REPORT.md'),report,'utf8');
 console.log(JSON.stringify(summary,null,2));
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
