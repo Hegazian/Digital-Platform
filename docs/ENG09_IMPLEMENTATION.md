@@ -31,7 +31,7 @@ client: npm test -- src/components/VideoUploader.test.tsx src/components/VideoPl
 
 The video integration suite uses the repository's guarded local `eduplatform_test` database. It verifies an approved-teacher upload, PROCESSING response, early-playback rejection, bad-signature rejection and absence of a video row after validation failure. Playback tests cover authorization and the existing byte-range/disconnect behavior. Scanner tests confirm a staged file is passed to ClamAV without a whole-file Buffer. The uploader component tests assert truthful English and Arabic processing messages and no simulated percentage.
 
-Fresh full package checks pass in the [M1 review evidence](../audit/m1-review/verification.json). The retained production and development/Strict Mode browser suites passed **24/24** checks per mode at `fbd0084`; the full suites have not been rerun after the current ENG-02 follow-up. Ordinary uploads still require PROCESSING and reject early playback with 409. These suites use browser emulation and do not replace physical-device evidence.
+Fresh full package checks pass in the [M1 review evidence](../audit/m1-review/verification.json). Complete local production and development/Strict Mode browser suites each passed **32/32**, with 0 failures/skips and clean exit. The suites cover the retained upload, protected playback, range, cancellation and document-switch checks alongside bilingual config and checkout flows. Ordinary uploads still require PROCESSING and reject early playback with 409. Browser emulation does not replace physical-device evidence.
 
 ## Still required before ENG-09 completion
 

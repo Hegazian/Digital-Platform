@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the current working tree before commit. ENG-02 follow-up verifies real-PostgreSQL catalog/order snapshots and bilingual settings/pricing/checkout. The full browser checkpoint remains pending after local runner teardown stalled.",
+  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the tested working tree based on 4123f5f before this increment is committed. ENG-02 verifies real-PostgreSQL catalog/order snapshots, bilingual settings/pricing, admin concurrency and student EGP checkout after rate changes. Complete local production and development/Strict Mode browser suites each pass 32/32 with clean process exit after the runner lifecycle fix.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
@@ -41,18 +41,19 @@
     "server/src/utils/file-validation.ts": "a81a8d0f258c4cff31d9ca12e97ac92785a10bf3d108237b9d1f54d225cb257d",
     "server/src/utils/schemas.ts": "46094a0d3cebd7704cc5524be5483656b113ebe4de9c8fa8398eb59c12d91afb",
     "server/src/utils/storage.ts": "48087ed64ad750bb6ff1dc64d7f2263ec2f2610caad4eae26d7205c313c0497d",
-    "client/e2e/m0/review.spec.ts": "4ef20c23f4117e2768baa2557402f7d83c6c56cf3dd5d20a7d01d26afaa0c852",
+    "client/e2e/m0/review.spec.ts": "3b56583f275135a06d62eda91b4b767745793694dd9d06eba73ef2be8f6b378e",
     "client/e2e/m0/safety.spec.ts": "69213be4256acb31e15e3b40fdf80503237186b0cfa3a7489b661da69d551ca8",
     "client/src/components/admin/CoursePricingManager.test.tsx": "f98cc5662a2776ac825ee64d97592c41a16d39bb21a6a9602366ffd6f3c0ef8e",
-    "server/scripts/m0-browser.cjs": "7e83f75a38878e77d77fd3c3002e4b1c69799a319cb5b23754cd669caf28d4ec",
+    "server/scripts/m0-browser.cjs": "8c74c87c8bb5376a1a042640414240bf7b115ae9948c0b3377af554d838807af",
     "client/src/components/__tests__/CheckoutModal.spec.tsx": "ee9e7d6a42f6770a68e3d9161ec82f09d375debe82038628233122d9d5be24b3",
     "server/src/modules/commerce/commerce.service.ts": "e611f66af609f14b0bfc44be023de48d9cc42312b87483f1f3d2e0b201d09a1b",
     "client/src/components/admin/PlatformSettings.test.tsx": "69931164ca6388b36c8f8b152c3d78330856c9906df4b19279aff280c952812b",
     "client/src/lib/api.test.ts": "d879eb3b0a24944ec43c5576cd382037e858220383aa5ba764f7bccdbaa3fb88",
     "client/src/lib/api.ts": "bdb1cde16c45c2a8b981bd087fb78bb5329d6da6602a6f01f2547277e82fdc14",
-    "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da"
+    "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da",
+    "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a"
   },
-  "sourceFingerprint": "ca8ecb5df70b8e4d6ae3716fe179c256f0dea3dd5717cfa8e630524154fc501f",
+  "sourceFingerprint": "ad91c1c690eea07025aeffae835a4aa72d91ea67b1ce9e65d720f494b302d720",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -72,7 +73,7 @@
       "M1-R03",
       "M1-R04"
     ],
-    "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; production and development/Strict Mode browser suites each 24/24."
+    "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; complete production and development/Strict Mode desktop/mobile browser suites each passed 32/32 with clean exit."
   },
   "server": {
     "typecheck": "passed 2026-10-23",
@@ -127,15 +128,15 @@
     "headingLinks": 488,
     "errors": 0,
     "archivedOriginalsPreserved": 13,
-    "notes": "Documentation build and validation passed on 23 October 2026. Source hashes cover 47 current application, regression, and browser fixture files. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
+    "notes": "Regenerated and validated on 23 October 2026: 77 tasks, 58 findings, 42 acceptance cases, 158 dependency edges, 2,323 local links and 488 heading links; 0 validation errors. Source hashes cover 48 current application, regression and browser fixture files, including the M0 Playwright configuration. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
   },
   "browser": {
     "production": {
       "status": "passed",
-      "passed": 24,
+      "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "24/24 retained browser checkpoint passed at fbd0084; full suite not rerun after ENG-02 follow-up. Targeted config attempts are recorded separately.",
+      "note": "Complete production build and browser suite passed all 32 desktop/Pixel 5 cases; runner started and stopped its own API and Next processes and exited cleanly.",
       "attempts": [
         {
           "environment": "sandbox",
@@ -163,20 +164,34 @@
           "exitCode": 0,
           "note": "final production build and retained desktop/mobile browser suite passed after expected dev navigation/document cancellation handling",
           "log": "browser-production-final.log"
+        },
+        {
+          "environment": "local Windows; tested working tree based on 4123f5f",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "Complete production build and browser suite passed all 32 desktop/Pixel 5 cases; runner started and stopped its own API and Next processes and exited cleanly.",
+          "browserProjects": [
+            "chromium",
+            "mobile-chrome"
+          ]
         }
       ],
-      "revision": "fbd0084"
+      "revision": "working tree based on 4123f5f",
+      "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
+      "command": "npm run test:m0:browser (client; runner-owned local API and production Next processes)",
+      "exitCode": 0
     },
     "development": {
       "status": "passed",
-      "passed": 24,
+      "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "24/24 retained browser checkpoint passed at fbd0084; full suite not rerun after ENG-02 follow-up. Targeted config attempts are recorded separately.",
-      "command": "M0_WEB_MODE=dev npm run test:m0:browser",
-      "environment": "network-enabled",
+      "note": "Complete Next development/Strict Mode browser suite passed all 32 desktop/Pixel 5 cases and exited cleanly. One transient ECONNRESET appeared on dashboard proxy reads during the mobile admin case; an immediate repeat of all four bilingual desktop/mobile admin config cases passed without recurrence. Expected 409 conflict and authorization-denial logs are exercised behavior.",
+      "command": "$env:M0_WEB_MODE=dev; npm run test:m0:browser (client; runner-owned local API and Next dev processes)",
+      "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
       "exitCode": 0,
-      "log": "browser-development.log",
       "attempts": [
         {
           "environment": "network-enabled",
@@ -195,33 +210,57 @@
           "exitCode": 0,
           "note": "final development/Strict Mode build and retained desktop/mobile browser suite passed",
           "log": "browser-development-final.log"
+        },
+        {
+          "environment": "local Windows; tested working tree based on 4123f5f",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "Complete Next development/Strict Mode browser suite passed all 32 desktop/Pixel 5 cases and exited cleanly. One transient ECONNRESET appeared on dashboard proxy reads during the mobile admin case; an immediate repeat of all four bilingual desktop/mobile admin config cases passed without recurrence. Expected 409 conflict and authorization-denial logs are exercised behavior.",
+          "browserProjects": [
+            "chromium",
+            "mobile-chrome"
+          ]
         }
       ],
-      "revision": "fbd0084"
+      "revision": "working tree based on 4123f5f"
     },
     "targetedConfig": {
-      "status": "assertions passed; runner teardown interrupted",
-      "passed": 2,
+      "status": "superseded by complete production and development suite passes; interrupted attempts retained as history",
+      "passed": 8,
       "failed": 0,
       "skipped": 0,
-      "command": "M0_WEB_MODE=prod npm run test:m0:browser -- --grep 'admin config saves' --project chromium",
+      "command": "Targeted production M0 Playwright config and checkout cases",
       "attempts": [
         {
-          "environment": "local production; prior request helper",
+          "environment": "admin config; local production; both browser projects; earlier request helper",
           "passed": 4,
           "failed": 0,
           "skipped": 0,
           "exitCode": 1,
-          "note": "Both locales passed on desktop and Pixel 5 emulation; the local Playwright process did not exit during teardown and was interrupted. Synthetic fixture was recovered and removed."
+          "note": "English/Arabic two-session conflict cases passed on desktop and Pixel 5. The helper was later changed to use Playwright managed request fixtures; final-source desktop cases passed again. Wrapper did not exit during teardown and was interrupted; synthetic fixture recovered."
         },
         {
-          "environment": "local production; final managed request fixture; chromium",
+          "environment": "student EGP checkout; local production; chromium; final source",
           "passed": 2,
           "failed": 0,
           "skipped": 0,
           "exitCode": 1,
-          "note": "Both desktop locale cases emitted passing results; the Playwright wrapper remained open during teardown and was interrupted. Synthetic fixture was recovered and removed."
+          "note": "English/Arabic student checkout passed after changing the indicative rate 50 to 25; charge remained 250 EGP, conversion changed, and no order was submitted. Wrapper was interrupted during teardown; synthetic course/product fixtures recovered."
+        },
+        {
+          "environment": "student EGP checkout; local production; mobile-chrome; final source",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 1,
+          "note": "English/Arabic student checkout passed on Pixel 5 emulation with the same EGP assertion and no payment submission. Wrapper was interrupted during teardown; synthetic course/product fixtures recovered."
         }
+      ],
+      "supersededBy": [
+        "browser.production.latest attempt",
+        "browser.development.latest attempt"
       ]
     }
   },
@@ -229,9 +268,8 @@
     "status": "not checked for eventual M1 commit; prior M0 CI is historical only"
   },
   "notVerified": [
-    "clean full production/development browser suite after the ENG-02 follow-up",
-    "browser-based bilingual config conflict and student charge journeys",
-    "M1-specific bilingual admin/student config and upload manual journeys",
+    "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
+    "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
     "real private Supabase streaming and outage behavior",
     "external ClamAV canaries and maximum-size post-body disconnect load",
     "maximum-size concurrent memory/disk measurements",

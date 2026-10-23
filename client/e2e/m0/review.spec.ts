@@ -2,6 +2,14 @@ import { devices, test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
 const fixture = JSON.parse(fs.readFileSync(process.env.M0_FIXTURE_PATH!, 'utf8'));
+test.beforeEach(async ({ page }) => {
+  // Browser tests run offline in some environments. Keep app behavior local
+  // and deterministic while allowing the browser's normal fallback fonts.
+  await page.route('https://fonts.googleapis.com/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
+  );
+});
+
 function monitor(page: Page) {
   const errors: string[] = [];
   const failedApi: string[] = [];
@@ -177,6 +185,72 @@ for (const locale of ['en', 'ar'] as const) {
   });
 }
 
+for (const locale of ['en', 'ar'] as const) {
+  test(`student ${locale} checkout keeps the EGP charge when the indicative rate changes`, async ({ page, request }, info) => {
+    const course = fixture.courses.paid;
+    const title = locale === 'ar' ? 'دورة اختبار مدفوعة' : 'M0 paid course en';
+    let originalRate: number | undefined;
+    let adminToken: string | undefined;
+    let configModified = false;
+
+    try {
+      const configResponse = await request.get('/api/v1/config');
+      expect(configResponse.ok()).toBe(true);
+      originalRate = Number((await configResponse.json()).data.exchangeRateUsdToEgp);
+
+      const adminLogin = await request.post('/api/v1/auth/login', {
+        data: { email: fixture.users.admin.email, password: fixture.password },
+      });
+      expect(adminLogin.status()).toBe(200);
+      adminToken = (await adminLogin.json()).data.tokens.accessToken;
+      expect(adminToken).toBeTruthy();
+
+      const setRate = async (exchangeRateUsdToEgp: number) => {
+        const latestResponse = await request.get('/api/v1/config');
+        const latestConfig = (await latestResponse.json()).data;
+        const updated = await request.patch('/api/v1/config', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+          data: { expectedVersion: latestConfig.version, exchangeRateUsdToEgp },
+        });
+        expect(updated.status()).toBe(200);
+        configModified = true;
+      };
+
+      await setRate(50);
+      await login(page, info.project.name, 'student');
+      if (locale === 'ar') await page.locator('#lang-toggle-btn').click();
+      await page.goto(`/courses/${course.id}`);
+      await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+      await page.getByRole('button', { name: /250 EGP/ }).click();
+
+      let dialog = page.getByRole('dialog', { name: title });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('span').filter({ hasText: /250 EGP/ })).toHaveText(/250 EGP\s*\(\$5\)/);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+
+      await setRate(25);
+      await page.reload();
+      await page.getByRole('button', { name: /250 EGP/ }).click();
+      dialog = page.getByRole('dialog', { name: title });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('span').filter({ hasText: /250 EGP/ })).toHaveText(/250 EGP\s*\(\$10\)/);
+    } finally {
+      if (configModified && adminToken && originalRate !== undefined) {
+        const latestResponse = await request.get('/api/v1/config');
+        const latestConfig = (await latestResponse.json()).data;
+        if (Number(latestConfig.exchangeRateUsdToEgp) !== originalRate) {
+          const restored = await request.patch('/api/v1/config', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+            data: { expectedVersion: latestConfig.version, exchangeRateUsdToEgp: originalRate },
+          });
+          expect(restored.status()).toBe(200);
+        }
+      }
+    }
+  });
+}
+
 test('teacher workspace tabs and developer notice have no unexpected API/browser errors', async ({ page }) => {
   const observed = monitor(page);
   await login(page, 'teacher', 'teacher');
@@ -249,6 +323,16 @@ test('changing a document cancels the old request without warnings or stale cont
   // Keep first-enrollment fixtures for safety.spec.ts untouched.
   await login(page, `outsider-${info.project.name}`, 'student');
   const course = fixture.courses.en;
+  await page.addInitScript((path) => {
+    const w = window as Window & { __m0MaterialRequests?: Array<{ url: string; signal?: AbortSignal | null }> };
+    w.__m0MaterialRequests = [];
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes(path)) w.__m0MaterialRequests!.push({ url, signal: init?.signal });
+      return originalFetch(input, init);
+    }) as typeof window.fetch;
+  }, `/materials/${course.materialId}/content`);
   let release!: () => void;
   const held = new Promise<void>((resolve) => { release = resolve; });
   let started!: () => void;
@@ -256,7 +340,9 @@ test('changing a document cancels the old request without warnings or stale cont
   await page.route(`**/materials/${course.materialId}/content`, async (route) => {
     started();
     await held;
-    await route.continue().catch(() => {});
+    // The app should abort the fetch when its viewer unmounts. Finish the
+    // intercepted route explicitly so the browser worker can close cleanly.
+    await route.abort().catch(() => {});
   });
   const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
   const enrolled = await page.request.post(`/api/v1/courses/${course.id}/enroll`, { headers: { Authorization: `Bearer ${accessToken}` } });
@@ -267,15 +353,14 @@ test('changing a document cancels the old request without warnings or stale cont
   await intercepted;
   await page.getByRole('button', { name: 'M0 second PDF', exact: true }).click();
   await expect(page.getByTitle('M0 second PDF')).toHaveAttribute('src', /^blob:/);
+  await expect.poll(() => page.evaluate((path) => {
+    const w = window as Window & { __m0MaterialRequests?: Array<{ url: string; signal?: AbortSignal | null }> };
+    return w.__m0MaterialRequests?.find((entry) => entry.url.includes(path))?.signal?.aborted ?? false;
+  }, `/materials/${course.materialId}/content`)).toBe(true);
+  await expect(page.getByTitle('M0 study PDF')).not.toBeVisible();
   release();
   await page.unroute(`**/materials/${course.materialId}/content`);
   await expect(page.getByTitle('M0 second PDF')).toBeVisible();
   await observed.settle();
-  await expect.poll(() => observed.requestFailures.some(({ url }) => url.includes(`/materials/${course.materialId}/content`))).toBe(true);
-  expect(observed.requestFailures).toEqual(expect.arrayContaining([
-    expect.objectContaining({ url: expect.stringContaining(`/materials/${course.materialId}/content`), reason: 'net::ERR_ABORTED' }),
-    expect.objectContaining({ url: expect.stringMatching(/^blob:/), reason: 'net::ERR_ABORTED' }),
-  ]));
-  expect(observed.requestFailures.every(({ reason }) => reason === 'net::ERR_ABORTED')).toBe(true);
   expect(observed.errors).toEqual([]);
 });

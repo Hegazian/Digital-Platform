@@ -2,7 +2,7 @@
 
 Status: **In Progress** on `codex/milestone-1`. This file records local implementation and verification; it does not claim branch CI or deployment.
 
-The [23 October M1 review](M1_REVIEW.md) found two regressions owned here: **M1-R02**, non-atomic config update/readback, and **M1-R03**, saving one subject discards other subjects' pricing drafts. Both are fixed with real-PostgreSQL and component regressions. This follow-up also verifies that the product catalog recomputes indicative USD after a rate change while an existing order retains its original EGP and USD snapshots. Arabic/English component tests cover the Platform Settings rate control, saved EGP contract, localized stale-write conflict, checkout amount and subject pricing submission. With the final Playwright request-fixture version, both desktop locale cases passed; the earlier equivalent run also passed both Pixel 5 cases. The local runner did not exit during teardown and was interrupted, so the complete browser suite still needs a clean run. ENG-02 remains In Progress for that full browser evidence and exact-head CI. Fresh verification is recorded separately in [M1 evidence](../audit/m1-review/verification.json).
+The [23 October M1 review](M1_REVIEW.md) found two regressions owned here: **M1-R02**, non-atomic config update/readback, and **M1-R03**, saving one subject discards other subjects' pricing drafts. Both are fixed with real-PostgreSQL and component regressions. The product catalog recomputes indicative USD after a rate change while an existing order retains its original EGP and USD snapshots. Arabic/English component tests cover the Platform Settings rate control, saved EGP contract, localized stale-write conflict, checkout amount and subject pricing submission. Complete production and development/Strict Mode Playwright suites each passed 32/32 with clean exit, including two-session admin conflicts and a synthetic paid-course checkout in both languages on desktop and Pixel 5 emulation. The checkout journey changed the indicative rate from 50 to 25; the student still saw a 250 EGP charge while its displayed USD equivalent changed, and no order or payment was submitted. ENG-02 remains In Progress for exact-head CI and broader task-specific manual acceptance. Fresh verification is recorded separately in [M1 evidence](../audit/m1-review/verification.json).
 
 ## Implemented
 
@@ -21,9 +21,11 @@ The [23 October M1 review](M1_REVIEW.md) found two regressions owned here: **M1-
 - Focused course/subject/config/validation tests — 6 files / 39 tests passed, including fresh-rate catalog output, USD price input rejection and stale-write concurrency. Course/subject route integration subset — 3 files / 15 tests passed.
 - Full server `npm test` — 80 files / 441 tests passed.
 - Server `npm run typecheck` and `npm run build` — passed.
-- Client `npm run typecheck`, `npm test`, and `npm run build` — passed; 17 test files / 88 tests passed, including Arabic/English Platform Settings saves, checkout EGP display and subject pricing submission.
+- Client `npm run typecheck`, `npm test`, and `npm run build` — passed; 17 test files / 90 tests passed, including Arabic/English Platform Settings saves, checkout EGP display and subject pricing submission.
 - Client `npm run lint` — 0 errors and 27 existing warnings in other files.
-- Targeted production Playwright config journey — both English/Arabic desktop cases passed with the final request fixture; an earlier test-helper version also passed both Pixel 5 cases. The process did not exit after the cases; it was interrupted during teardown and the disposable fixture was recovered manually. This is targeted case evidence, not a successful full browser command or actual-device acceptance.
+- Complete production Playwright suite — 32 passed, 0 failed, 0 skipped; command exited 0 after the runner started and stopped its API and Next processes directly. The suite includes bilingual two-session config conflicts, student checkout after a rate change, and existing media/access checks on desktop and Pixel 5 emulation.
+- Complete development/Strict Mode Playwright suite — 32 passed, 0 failed, 0 skipped; command exited 0 with the same runner-owned process lifecycle and browser coverage.
+- Student checkout coverage changes the indicative rate from 50 to 25 and confirms the charge remains 250 EGP while the displayed USD equivalent changes; no order or payment is submitted. Browser emulation does not establish physical-device acceptance.
 - The first migration attempt against the preexisting disposable test schema returned Prisma P3005 because it has no reviewed baseline history. No baseline SQL was applied. The allowlisted disposable test target was synchronized using the repository-guarded `npm run db:push:test`; the isolated migration fixture then passed against fresh per-run schemas.
 
 ## Manual admin concurrency check
@@ -34,10 +36,10 @@ The [23 October M1 review](M1_REVIEW.md) found two regressions owned here: **M1-
 4. In session B, change the rate using the stale form and save. Confirm the API returns `409 CONFIG_VERSION_CONFLICT` with a reload/retry message and does not overwrite session A's value.
 5. Reload session B and save a valid setting again. Confirm the latest version is accepted.
 6. Create or edit a course and a subject plan. Confirm the form accepts EGP only and catalog USD equivalents update after changing the indicative rate.
-7. In Arabic and English student catalog/checkout journeys, confirm the displayed charge remains the same EGP product/order amount after changing the indicative rate. Component regressions cover locale labels and amount presentation; repeat this with real API data in the browser. Do not submit a real payment as part of this check.
+7. In Arabic and English student catalog/checkout journeys, confirm the displayed charge remains the same EGP product/order amount after changing the indicative rate. The complete production and development browser suites already cover the synthetic course detail/checkout journey: the rate changes from 50 to 25, the 250 EGP charge remains unchanged, its indicative USD conversion changes, and no payment is submitted. During manual acceptance, verify the same behavior against the intended disposable catalog data and confirm the persisted configuration after reload.
 
 ## Remaining acceptance
 
 - Run exact branch CI after this task's changes are reviewed and pushed.
-- Rerun the complete production and development Playwright suites after resolving or isolating the local browser-runner teardown stall. Then perform student catalog/charge display in both locales; the targeted admin config journey does not cover student checkout.
+- Complete the manual configuration, pricing and checkout steps below with persisted-state checks; automated browser emulation is not actual-device acceptance.
 - Keep ENG-02 In Progress until this evidence is attached to the reviewed commit.
