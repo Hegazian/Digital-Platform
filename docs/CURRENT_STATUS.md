@@ -10,7 +10,7 @@ Documentation refreshed **23 October 2026**. Reviewed M0 application and main-in
 
 | M1 check | Fresh recorded result |
 |---|---|
-| M1 server tests | 80 files / 441 tests passed |
+| M1 server tests | 81 files / 441 passed / 1 skipped (POSIX SIGTERM process test awaits Linux CI) |
 | M1 client tests | 17 files / 90 tests passed |
 | M1 typechecks / production builds | Both packages passed |
 | M1 client lint | 0 errors / 27 warnings |

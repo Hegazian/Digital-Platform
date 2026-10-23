@@ -164,7 +164,12 @@ for(const id of m1Evidence.review.openFindings) {
  check(byId.get(id==='M1-R02'||id==='M1-R03'?'ENG-02':'ENG-09').status==='In Progress','Open M1 findings cannot have a Complete owner');
 }
 for(const id of m1Evidence.review.resolvedFindings||[])check(m1Review.includes('**'+id+' — resolved'),'Resolved M1 finding lacks resolution evidence: '+id);
-for(const app of ['server','client'])check(current.includes(`${m1Evidence[app].files} files / ${m1Evidence[app].tests} tests passed`),'Current M1 test counts differ from evidence: '+app);
+for(const app of ['server','client']) {
+ const counts=m1Evidence[app].skipped
+  ? `${m1Evidence[app].files} files / ${m1Evidence[app].tests} passed / ${m1Evidence[app].skipped} skipped`
+  : `${m1Evidence[app].files} files / ${m1Evidence[app].tests} tests passed`;
+ check(current.includes(counts),'Current M1 test counts differ from evidence: '+app);
+}
 for(const mode of ['production','development']) {
  const result=m1Evidence.browser[mode];
  if(['passed','failed'].includes(result.status))check(current.includes(`${result.passed ?? result.tests} passed / ${result.failed ?? 0} failed / ${result.skipped} skipped; ${result.status}`),'Current M1 browser result differs from evidence: '+mode);

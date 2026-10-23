@@ -6,7 +6,7 @@ Updated **23 October 2026**. M0/G0 is complete for internal synthetic-data work.
 
 1. Retain the committed M0 regressions and review the [current status](CURRENT_STATUS.md), [target architecture](TARGET_ARCHITECTURE.md), [contracts](API_DATA_CONTRACTS.md) and [operations holds](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
 2. Keep the M1-R01–R04 regressions in CI; they pass locally. Complete production and development/Strict Mode browser suites each pass 32/32, including ENG-02 order snapshots, bilingual admin conflict, student EGP charge display and ENG-09 media/document journeys. Obtain exact M1 commit CI. Complete [ENG-09](tasks/ENG-09.md) measured load, real storage/scanner and actual-device acceptance while retaining all operational gates. ENH-03 owns new-upload-to-READY after ENG-09 transport acceptance; unverified new uploads stay PROCESSING.
-3. Keep **[ENG-05](tasks/ENG-05.md)** and **[ENG-06](tasks/ENG-06.md)** In Progress while an authorized operator performs representative restore/rollback review and real storage outage/process shutdown rehearsals. Never apply generated baseline SQL to existing tables blindly.
+3. Keep **[ENG-05](tasks/ENG-05.md)** and **[ENG-06](tasks/ENG-06.md)** In Progress while an authorized operator performs representative restore/rollback review and real storage outage/upload shutdown rehearsals. Run the new POSIX SIGTERM process test on Linux CI. Never apply generated baseline SQL to existing tables blindly.
 4. Continue **[ENG-13](tasks/ENG-13.md)** throughout: keep local gates green, add semantic domain/component/concurrency tests with each task, and work toward the existing release coverage target. Resolve development advisory exceptions before paid release or 19 January 2027.
 5. Follow the M1 waves; complete each task's prerequisites and acceptance evidence. Review **G1** using real upgrade, private-storage, access, session and outage evidence; then advance to M2 authoring/learning and M3 manual paid pilot. Keep all staged features denied at the API.
 
@@ -46,9 +46,9 @@ Waves respect the existing dependency graph; they are not dates or estimates. Wi
 
 [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md), [ENG-02](tasks/ENG-02.md).
 
-The M1-R01–R04 code regressions and full local desktop/mobile browser acceptance now pass. ENG-05 and ENG-06 have historical M0 CI; finish representative restore/recovery and real storage/process rehearsals. ENG-02 still needs exact-head CI and task-specific manual acceptance. Complete ENG-09 transport/device acceptance using known READY fixtures. ENH-03 owns subsequent processing.
+The M1-R01–R04 code regressions and full local desktop/mobile browser acceptance now pass. ENG-05 and ENG-06 have historical M0 CI; ENG-06 also has a POSIX process-level SIGTERM regression awaiting Linux CI. Finish the restored-copy review and real storage/upload shutdown rehearsals. ENG-02 still needs exact-head CI and task-specific manual acceptance. Complete ENG-09 transport/device acceptance using known READY fixtures. ENH-03 owns subsequent processing.
 
-Exit evidence: Exact-head remote CI; ENG-05 restored-copy diff/restore rehearsal; ENG-06 real storage outage and process signal/drain tests; ENG-09 real upload, bounded memory, scan, cleanup, playback/range and target-device tests; ENG-02 migration fixture, stale-write conflict, rate readback, immutable order snapshots, bilingual browser admin/student EGP display and manual saved-state checks.
+Exit evidence: Exact-head remote CI; ENG-05 restored-copy diff/restore rehearsal; ENG-06 stalled-readiness SIGTERM process test on Linux plus real storage outage and upload drain tests; ENG-09 real upload, bounded memory, scan, cleanup, playback/range and target-device tests; ENG-02 migration fixture, stale-write conflict, rate readback, immutable order snapshots, bilingual browser admin/student EGP display and manual saved-state checks.
 
 ### Wave 2 — Shared data, identity and commerce primitives
 

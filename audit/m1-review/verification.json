@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the tested working tree based on 4123f5f before this increment is committed. ENG-02 verifies real-PostgreSQL catalog/order snapshots, bilingual settings/pricing, admin concurrency and student EGP checkout after rate changes. Complete local production and development/Strict Mode browser suites each pass 32/32 with clean process exit after the runner lifecycle fix.",
+  "scope": "Review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files. Production/development browser suites passed 32/32 on the working tree based on 4123f5f after ENG-02 runner changes. This increment then added an ENG-06 POSIX process-level SIGTERM test; the full server suite passed 441 tests and skipped that one signal test on Windows, with typecheck/build passing. Linux CI execution of the signal path remains pending.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
@@ -51,9 +51,10 @@
     "client/src/lib/api.test.ts": "d879eb3b0a24944ec43c5576cd382037e858220383aa5ba764f7bccdbaa3fb88",
     "client/src/lib/api.ts": "bdb1cde16c45c2a8b981bd087fb78bb5329d6da6602a6f01f2547277e82fdc14",
     "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da",
-    "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a"
+    "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a",
+    "server/src/utils/__tests__/process-shutdown.spec.ts": "be41010c070d0b6100b623200bc05ba811549ce3eb3d15bddbccb205506f4c49"
   },
-  "sourceFingerprint": "ad91c1c690eea07025aeffae835a4aa72d91ea67b1ce9e65d720f494b302d720",
+  "sourceFingerprint": "8b6aed521201a1bc5cfd63b47c892e4f23393e55aacbd6c4f6e5f3e4193fd3fe",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -76,13 +77,14 @@
     "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; complete production and development/Strict Mode desktop/mobile browser suites each passed 32/32 with clean exit."
   },
   "server": {
-    "typecheck": "passed 2026-10-23",
-    "build": "passed 2026-10-23",
-    "files": 80,
+    "typecheck": "passed 2026-10-23 after process-shutdown test addition",
+    "build": "passed 2026-10-23 after process-shutdown test addition",
+    "files": 81,
     "tests": 441,
-    "skipped": 0,
+    "skipped": 1,
     "command": "npm test",
-    "log": "server-tests.log"
+    "totalTests": 442,
+    "note": "Full suite: 441 passed across 81 files; one POSIX-only process-level SIGTERM test skipped on Windows and awaits Linux CI execution. Focused suite had 37 tests across 7 files before this test was added."
   },
   "client": {
     "typecheck": "passed 2026-10-23",
@@ -128,7 +130,7 @@
     "headingLinks": 488,
     "errors": 0,
     "archivedOriginalsPreserved": 13,
-    "notes": "Regenerated and validated on 23 October 2026: 77 tasks, 58 findings, 42 acceptance cases, 158 dependency edges, 2,323 local links and 488 heading links; 0 validation errors. Source hashes cover 48 current application, regression and browser fixture files, including the M0 Playwright configuration. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
+    "notes": "Regenerated and validated on 23 October 2026: 77 tasks, 58 findings, 42 acceptance cases, 158 dependency edges, 2,323 local links and 488 heading links; 0 validation errors. Source hashes cover 49 current application, regression and browser fixture files, including the M0 Playwright configuration and ENG-06 process-level test. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
   },
   "browser": {
     "production": {
@@ -269,7 +271,6 @@
   },
   "notVerified": [
     "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
-    "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
     "real private Supabase streaming and outage behavior",
     "external ClamAV canaries and maximum-size post-body disconnect load",
     "maximum-size concurrent memory/disk measurements",
@@ -277,7 +278,8 @@
     "representative database/object restore and rollback",
     "production deployment or migration adoption",
     "exact-head M1 remote CI",
-    "fresh advisory audit or whole-source coverage measurement"
+    "fresh advisory audit or whole-source coverage measurement",
+    "Linux CI execution of the POSIX process-level SIGTERM regression; real storage outage and SIGTERM during upload"
   ],
   "logs": "Local audit/m1-review/*.log files are intentionally gitignored; this record and the review report are committed. M0 evidence is unchanged.",
   "sourceFingerprintMethod": "sha256 of sorted path:contentSha256 entries joined by newline"
