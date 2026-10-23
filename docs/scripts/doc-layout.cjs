@@ -14,7 +14,7 @@ const retiredRootDocs = {
 };
 
 const taskDocument = t => t.status === 'Complete'
-  ? `docs/archive/completed/M0/${t.id}.md` : `docs/tasks/${t.id}.md`;
+  ? `docs/archive/completed/${t.milestone}/${t.id}.md` : `docs/tasks/${t.id}.md`;
 const historicalDocMoves = {
   'docs/M0_IMPLEMENTATION_STATUS.md': 'docs/archive/reviews/M0_IMPLEMENTATION_STATUS.md',
   'docs/M0_REVIEW_RESOLUTION.md': 'docs/archive/reviews/M0_REVIEW_RESOLUTION.md',

@@ -1,6 +1,6 @@
 # Implementation documentation — start here
 
-Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains 62 unfinished tasks; 15 completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. The [M1 review](M1_REVIEW.md) records four resolved code regressions and the remaining acceptance gates under ENG-09/ENG-02. Fresh test/browser results and [manual checks](M1_MANUAL_TESTING.md) feed [the M1 handoff](NEXT_STEPS.md). ENG-05/06 operational gates remain open.
+Refreshed: **23 October 2026**. [Current status](CURRENT_STATUS.md) records test evidence and release holds. The active backlog contains 62 unfinished tasks; 15 completed specifications are [archived](archive/completed/README.md). The [M1 release closure](M1_RELEASE_READINESS.md) lists every unfinished foundation task, review finding and external evidence requirement. Read [the M1 review](M1_REVIEW.md), [manual checks](M1_MANUAL_TESTING.md) and [implementation order](NEXT_STEPS.md) together. G1–G3 remain open; current work uses local fixtures only. [The final M0 review](M0_FINAL_REVIEW.md) remains historical checkpoint evidence.
 
 > A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
@@ -20,7 +20,8 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 | Document | Purpose |
 |---|---|
 | [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
-| [Next implementation steps](NEXT_STEPS.md) | ENG-05 restore/recovery gate, ENG-06 implementation, remaining M1 dependency waves and release evidence |
+| [M1 release closure](M1_RELEASE_READINESS.md) | Complete M1 task disposition, current review findings and remaining release evidence |
+| [Next implementation steps](NEXT_STEPS.md) | Verified baseline prerequisite, next local M1 implementations, dependency waves and external release evidence |
 | [M1 review](M1_REVIEW.md) | Four resolved code findings, owners, regressions and remaining acceptance limits |
 | [M1 manual verification](M1_MANUAL_TESTING.md) | Step-by-step config, pricing, upload, playback and operations checks |
 | [ENG-02 implementation evidence](ENG02_IMPLEMENTATION.md) | Config versioning, EGP semantics, resolved concurrency/draft regressions and remaining acceptance |
@@ -31,12 +32,12 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 | [Target architecture](TARGET_ARCHITECTURE.md) | Module/data ownership, workers, deployment and safety boundaries |
 | [API and data contracts](API_DATA_CONTRACTS.md) | Normative DTOs, schemas, actions, errors, validation and compatibility |
 | [Roadmap and backlog](ROADMAP_BACKLOG.md) | Unfinished task links, dependencies, milestones and execution order |
-| [Completed M0 specifications](archive/completed/README.md) | Completed task records retained outside the active backlog |
+| [Completed task specifications](archive/completed/README.md) | Completed records archived under their own milestone and excluded from the active backlog |
 | [Final M0 review](M0_FINAL_REVIEW.md) | Findings, corrections, fresh verification and merge disposition |
 | [Audit traceability](AUDIT_TRACEABILITY.md) | All 58 findings and all 42 previous acceptance dispositions |
 | [Testing and release gates](TESTING_RELEASE_GATES.md) | Baseline, fixtures, CI, exit criteria and sign-off evidence |
 | [M0 manual testing](M0_MANUAL_TESTING.md) | Local setup, step-by-step checks and visible browser replay |
-| [Earlier M0 reviews](archive/reviews/README.md) | Historical checkpoint results and resolved findings, removed from the active plan |
+| [Earlier reviews](archive/reviews/README.md) | Historical checkpoint results and resolved findings, removed from the active plan |
 | [M0 dependency review](M0_DEPENDENCY_REVIEW.md) | Patched runtime paths and bounded development-only exceptions |
 | [Migration and operations](MIGRATION_OPERATIONS.md) | Data/asset preservation, deployment, rollback, recovery and monitoring |
 | [Task template](TASK_TEMPLATE.md) | Required task detail and completion checklist |

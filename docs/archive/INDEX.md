@@ -2,7 +2,7 @@
 
 The original design guides listed below are **historical and superseded** by [current documentation](../README.md). Their original bytes and FR/TC/checklist IDs remain available for audit. Their AI generation/tutoring, model pipelines, old microservice plans, license badges and fixed schedule assumptions are withdrawn.
 
-[Completed task specifications](completed/README.md) and [earlier M0 reviews](reviews/README.md) are retained separately as historical implementation/acceptance evidence. They are excluded from the active work queue; current decisions and results live in [the final review](../M0_FINAL_REVIEW.md).
+[Completed task specifications](completed/README.md) and [earlier reviews](reviews/README.md) are retained separately as historical implementation/acceptance evidence. They are excluded from the active work queue; current decisions and results live in [the final review](../M0_FINAL_REVIEW.md).
 
 The [archive manifest](manifest.json) records original path and SHA-256. The generator never overwrites an existing archive. New active entries point to the current product/architecture/test/usage documents; historic design comparisons remain available only as context.
 

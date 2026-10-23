@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files. Production/development browser suites passed 32/32 on the working tree based on 4123f5f after ENG-02 runner changes. This increment then added an ENG-06 POSIX process-level SIGTERM test; the full server suite passed 441 tests and skipped that one signal test on Windows, with typecheck/build passing. Linux CI execution of the signal path remains pending.",
+  "scope": "Full independent M1 review at ad920ce against recorded merge base, including staged/unstaged/untracked files. M1-R05 was repaired and independently rechecked. Author reran both package coverage suites, typechecks/builds, client lint and disposable migration fixture; retained browser results are prior local evidence because runtime application code did not change in this review.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
@@ -52,9 +52,9 @@
     "client/src/lib/api.ts": "bdb1cde16c45c2a8b981bd087fb78bb5329d6da6602a6f01f2547277e82fdc14",
     "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da",
     "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a",
-    "server/src/utils/__tests__/process-shutdown.spec.ts": "be41010c070d0b6100b623200bc05ba811549ce3eb3d15bddbccb205506f4c49"
+    "server/src/utils/__tests__/process-shutdown.spec.ts": "0fad010f064ddbcfed79ccfc15acdc3334334a86a6e1ab73b90bd93c3be7195d"
   },
-  "sourceFingerprint": "8b6aed521201a1bc5cfd63b47c892e4f23393e55aacbd6c4f6e5f3e4193fd3fe",
+  "sourceFingerprint": "935dfa7263d85535350a2e672114bceeba930a41c4d6282ae45dfca995216253",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -77,14 +77,46 @@
     "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; complete production and development/Strict Mode desktop/mobile browser suites each passed 32/32 with clean exit."
   },
   "server": {
-    "typecheck": "passed 2026-10-23 after process-shutdown test addition",
-    "build": "passed 2026-10-23 after process-shutdown test addition",
+    "typecheck": "passed 2026-10-23 after M1-R05 repair",
+    "build": "passed 2026-10-23 after M1-R05 repair",
     "files": 81,
-    "tests": 441,
-    "skipped": 1,
-    "command": "npm test",
+    "tests": 442,
+    "skipped": 0,
+    "command": "npm run test:coverage",
     "totalTests": 442,
-    "note": "Full suite: 441 passed across 81 files; one POSIX-only process-level SIGTERM test skipped on Windows and awaits Linux CI execution. Focused suite had 37 tests across 7 files before this test was added."
+    "note": "All 442 passed with zero skips. Windows process test invokes the registered SIGTERM handler through test-only child IPC; POSIX runners use native SIGTERM. The fake database settles after the draining 503 assertion so Prisma disconnect can finish.",
+    "coverage": {
+      "lines": {
+        "total": 3768,
+        "covered": 2832,
+        "skipped": 0,
+        "pct": 75.15
+      },
+      "statements": {
+        "total": 4034,
+        "covered": 2982,
+        "skipped": 0,
+        "pct": 73.92
+      },
+      "functions": {
+        "total": 679,
+        "covered": 613,
+        "skipped": 0,
+        "pct": 90.27
+      },
+      "branches": {
+        "total": 2576,
+        "covered": 1713,
+        "skipped": 0,
+        "pct": 66.49
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
   },
   "client": {
     "typecheck": "passed 2026-10-23",
@@ -92,16 +124,47 @@
     "files": 17,
     "tests": 90,
     "skipped": 0,
-    "command": "npm test",
-    "log": "client-tests.log",
+    "command": "npm run test:coverage",
     "lint": {
       "errors": 0,
       "warnings": 27
+    },
+    "coverage": {
+      "lines": {
+        "total": 3833,
+        "covered": 723,
+        "skipped": 0,
+        "pct": 18.86
+      },
+      "statements": {
+        "total": 4192,
+        "covered": 811,
+        "skipped": 0,
+        "pct": 19.34
+      },
+      "functions": {
+        "total": 1202,
+        "covered": 161,
+        "skipped": 0,
+        "pct": 13.39
+      },
+      "branches": {
+        "total": 3854,
+        "covered": 730,
+        "skipped": 0,
+        "pct": 18.94
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
     }
   },
   "migrations": {
     "command": "npm run db:migrate:fixture",
-    "status": "passed",
+    "status": "passed 2026-10-23 during release review",
     "migrationCount": 3,
     "preservedRows": 22,
     "tables": 21,
@@ -126,11 +189,11 @@
     "findings": 58,
     "acceptanceCases": 42,
     "dependencyEdges": 158,
-    "localLinks": 2323,
-    "headingLinks": 488,
+    "localLinks": 2413,
+    "headingLinks": 490,
     "errors": 0,
     "archivedOriginalsPreserved": 13,
-    "notes": "Regenerated and validated on 23 October 2026: 77 tasks, 58 findings, 42 acceptance cases, 158 dependency edges, 2,323 local links and 488 heading links; 0 validation errors. Source hashes cover 49 current application, regression and browser fixture files, including the M0 Playwright configuration and ENG-06 process-level test. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
+    "notes": "Regenerated and validated on 23 October 2026: 77 tasks, 58 findings, 42 acceptance cases, 158 dependency edges, 2,413 local links and 490 heading links; zero errors. Fifteen completed task records remain archived; the active queue has 62 unfinished tasks. Current M1 closure lists 25 unfinished M1 tasks. Source hashes cover 49 application/test/fixture files; the first M1 review and fresh coverage inventory have independent hashes. No release sign-off follows from documentation checks."
   },
   "browser": {
     "production": {
@@ -138,7 +201,7 @@
       "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "Complete production build and browser suite passed all 32 desktop/Pixel 5 cases; runner started and stopped its own API and Next processes and exited cleanly.",
+      "note": "Retained prior local32/32 checkpoint; not rerun during this review. Runtime application code is unchanged by M1-R05 test-only repair. Complete production build and browser suite passed all 32 desktop/Pixel 5 cases; runner started and stopped its own API and Next processes and exited cleanly.",
       "attempts": [
         {
           "environment": "sandbox",
@@ -183,14 +246,15 @@
       "revision": "working tree based on 4123f5f",
       "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
       "command": "npm run test:m0:browser (client; runner-owned local API and production Next processes)",
-      "exitCode": 0
+      "exitCode": 0,
+      "rerunInReleaseReview": false
     },
     "development": {
       "status": "passed",
       "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "Complete Next development/Strict Mode browser suite passed all 32 desktop/Pixel 5 cases and exited cleanly. One transient ECONNRESET appeared on dashboard proxy reads during the mobile admin case; an immediate repeat of all four bilingual desktop/mobile admin config cases passed without recurrence. Expected 409 conflict and authorization-denial logs are exercised behavior.",
+      "note": "Retained prior local32/32 checkpoint; not rerun during this review. Runtime application code is unchanged by M1-R05 test-only repair. Complete Next development/Strict Mode browser suite passed all 32 desktop/Pixel 5 cases and exited cleanly. One transient ECONNRESET appeared on dashboard proxy reads during the mobile admin case; an immediate repeat of all four bilingual desktop/mobile admin config cases passed without recurrence. Expected 409 conflict and authorization-denial logs are exercised behavior.",
       "command": "$env:M0_WEB_MODE=dev; npm run test:m0:browser (client; runner-owned local API and Next dev processes)",
       "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
       "exitCode": 0,
@@ -226,7 +290,8 @@
           ]
         }
       ],
-      "revision": "working tree based on 4123f5f"
+      "revision": "working tree based on 4123f5f",
+      "rerunInReleaseReview": false
     },
     "targetedConfig": {
       "status": "superseded by complete production and development suite passes; interrupted attempts retained as history",
@@ -267,7 +332,7 @@
     }
   },
   "remoteCI": {
-    "status": "not checked for eventual M1 commit; prior M0 CI is historical only"
+    "status": "No current M1 pass verified: no branch PR or commit status checks returned for ad920ce; final reviewed-fix commit still requires Linux CI"
   },
   "notVerified": [
     "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
@@ -278,9 +343,66 @@
     "representative database/object restore and rollback",
     "production deployment or migration adoption",
     "exact-head M1 remote CI",
-    "fresh advisory audit or whole-source coverage measurement",
-    "Linux CI execution of the POSIX process-level SIGTERM regression; real storage outage and SIGTERM during upload"
+    "Native Linux SIGTERM execution for the repaired process test and final-commit CI",
+    "Total cleanup deadline with an indefinitely unresponsive real dependency, real storage outage and shutdown during upload",
+    "Fresh dependency advisory audit during this review; previous scans remain historical"
   ],
   "logs": "Local audit/m1-review/*.log files are intentionally gitignored; this record and the review report are committed. M0 evidence is unchanged.",
-  "sourceFingerprintMethod": "sha256 of sorted path:contentSha256 entries joined by newline"
+  "sourceFingerprintMethod": "sha256 of sorted path:contentSha256 entries joined by newline",
+  "releaseReview": {
+    "date": "2026-10-23",
+    "reviewedRevision": "ad920ce5c72bbccfb99defc60c33ec584ebe3bdf",
+    "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
+    "mode": "One fresh independent read-only reviewer; same reviewer rechecked the fix",
+    "scope": "Full Milestone 1 branch diff, including staged, unstaged and untracked files at review start; tree clean at that checkpoint. Documentation reconciliation proceeded concurrently.",
+    "status": "Introduced CI-test defect resolved; M1 implementation and external release gates remain open",
+    "report": "docs/M1_REVIEW.md",
+    "priorReport": {
+      "path": "docs/archive/reviews/M1_REVIEW_ROUND_1.md",
+      "sha256": "890519e44b6aa5f4753660b0831ce0262c2de1534350b0b0eece0a35e4668f27"
+    },
+    "localOnly": true,
+    "externalDecision": "User selected local fixtures only; keep external release checks open.",
+    "findings": [
+      {
+        "id": "M1-R05",
+        "title": "Settle the stalled database fixture before asserting shutdown exit",
+        "priority": "P2",
+        "owner": "ENG-06",
+        "status": "Resolved",
+        "file": "server/src/utils/__tests__/process-shutdown.spec.ts",
+        "reviewedLines": "120-121 at ad920ce",
+        "impact": "The 30-second fake PostgreSQL handshake kept Prisma disconnect pending beyond the eight-second process-exit assertion, blocking Linux API CI.",
+        "fix": "After asserting the draining 503 response, destroy the fixture database sockets before awaiting exit. Exercise registered SIGTERM handler through test-only IPC on Windows; use native signal on POSIX. Use disposable upload storage and verified cleanup.",
+        "regression": "Focused shutdown process test passed locally without skips; independent read-only recheck confirms the fix. Native Linux SIGTERM execution still requires CI."
+      }
+    ],
+    "reviewerChecks": [
+      "Both package typechecks passed without source/build writes",
+      "git diff --check passed",
+      "Disposable loopback reproduction with actual API shutdown handler confirmed the defect",
+      "Same reviewer rechecked the fix and found no new actionable issue"
+    ],
+    "limitations": [
+      "No full suites run by the reviewer; author verification recorded separately",
+      "Native Linux signal delivery not executed in this Windows session",
+      "No staging/storage/scanner/device/restore checks; local-only authorization"
+    ],
+    "ciDiscovery": "No branch PR found through GitHub connector; no commit status checks returned for ad920ce. Code Review plugin exposes PR CI diagnostics only; no current pass is claimed.",
+    "authorVerification": [
+      "server coverage: 81 files / 442 passed / zero skipped",
+      "client coverage: 17 files / 90 passed / zero skipped",
+      "both package typechecks and production builds passed",
+      "client lint: 0 errors / 27 warnings",
+      "migration fixture: three migrations, 22 rows / 21 tables preserved; drift rejection, parity and repeat deploy passed"
+    ],
+    "releaseDisposition": "Not release ready: 25 M1 tasks, 0 Complete / 4 In Progress / 21 Planned; ENG-13 continues across milestones. Local fixtures only; external evidence remains open."
+  },
+  "coverage": {
+    "status": "Internal coverage commands passed; G3 whole-product thresholds not met",
+    "report": "audit/m1-review/coverage-gaps.json",
+    "sha256": "19d68c143877a6a59425a5afaa73ede807b28e4dda9fc3bc1712e60382322c28",
+    "browserInstrumented": false,
+    "childProcessInstrumented": false
+  }
 }

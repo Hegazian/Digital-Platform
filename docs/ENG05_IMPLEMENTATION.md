@@ -12,8 +12,9 @@ The ordered migrations are:
 
 1. `20261022000000_pre_m0_baseline` — the complete create-only pre-M0 schema. It contains no data backfill or destructive table operation.
 2. `20261022000100_m0_auth_version` — the existing additive M0 bridge: add `authVersion` if absent, change legacy zero values to one, and set the database default to one. Reapplying it preserves higher values and existing records.
+3. `20261023000000_eng02_config_version` — add the config version with default one and normalize the charge currency to EGP while preserving the indicative exchange rate.
 
-An empty database applies both files. For a populated database, the initial create-only SQL must **never** run against its existing tables. An operator first compares a restorable copy to the immutable pre-M0 or current schema, resolves the baseline as applied only after the relevant schema diff is empty, and then deploys the idempotent bridge. Existing history, drift, concurrent writers or an unknown baseline require investigation before resolution. This branch did not connect to or baseline a production database.
+An empty database applies all three files. For a populated database, the initial create-only SQL must **never** run against its existing tables. An operator first compares a restorable copy to the immutable pre-M0 or current schema, resolves the baseline as applied only after the relevant schema diff is empty, and then deploys the reviewed follow-ups. Existing history, drift, concurrent writers or an unknown baseline require investigation before resolution. This branch did not connect to or baseline a production database.
 
 ## Local PostgreSQL fixture
 
@@ -25,7 +26,7 @@ npm run db:migrate:fixture
 
 The script validates **both** database URLs, creates two unpredictable run-specific schemas inside the already dedicated test database, and never connects to a development or production target. It deletes only those two schemas in its cleanup path.
 
-The empty-install case applied both migrations, matched the current Prisma schema, and passed a repeated no-op deployment. A separate drift case added an unexpected table, confirmed the read-only diff returned Prisma's drift exit code, and confirmed `_prisma_migrations` was not created. The populated case created the exact pre-M0 snapshot in its isolated schema; a read-only diff returned no changes before baseline resolution. Its synthetic data covers two accounts, Egyptian grade/subject, a published course and preview section, lesson/progress, quiz and assessment snapshots/attempts, assignment/grading/submission file, and a paid order/entitlement. The bridge was deployed and a second deploy was repeated. **All 21 rows across 20 tables retained their IDs and values**, both account versions became `1`, and the final Prisma schema diff was empty. All temporary schemas were cleaned up.
+The latest empty-install case applied three migrations, matched the current Prisma schema, and passed a repeated no-op deployment. A separate drift case added an unexpected table, confirmed the read-only diff returned Prisma's drift exit code, and confirmed `_prisma_migrations` was not created. The populated case created the exact pre-M0 snapshot in its isolated schema; a read-only diff returned no changes before baseline resolution. Its synthetic data covers two accounts, Egyptian grade/subject, a published course and preview section, lesson/progress, quiz and assessment snapshots/attempts, assignment/grading/submission file, a paid order/entitlement, and AppConfig. **22 rows across 21 tables were preserved**, with explicit expected authVersion/config-version/currency updates and the indicative rate retained. The final schema diff was empty and repeat deployment was harmless. The earlier M0 two-migration checkpoint preserved 21 rows across 20 tables; it is historical evidence, not the current migration-chain count. All temporary fixture schemas were cleaned up.
 
 Verification commands and results:
 

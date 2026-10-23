@@ -2184,6 +2184,7 @@
         "server/src/utils/storage.ts",
         "server/src/utils/graceful-shutdown.ts",
         "server/src/utils/__tests__/graceful-shutdown.spec.ts",
+        "server/src/utils/__tests__/process-shutdown.spec.ts",
         "server/src/utils/__tests__/storage-readiness.spec.ts",
         "server/.env.example",
         "docker-compose.yml"

@@ -1,6 +1,8 @@
-# Completed milestone 0 work
+# Completed task records
 
-These 15 task specifications are retained as historical implementation/acceptance records. They are excluded from the [active backlog](../../ROADMAP_BACKLOG.md). Completion covers the internal M0/G0 engineering checkpoint; production holds remain in [current status](../../CURRENT_STATUS.md).
+These 15 task specifications are retained as historical implementation/acceptance records and excluded from the [active backlog](../../ROADMAP_BACKLOG.md). Each record is stored under its own milestone. Completion applies only to its recorded scope; production holds remain in [current status](../../CURRENT_STATUS.md).
+
+## M0 — Scope and immediate safety
 
 - [SCOPE-01 — Establish the uploader-driven product specification](M0/SCOPE-01.md)
 - [SCOPE-02 — Remove AI tutoring, generation and provider dependencies](M0/SCOPE-02.md)

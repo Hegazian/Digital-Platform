@@ -2,9 +2,13 @@
 
 ## M1 review verification (23 October 2026)
 
-The [M1 review](M1_REVIEW.md) covers branch changes and local/untracked files against merge base `322d070`. The current server suite passes **441 tests across 81 files**, with one POSIX SIGTERM process integration test skipped on Windows; Linux execution is required in exact-head CI. Client tests pass **17 files / 90 tests**, both package typechecks and production builds pass, and lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, schema parity, repeat deployment and preservation of **22 rows across 21 tables**. Complete production and development/Strict Mode browser suites each passed **32/32**, with 0 failures/skips and clean exit. They include bilingual admin conflict and student checkout cases on desktop and Pixel 5 emulation. Earlier failed and interrupted attempts remain in [machine-readable evidence](../audit/m1-review/verification.json) as history; exact M1 commit CI and task-specific manual/operator acceptance remain required.
+The [M1 review](M1_REVIEW.md) covers all branch changes against merge base `322d070`. M1-R05, the introduced shutdown-test fixture/deadline defect, is fixed and independently rechecked. The current coverage suites pass **81 server files / 442 tests** and **17 client files / 90 tests**, with zero skips. Windows exercises the registered shutdown handler through test-only IPC; native Linux SIGTERM remains a final-commit CI requirement. Both package typechecks and production builds pass. Client lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, parity, repeat deploy and preservation of **22 rows across 21 tables**.
 
-**M1-R01–R04 are resolved by targeted regressions.** The four code fixes and retained browser checks pass; ENG-02, ENG-05, ENG-06 and ENG-09 remain In Progress for broader acceptance and operator gates. Execute the remaining [M1 manual journey](M1_MANUAL_TESTING.md). G1 remains open. Historical M0 coverage/advisory/browser values below are not remeasured or attributed to M1 by this pass.
+Whole-source coverage (statements / branches / functions / lines) is **73.92% / 66.49% / 90.27% / 75.15%** for the server and **19.34% / 18.94% / 13.39% / 18.86%** for the client. Current internal coverage commands pass; the G3 whole-product targets remain unmet. The [current gap inventory](../audit/m1-review/coverage-gaps.json) lists uncovered and partially covered files. Browser and child-process API execution are not instrumented, so zero unit coverage is not proof of an unvisited UI or unlaunched entrypoint.
+
+Retained production and development/Strict Mode browser suites each passed **32/32** in the previous increment, with clean exit; they were not rerun for this review's test-only repair. The original M1-R01–R04 regressions remain resolved. Earlier failed/interrupted attempts remain historical in [machine-readable evidence](../audit/m1-review/verification.json). [Release closure](M1_RELEASE_READINESS.md) keeps all 25 M1 task dispositions visible; four are In Progress and 21 Planned. Complete [manual acceptance](M1_MANUAL_TESTING.md), final-commit Linux CI and remaining domain implementations before G1 sign-off.
+
+The user authorized **local fixtures only; keep external release checks open**. Real storage/scanner/device, representative restore/rollback and production onboarding checks are unexecuted. Historical M0 coverage/advisory/browser values below are preserved separately.
 
 ## Current M0 implementation verification (22 October 2026)
 
@@ -125,6 +129,7 @@ G0 allows internal synthetic-data work only. Production storage/scanner canaries
 ## Gate G1 — durable foundation (M1)
 
 - [x] M1-R01–R04 regression fixes pass; both retained browser modes pass with isolated READY fixtures while normal uploads retain PROCESSING protection.
+- [x] M1-R05 shutdown-test fixture defect fixed and independently rechecked; full local suites pass without skips. Native Linux signal delivery still requires CI.
 - [ ] Exact M1 revision CI and bilingual config/order-preservation, upload/resource, storage/scanner, and actual-device evidence are attached.
 - [ ] ENG-09 transport acceptance closes independently using known supported READY fixtures; ENH-03 subsequently supplies managed processing/READY and complete A29 media evidence. Neither task waives the G1 end-to-end gate.
 - [ ] Checked-in migrations upgrade both empty and populated prior database; canonical lessons/IDs/progress/previews and access/payment history preserved.

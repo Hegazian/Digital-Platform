@@ -1,6 +1,6 @@
 # Next implementation steps
 
-Updated **23 October 2026**. M0/G0 is complete for internal synthetic-data work. The latest reliability commit **34723cdded64a751b6a36c208a69421f4a57ac44** is pushed and all five exact-head GitHub checks passed. ENG-05 and ENG-06 remain In Progress for external rehearsal evidence. The four M1 review findings under ENG-09/ENG-02 are fixed. Complete production and development/Strict Mode browser suites each pass 32/32 with clean exit, including bilingual admin conflict and student charge cases on desktop/Pixel emulation. [Review](M1_REVIEW.md), [fresh evidence](../audit/m1-review/verification.json) and [manual checks](M1_MANUAL_TESTING.md) define the remaining M1 gates. Exact-head M1 CI, G1–G3 acceptance and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Updated **23 October 2026**. M0/G0 is complete for internal synthetic-data work. The historical M0 reliability commit **34723cdded64a751b6a36c208a69421f4a57ac44** passed all five GitHub checks; this is not CI evidence for later M1 commits. ENG-05 and ENG-06 remain In Progress for external rehearsal evidence. The original four M1 review findings under ENG-09/ENG-02 and the new M1-R05 shutdown-test defect are fixed. The [release closure](M1_RELEASE_READINESS.md) retains all 25 M1 tasks and the local-only execution boundary. Complete production and development/Strict Mode browser suites each pass 32/32 with clean exit, including bilingual admin conflict and student charge cases on desktop/Pixel emulation. [Review](M1_REVIEW.md), [fresh evidence](../audit/m1-review/verification.json) and [manual checks](M1_MANUAL_TESTING.md) define the remaining M1 gates. Exact-head M1 CI, G1–G3 acceptance and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## Start here
 
@@ -12,14 +12,14 @@ Updated **23 October 2026**. M0/G0 is complete for internal synthetic-data work.
 
 ## Immediate implementation packages
 
-All four findings are fixed in the current working tree. The fixes reuse existing owners and do not add duplicate backlog IDs. Full ENG-02/ENG-09 completion and M1/G1 still require the remaining evidence below.
+The original four findings and M1-R05 are fixed in the current working tree; [the current review](M1_REVIEW.md) preserves their evidence. The fixes reuse existing owners and do not add duplicate backlog IDs. Full ENG-02/ENG-09 completion and M1/G1 still require the remaining evidence below.
 
 1. **ENG-09 / M1-R01 — completed regression.** Premature response close after body consumption aborts scanner/source work; staging cleanup and slot release await termination. A controlled HTTP/scanner test verifies two-slot admission, third-request rejection, cleanup and safe slot reuse. Remaining: measured maximum-size resource use, real storage/scanner behavior and cross-platform CI.
 2. **ENG-02 / M1-R02 — completed regression.** The conditional update and exact-row readback share one transaction. Real-PostgreSQL barriers verify a competing stale write cannot replace the first response; API tests verify the response and persisted version match.
 3. **ENG-02 / M1-R03 — completed regression.** Saving a subject preserves other drafts and edits typed during the request; component tests cover Arabic copy, RTL and server-confirmed pricing. Additional tests verify Arabic EGP submission, equal English/Arabic checkout charges and immutable order snapshots when the indicative rate changes. Complete production and development browser suites also verify bilingual admin conflicts and student checkout charges on desktop/Pixel emulation. Exact-head CI and broader manual acceptance remain open.
 4. **ENG-09 / M1-R04 — completed regression.** Guarded setup seeds a known supported READY video and isolates the renewal lesson. The complete production and development/Strict Mode desktop/mobile browser suites pass 32/32 each with clean exit. Ordinary uploads remain PROCESSING until verified; measured load, external storage/scanner and actual-device acceptance remain open.
 5. **Evidence and release gates.** Keep the resolved finding regressions in CI. Collect exact-commit CI after the current branch commit is pushed; complete the ENG-02 bilingual/order checks and ENG-09 load/storage/device acceptance, then finish the ENG-05/06 operator rehearsals below. Leave task statuses In Progress until their full acceptance criteria are evidenced.
-6. **Unlock Wave 2.** Once ENG-05's operator gate closes, start ENH-02 shared contracts and ENH-01 taxonomy, then the remaining Wave 2 primitives according to each task's prerequisites. Consumers reuse these contracts and policies.
+6. **Continue Wave 2 locally.** The reviewed ENG-05 baseline and populated fixture are implemented and reverified. Start COM-09 lifecycle primitives and ENH-02 shared contracts, then ENH-01 taxonomy and the other primitives according to their implementation prerequisites. Keep ENG-05 In Progress for representative restore/operator acceptance; that release hold does not prevent preparing tested additive migrations in disposable schemas. Never deploy them to existing databases without the adoption review. Consumers reuse the owning contracts and policies.
 
 ### ENG-09 / ENH-03 acceptance boundary
 
@@ -27,7 +27,7 @@ ENH-03 depends on ENG-09, ENG-05, ENG-06, ENG-07, ENH-02 and completed SEC-02/03
 
 ## ENG-05 operational follow-through
 
-Owner: database migrations and operations. Status: **In Progress**, priority **P1**. See the [full task](tasks/ENG-05.md), [implementation evidence](ENG05_IMPLEMENTATION.md) and [migration runbook](MIGRATION_OPERATIONS.md). Code, local fixtures and exact-head CI are complete; representative restore/rollback/operator review remain open.
+Owner: database migrations and operations. Status: **In Progress**, priority **P1**. See the [full task](tasks/ENG-05.md), [implementation evidence](ENG05_IMPLEMENTATION.md) and [migration runbook](MIGRATION_OPERATIONS.md). Baseline code and local fixtures are implemented; earlier checkpoint CI is linked below. The current M1 chain still needs final-commit CI, representative restore/rollback and operator review.
 
 1. **Complete:** inventory the pre-M0/current schema difference; check in the immutable 2fbdc8e schema snapshot; generate and verify its baseline SQL; preserve the idempotent M0 authVersion bridge as the next migration. Existing production history is not marked as applied by CI or local tests.
 2. **Complete:** add migrate-deploy/test commands and replace CI's schema-push setup with reviewed migration application. Guard schema push to local development or the dedicated test database.
@@ -36,7 +36,7 @@ Owner: database migrations and operations. Status: **In Progress**, priority **P
 5. **Complete:** exact branch Node 22 CI passed all five checks for 34723cdded64a751b6a36c208a69421f4a57ac44 in [GitHub Actions run 39820430062](https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062), including the server empty/populated migration fixture and both browser modes.
 6. **Remaining:** restore an authorized representative copy, inspect it with read-only schema diff, rehearse baseline resolution plus rollback/forward repair and backup/restore, then obtain operator review before marking ENG-05 Complete.
 
-First-task exclusions: no taxonomy, canonical course migration, managed asset schema, new commerce model or assessment revision engine in this baseline task. Those owners add their own subsequent ordered migrations. No production database changes are authorized by this planning document.
+Baseline-task exclusions: taxonomy, canonical course migration, managed assets, commerce and assessment revisions keep their own owners and subsequent ordered migrations. The baseline/fixture engineering prerequisite is ready for local implementation; representative restore, deployment adoption and rollback approval remain release holds. No production database changes are authorized by this document.
 
 ## M1 implementation waves
 
@@ -54,7 +54,7 @@ Exit evidence: Exact-head remote CI; ENG-05 restored-copy diff/restore rehearsal
 
 [ENH-01](tasks/ENH-01.md), [ENH-02](tasks/ENH-02.md), [ENG-07](tasks/ENG-07.md), [COM-03](tasks/COM-03.md), [COM-05](tasks/COM-05.md), [COM-09](tasks/COM-09.md), [SEC-07](tasks/SEC-07.md), [SEC-13](tasks/SEC-13.md), [SEC-14](tasks/SEC-14.md).
 
-After ENG-05, establish curriculum metadata, shared contracts, audit/outbox, subscription terms, scoped idempotency, effective dates, bank ownership and atomic session/MFA behavior.
+ENG-05 baseline code and its populated disposable upgrade fixture are verified for local feature development. Continue COM-09 lifecycle primitives and ENH-02 shared contracts, then curriculum metadata, audit/outbox, subscription terms, scoped idempotency, bank ownership and atomic session/MFA behavior. Representative restore/operator approval remains a release gate; it does not authorize production migrations.
 
 Exit evidence: Schema/contract and preservation checks; real PostgreSQL races for token/code consumption, payment intent and calendar boundaries; cross-account bank tests.
 
@@ -87,7 +87,7 @@ Exit evidence: Concurrent price edits/purchases preserve snapshots; all M1 task 
 - Every implemented task adds meaningful positive/negative, cross-account, real database concurrency/recovery, migration and Arabic/English tests as applicable. Keep the 397-server/63-client and 24-per-mode browser checkpoint as historical regression evidence; record new counts for the new commit instead of treating them as a fixed test quota.
 - Use [M0 manual steps](M0_MANUAL_TESTING.md) for current flows. Recheck disabled developer tabs with no requests, malformed cookies, transient refresh failures, protected course inspection, rapid PDF/course switches, failed video renewal retry, mobile profile/logout, enrollment and assignment delivery in both locales.
 - Before local integration tests, verify the dedicated test target. Existing schema push is limited to local development and disposable test fixtures; install/upgrade workflows use reviewed migrations. Never use destructive fixture cleanup on a shared or real-student database.
-- Preserve exact CI artifacts and coverage denominators. The [coverage inventory](../audit/final-m0/coverage-gaps.json) and [domain ownership table](TESTING_RELEASE_GATES.md#untested-and-incompletely-tested-domain-ownership) identify what still needs tests. Do not claim every feature tested because every dashboard tab opened.
+- Preserve exact CI artifacts and coverage denominators. The [coverage inventory](../audit/m1-review/coverage-gaps.json) and [domain ownership table](TESTING_RELEASE_GATES.md#untested-and-incompletely-tested-domain-ownership) identify what still needs tests. Do not claim every feature tested because every dashboard tab opened.
 - Regenerate docs using 'node docs/scripts/build-docs.cjs', validate using 'node docs/scripts/validate-docs.cjs', and update current evidence only when new checks actually run. Keep the 58 finding IDs, 42 acceptance dispositions and immutable archived originals.
 
 ## After M1

@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import fs from 'node:fs';
 import net from 'node:net';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -65,9 +67,9 @@ async function waitForApi(url: string, child: ChildProcess, getOutput: () => str
 }
 
 describe('API process-level graceful shutdown', () => {
-  // Windows child.kill('SIGTERM') terminates the process without delivering a
-  // catchable POSIX signal. This integration case runs on the Linux CI runner.
-  it.skipIf(process.platform === 'win32')('returns the in-flight readiness result and drains before disconnecting on SIGTERM', async () => {
+  // Windows child.kill('SIGTERM') terminates immediately. Its test-only
+  // bootstrap emits the same signal event; POSIX runners deliver native SIGTERM.
+  it('returns the in-flight readiness result and drains before disconnecting on SIGTERM', async () => {
     const databaseSockets = new Set<net.Socket>();
     const fakeDatabase = net.createServer((socket) => {
       databaseSockets.add(socket);
@@ -78,13 +80,17 @@ describe('API process-level graceful shutdown', () => {
     });
     const databasePort = await listen(fakeDatabase);
     const apiPort = await freePort();
+    const uploadsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'eng06-process-'));
     const stalledDatabaseUrl = `postgresql://test:test@127.0.0.1:${databasePort}/eduplatform_test?schema=public&connect_timeout=30&pool_timeout=30&connection_limit=1`;
     let child: ChildProcess | undefined;
     let closed: Promise<{ code: number | null; signal: NodeJS.Signals | null }> | undefined;
     let output = '';
 
     try {
-      child = spawn(process.execPath, ['--import', 'tsx', serverEntry], {
+      const entryArgs = process.platform === 'win32'
+        ? ['--eval', `require(${JSON.stringify(serverEntry)}); process.on('message', (message) => { if (message === 'eng06-sigterm') { process.emit('SIGTERM', 'SIGTERM'); process.disconnect(); } });`]
+        : [serverEntry];
+      child = spawn(process.execPath, ['--import', 'tsx', ...entryArgs], {
         cwd: serverRoot,
         env: {
           ...process.env,
@@ -92,9 +98,10 @@ describe('API process-level graceful shutdown', () => {
           STORAGE_DRIVER: 'filesystem',
           DATABASE_URL: stalledDatabaseUrl,
           DIRECT_URL: stalledDatabaseUrl,
+          UPLOADS_DIR: uploadsRoot,
           PORT: String(apiPort),
         },
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: process.platform === 'win32' ? ['ignore', 'pipe', 'pipe', 'ipc'] : ['ignore', 'pipe', 'pipe'],
         windowsHide: true,
       });
       child.stdout?.setEncoding('utf8').on('data', (chunk: string) => { output += chunk; });
@@ -108,7 +115,11 @@ describe('API process-level graceful shutdown', () => {
         signal: AbortSignal.timeout(10_000),
       });
       await waitFor(() => databaseSockets.size > 0, 2_000, 'the stalled database readiness probe');
-      expect(child.kill('SIGTERM')).toBe(true);
+      if (process.platform === 'win32') {
+        await new Promise<void>((resolve, reject) => child!.send('eng06-sigterm', (error) => error ? reject(error) : resolve()));
+      } else {
+        expect(child.kill('SIGTERM')).toBe(true);
+      }
 
       const response = await inFlightReadiness;
       expect(response.status).toBe(503);
@@ -117,6 +128,10 @@ describe('API process-level graceful shutdown', () => {
         draining: true,
         dependencies: { database: 'unavailable', storage: 'ready' },
       });
+      // Readiness has reported the stalled dependency honestly. Settle the fake
+      // handshake so Prisma disconnect can finish; this fixture must not test a
+      // 30-second connection deadline against an eight-second exit assertion.
+      for (const socket of databaseSockets) socket.destroy();
       const exit = await withTimeout(closed, 8_000);
       expect(exit).toEqual({ code: 0, signal: null });
       expect(output).toContain('Received SIGTERM; stopping admission and draining requests.');
@@ -128,6 +143,10 @@ describe('API process-level graceful shutdown', () => {
       }
       for (const socket of databaseSockets) socket.destroy();
       await new Promise<void>((resolve) => fakeDatabase.close(() => resolve()));
+      if (path.dirname(uploadsRoot) !== path.resolve(os.tmpdir()) || !path.basename(uploadsRoot).startsWith('eng06-process-')) {
+        throw new Error('Refusing cleanup of an unowned process-test directory.');
+      }
+      fs.rmSync(uploadsRoot, { recursive: true, force: true });
     }
   }, 20_000);
 });

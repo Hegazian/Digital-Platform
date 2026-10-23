@@ -95,7 +95,7 @@ if(fs.existsSync(path.join(root,integrationManifest))) {
  for(const entry of integration.files)check(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,entry.archive))).digest('hex')===entry.sha256,'Archived integration input changed: '+entry.archive);
  check(!fs.existsSync(path.join(root,'server/prisma/migrations/0001_init/migration.sql')),'Competing initial baseline must remain outside executable migrations');
 }
-const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','M1_REVIEW.md','M1_MANUAL_TESTING.md','ENG02_IMPLEMENTATION.md','ENG05_IMPLEMENTATION.md','ENG06_IMPLEMENTATION.md','ENG09_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
+const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','M1_REVIEW.md','M1_RELEASE_READINESS.md','M1_MANUAL_TESTING.md','ENG02_IMPLEMENTATION.md','ENG05_IMPLEMENTATION.md','ENG06_IMPLEMENTATION.md','ENG09_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,historicalDocMoves['docs/'+p] || 'docs/'+p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>historicalDocMoves['docs/'+p] || 'docs/'+p),...tasks.map(t=>t.documentPath),'README.md','server/README.md','client/README.md','docs/archive/INDEX.md','docs/archive/completed/README.md','docs/archive/reviews/README.md','docs/M0_FINAL_REVIEW.md'];
 let links=0,anchors=0;
@@ -159,6 +159,29 @@ check(suspicious.length===0,'Review active AI requirement matches: '+suspicious.
 const current=read('docs/CURRENT_STATUS.md');
 const m1Review=read('docs/M1_REVIEW.md');
 const handoff=read('docs/NEXT_STEPS.md');
+const releaseClosure=read('docs/M1_RELEASE_READINESS.md');
+if(m1Evidence.releaseReview?.priorReport) {
+ const archived=m1Evidence.releaseReview.priorReport;
+ check(fs.existsSync(path.join(root,archived.path)) && crypto.createHash('sha256').update(fs.readFileSync(path.join(root,archived.path))).digest('hex')===archived.sha256,'Archived first M1 review changed');
+}
+if(m1Evidence.coverage) {
+ const coverage=m1Evidence.coverage;
+ check(fs.existsSync(path.join(root,coverage.report)) && crypto.createHash('sha256').update(fs.readFileSync(path.join(root,coverage.report))).digest('hex')===coverage.sha256,'M1 coverage inventory differs from verified evidence');
+ for(const app of ['server','client']) {
+  const summary=m1Evidence[app].coverage;
+  const values=['statements','branches','functions','lines'].map(d=>summary[d].pct+'%').join(' / ');
+  check(current.includes(values),'Current M1 coverage differs from evidence: '+app);
+ }
+}
+for(const t of tasks.filter(t=>t.milestone==='M1')) {
+ check(releaseClosure.includes(`| [${t.id}](${path.posix.relative('docs',t.documentPath)}) | ${t.status} |`),'M1 release closure omits task/status '+t.id);
+}
+check(releaseClosure.includes('local fixtures only; keep external release checks open'),'M1 release closure omits the user-authorized local-only boundary');
+for(const finding of m1Evidence.releaseReview?.findings||[]) {
+ check(byId.has(finding.owner),'M1 review finding has unknown owner '+finding.id);
+ check(m1Review.includes(finding.id) && releaseClosure.includes(finding.id),'M1 release review finding missing from active docs '+finding.id);
+ if(finding.status!=='Resolved') check(byId.get(finding.owner)?.status!=='Complete','Unresolved M1 review finding has completed owner '+finding.id);
+}
 for(const id of m1Evidence.review.openFindings) {
  check(m1Review.includes('| '+id+' |'),'Missing M1 review finding '+id);
  check(byId.get(id==='M1-R02'||id==='M1-R03'?'ENG-02':'ENG-09').status==='In Progress','Open M1 findings cannot have a Complete owner');

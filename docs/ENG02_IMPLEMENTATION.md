@@ -19,7 +19,7 @@ The [23 October M1 review](M1_REVIEW.md) found two regressions owned here: **M1-
 - `npm run db:migrate:fixture` — passed empty install and repeated deploy, drift rejection before migration history, and populated upgrade. The fixture retained 22 rows across 21 tables and verified legacy AppConfig currency becomes EGP, version starts at 1, and a saved rate of 60 remains 60.
 - `npm test -- src/modules/config/__tests__/config-branding.spec.ts` — 7 tests passed, including the explicit real-PostgreSQL config barrier and an order-snapshot regression across a rate change.
 - Focused course/subject/config/validation tests — 6 files / 39 tests passed, including fresh-rate catalog output, USD price input rejection and stale-write concurrency. Course/subject route integration subset — 3 files / 15 tests passed.
-- Full server `npm test` after ENG-06 test addition — 81 files, 441 passed and 1 POSIX process-shutdown test skipped on Windows; Linux CI must execute the skipped signal test.
+- Full server coverage suite after the M1-R05 repair — 81 files, 442 passed and zero skips. Windows exercises the registered shutdown handler; native Linux signal delivery still requires CI.
 - Server `npm run typecheck` and `npm run build` — passed.
 - Client `npm run typecheck`, `npm test`, and `npm run build` — passed; 17 test files / 90 tests passed, including Arabic/English Platform Settings saves, checkout EGP display and subject pricing submission.
 - Client `npm run lint` — 0 errors and 27 existing warnings in other files.

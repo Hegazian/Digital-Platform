@@ -4,7 +4,7 @@ Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed 
 
 ## M1 review supplement
 
-[M1-R01–R04](M1_REVIEW.md) are resolved by targeted upload lifetime, exact config readback, pricing draft and READY-fixture regressions owned by ENG-09/ENG-02. The owners remain In Progress for broader acceptance; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
+[M1-R01–R04](M1_REVIEW.md) are resolved by upload lifetime, exact config readback, pricing draft and READY-fixture regressions owned by ENG-09/ENG-02. The second independent review found M1-R05 in the shutdown process test, now fixed and rechecked under ENG-06/ENG-13. [Release closure](M1_RELEASE_READINESS.md) retains the full unfinished M1 task matrix and local-only/external evidence boundary. The original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 coverage and test evidence is separate from historical M0 CI.
 
 ## Finding disposition — 58 of 58
 
