@@ -22,4 +22,12 @@ describe('graceful HTTP shutdown', () => {
     expect(server.closeAllConnections).toHaveBeenCalledOnce();
     expect(disconnect).toHaveBeenCalledOnce();
   });
+
+  it('bounds shared-resource cleanup after the HTTP drain', async () => {
+    const disconnect = vi.fn(() => new Promise<never>(() => undefined));
+    const server = { close: (callback?: (error?: Error) => void) => callback?.() };
+
+    await expect(closeGracefully(server, disconnect, 100, 5)).resolves.toBe(false);
+    expect(disconnect).toHaveBeenCalledOnce();
+  });
 });

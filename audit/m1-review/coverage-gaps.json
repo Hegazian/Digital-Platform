@@ -1,46 +1,40 @@
 {
   "date": "2026-10-23",
-  "testedWorktreeBase": "ad920ce5c72bbccfb99defc60c33ec584ebe3bdf",
-  "sourceFingerprint": "935dfa7263d85535350a2e672114bceeba930a41c4d6282ae45dfca995216253",
-  "explanation": "Whole-source unit/component V8 coverage. Browser and child-process API code are not instrumented; zero coverage does not prove a UI was never visited or a server entrypoint was never launched. G3 release targets remain 80% statements/lines/functions and 75% branches; both packages remain below at least one target.",
+  "testedWorktreeBase": "f42a95a",
+  "sourceFingerprint": "7dae6f295e0d8f00060a124ff14b5ce7a1ce2e3f76a13368c851ed36894ca432",
+  "explanation": "Fresh server V8 coverage follows the local M1 reliability and media cleanup changes. Client coverage is retained from its unchanged source suite. Browser and child-process API code are not instrumented; zero coverage does not prove a UI was never visited or a server entrypoint was never launched. G3 targets are 80% statements/lines/functions and 75% branches; current server functions are 89.82% against the 90% package threshold and both packages remain below other targets.",
   "packages": {
     "server": {
       "total": {
         "lines": {
-          "total": 3768,
-          "covered": 2832,
+          "total": 3797,
+          "covered": 2852,
           "skipped": 0,
-          "pct": 75.15
+          "pct": 75.11
         },
         "statements": {
-          "total": 4034,
-          "covered": 2982,
+          "total": 4069,
+          "covered": 3006,
           "skipped": 0,
-          "pct": 73.92
+          "pct": 73.87
         },
         "functions": {
-          "total": 679,
-          "covered": 613,
+          "total": 688,
+          "covered": 618,
           "skipped": 0,
-          "pct": 90.27
+          "pct": 89.82
         },
         "branches": {
-          "total": 2576,
-          "covered": 1713,
+          "total": 2599,
+          "covered": 1732,
           "skipped": 0,
-          "pct": 66.49
-        },
-        "branchesTrue": {
-          "total": 0,
-          "covered": 0,
-          "skipped": 0,
-          "pct": 100
+          "pct": 66.64
         }
       },
       "filesWithoutUnitCoverage": [
         {
           "file": "server/src/server.ts",
-          "statements": 23
+          "statements": 31
         }
       ],
       "partialCoverage": [
@@ -69,33 +63,6 @@
             "covered": 23,
             "skipped": 0,
             "pct": 48.93
-          }
-        },
-        {
-          "file": "server/src/prisma.ts",
-          "lines": {
-            "total": 8,
-            "covered": 7,
-            "skipped": 0,
-            "pct": 87.5
-          },
-          "functions": {
-            "total": 0,
-            "covered": 0,
-            "skipped": 0,
-            "pct": 100
-          },
-          "statements": {
-            "total": 8,
-            "covered": 7,
-            "skipped": 0,
-            "pct": 87.5
-          },
-          "branches": {
-            "total": 6,
-            "covered": 4,
-            "skipped": 0,
-            "pct": 66.66
           }
         },
         {
@@ -1665,6 +1632,60 @@
           }
         },
         {
+          "file": "server/src/prisma.ts",
+          "lines": {
+            "total": 8,
+            "covered": 7,
+            "skipped": 0,
+            "pct": 87.5
+          },
+          "functions": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 8,
+            "covered": 7,
+            "skipped": 0,
+            "pct": 87.5
+          },
+          "branches": {
+            "total": 6,
+            "covered": 4,
+            "skipped": 0,
+            "pct": 66.66
+          }
+        },
+        {
+          "file": "server/src/server.ts",
+          "lines": {
+            "total": 29,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 0
+          },
+          "functions": {
+            "total": 11,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 0
+          },
+          "statements": {
+            "total": 31,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 0
+          },
+          "branches": {
+            "total": 6,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 0
+          }
+        },
+        {
           "file": "server/src/utils/cache.ts",
           "lines": {
             "total": 18,
@@ -1856,28 +1877,28 @@
         {
           "file": "server/src/utils/graceful-shutdown.ts",
           "lines": {
-            "total": 12,
-            "covered": 12,
+            "total": 17,
+            "covered": 17,
             "skipped": 0,
             "pct": 100
           },
           "functions": {
-            "total": 5,
-            "covered": 5,
+            "total": 9,
+            "covered": 9,
             "skipped": 0,
             "pct": 100
           },
           "statements": {
-            "total": 14,
-            "covered": 14,
+            "total": 21,
+            "covered": 21,
             "skipped": 0,
             "pct": 100
           },
           "branches": {
-            "total": 3,
-            "covered": 2,
+            "total": 8,
+            "covered": 6,
             "skipped": 0,
-            "pct": 66.66
+            "pct": 75
           }
         },
         {
@@ -1991,28 +2012,28 @@
         {
           "file": "server/src/utils/storage.ts",
           "lines": {
-            "total": 118,
-            "covered": 96,
+            "total": 134,
+            "covered": 111,
             "skipped": 0,
-            "pct": 81.35
+            "pct": 82.83
           },
           "functions": {
-            "total": 19,
-            "covered": 14,
+            "total": 20,
+            "covered": 15,
             "skipped": 0,
-            "pct": 73.68
+            "pct": 75
           },
           "statements": {
-            "total": 146,
-            "covered": 108,
+            "total": 166,
+            "covered": 125,
             "skipped": 0,
-            "pct": 73.97
+            "pct": 75.3
           },
           "branches": {
-            "total": 90,
-            "covered": 65,
+            "total": 108,
+            "covered": 80,
             "skipped": 0,
-            "pct": 72.22
+            "pct": 74.07
           }
         },
         {

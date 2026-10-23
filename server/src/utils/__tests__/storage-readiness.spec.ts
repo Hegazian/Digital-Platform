@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { StorageService } from '../storage';
+import { cleanupStaleUploadStaging, StorageService } from '../storage';
 
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 describe('production private bucket gate', () => {
@@ -118,5 +118,31 @@ describe('production private bucket gate', () => {
     } finally {
       await fs.rm(uploads, { recursive: true, force: true });
     }
+  });
+});
+
+describe('stale upload staging cleanup', () => {
+  it('removes only expired regular .upload files from the private staging directory', async () => {
+    const uploads = await fs.mkdtemp(path.join(os.tmpdir(), 'eduplatform-staging-cleanup-'));
+    const staging = path.join(uploads, '.staging');
+    const stale = path.join(staging, 'abandoned.upload');
+    const active = path.join(staging, 'active.upload');
+    const unrelated = path.join(staging, 'keep.txt');
+    vi.stubEnv('UPLOADS_DIR', uploads);
+    await fs.mkdir(staging);
+    await Promise.all([fs.writeFile(stale, 'old'), fs.writeFile(active, 'active'), fs.writeFile(unrelated, 'keep')]);
+    const now = Date.now();
+    await fs.utimes(stale, new Date(now - 16 * 60_000), new Date(now - 16 * 60_000));
+    await fs.utimes(active, new Date(now - 1_000), new Date(now - 1_000));
+    try {
+      await expect(cleanupStaleUploadStaging(15 * 60_000, now)).resolves.toBe(1);
+      await expect(fs.readdir(staging).then((names) => names.sort())).resolves.toEqual(['active.upload', 'keep.txt']);
+    } finally {
+      await fs.rm(uploads, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects a retention shorter than the maximum upload request lifetime', async () => {
+    await expect(cleanupStaleUploadStaging(1_000)).rejects.toThrow('maximum upload request lifetime');
   });
 });

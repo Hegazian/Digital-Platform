@@ -2,7 +2,7 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Full independent M1 review at ad920ce against recorded merge base, including staged/unstaged/untracked files. M1-R05 was repaired and independently rechecked. Author reran both package coverage suites, typechecks/builds, client lint and disposable migration fixture; retained browser results are prior local evidence because runtime application code did not change in this review.",
+  "scope": "Full independent M1 review at ad920ce against recorded merge base, including staged/unstaged/untracked files. M1-R05 was repaired and independently rechecked. After review, the author reran package tests/coverage, typechecks/builds, client lint, disposable migration fixture, and production plus development browser suites against the shutdown/staging follow-up working tree. Browser results are local evidence, not exact-head remote CI or external release acceptance.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
@@ -35,12 +35,12 @@
     "server/src/modules/videos/video.service.ts": "4e1c0d1afac429be20d698c79e17fa0237e3b44e0e809d1a85ba2fa7c98b71c8",
     "server/src/utils/__tests__/file-validation.spec.ts": "8baffdd26a4f61cb286886b2bb60210bc3dc45508a363a77c92b82178c8a5e93",
     "server/src/utils/__tests__/scanner.spec.ts": "eb5d5e24d51987f842a54c2e3f1f402d515b67cc52676db62031ce8830695f1b",
-    "server/src/utils/__tests__/storage-readiness.spec.ts": "48274baa204f017d1cca0c08c6bc3d1e2ed8b8735e6fb593d6fe128d022ef259",
+    "server/src/utils/__tests__/storage-readiness.spec.ts": "5a368e4d4866dc1bb5ff463341da865835a9ede4f47832c169578081f5f89a2b",
     "server/src/utils/__tests__/validate.spec.ts": "3469e5d001eec083961c3df651585562eda7ca04c832f3d480989f3f85442119",
     "server/src/utils/currency.ts": "5fdebc88751694ad4286403d4deffd05c01c9af3e1091b6bdbd8b3e7548ca575",
     "server/src/utils/file-validation.ts": "a81a8d0f258c4cff31d9ca12e97ac92785a10bf3d108237b9d1f54d225cb257d",
     "server/src/utils/schemas.ts": "46094a0d3cebd7704cc5524be5483656b113ebe4de9c8fa8398eb59c12d91afb",
-    "server/src/utils/storage.ts": "48087ed64ad750bb6ff1dc64d7f2263ec2f2610caad4eae26d7205c313c0497d",
+    "server/src/utils/storage.ts": "1a2ed36e0a426f942502c2ad2b44a0d2f4f53cca299339a8e26a36d7239de54d",
     "client/e2e/m0/review.spec.ts": "3b56583f275135a06d62eda91b4b767745793694dd9d06eba73ef2be8f6b378e",
     "client/e2e/m0/safety.spec.ts": "69213be4256acb31e15e3b40fdf80503237186b0cfa3a7489b661da69d551ca8",
     "client/src/components/admin/CoursePricingManager.test.tsx": "f98cc5662a2776ac825ee64d97592c41a16d39bb21a6a9602366ffd6f3c0ef8e",
@@ -52,9 +52,12 @@
     "client/src/lib/api.ts": "bdb1cde16c45c2a8b981bd087fb78bb5329d6da6602a6f01f2547277e82fdc14",
     "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da",
     "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a",
-    "server/src/utils/__tests__/process-shutdown.spec.ts": "0fad010f064ddbcfed79ccfc15acdc3334334a86a6e1ab73b90bd93c3be7195d"
+    "server/src/utils/__tests__/process-shutdown.spec.ts": "adb9b4d5e1822dd0da66dcf28406c9ce2375f004588ec838e73e1814b0c41bed",
+    "server/src/server.ts": "41e0ee8b422dd52d5e9a3786c49e22f56989104982e8cc2868eb49b08887759f",
+    "server/src/utils/graceful-shutdown.ts": "1dd495821b0c47ab7dad223f80483a389dca26f0d782d1155c5525fad1f2d443",
+    "server/src/utils/__tests__/graceful-shutdown.spec.ts": "7f6bcdc437b8f5ce89a607168d6ebc3b90f63203a33e1c4c1435c4712ffc1072"
   },
-  "sourceFingerprint": "935dfa7263d85535350a2e672114bceeba930a41c4d6282ae45dfca995216253",
+  "sourceFingerprint": "7dae6f295e0d8f00060a124ff14b5ce7a1ce2e3f76a13368c851ed36894ca432",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -77,44 +80,38 @@
     "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; complete production and development/Strict Mode desktop/mobile browser suites each passed 32/32 with clean exit."
   },
   "server": {
-    "typecheck": "passed 2026-10-23 after M1-R05 repair",
-    "build": "passed 2026-10-23 after M1-R05 repair",
+    "typecheck": "passed 2026-10-23 after M1 reliability/media cleanup and process-test update",
+    "build": "passed 2026-10-23 after M1 reliability/media cleanup and process-test update",
     "files": 81,
-    "tests": 442,
+    "tests": 446,
     "skipped": 0,
-    "command": "npm run test:coverage",
-    "totalTests": 442,
-    "note": "All 442 passed with zero skips. Windows process test invokes the registered SIGTERM handler through test-only child IPC; POSIX runners use native SIGTERM. The fake database settles after the draining 503 assertion so Prisma disconnect can finish.",
+    "command": "npm run test:coverage (446 tests pass; command exits 1 on global function threshold)",
+    "totalTests": 446,
+    "note": "All 446 tests across 81 files pass with zero skips. The coverage command exits 1 because function coverage is 89.82%, below the 90% package threshold. A separate npm test run exits 0. Windows process tests invoke the registered SIGTERM handler through test-only child IPC; POSIX runners use native SIGTERM.",
     "coverage": {
       "lines": {
-        "total": 3768,
-        "covered": 2832,
+        "total": 3797,
+        "covered": 2852,
         "skipped": 0,
-        "pct": 75.15
+        "pct": 75.11
       },
       "statements": {
-        "total": 4034,
-        "covered": 2982,
+        "total": 4069,
+        "covered": 3006,
         "skipped": 0,
-        "pct": 73.92
+        "pct": 73.87
       },
       "functions": {
-        "total": 679,
-        "covered": 613,
+        "total": 688,
+        "covered": 618,
         "skipped": 0,
-        "pct": 90.27
+        "pct": 89.82
       },
       "branches": {
-        "total": 2576,
-        "covered": 1713,
+        "total": 2599,
+        "covered": 1732,
         "skipped": 0,
-        "pct": 66.49
-      },
-      "branchesTrue": {
-        "total": 0,
-        "covered": 0,
-        "skipped": 0,
-        "pct": 100
+        "pct": 66.64
       }
     }
   },
@@ -164,7 +161,7 @@
   },
   "migrations": {
     "command": "npm run db:migrate:fixture",
-    "status": "passed 2026-10-23 during release review",
+    "status": "passed 2026-10-23 after M1 reliability/media cleanup",
     "migrationCount": 3,
     "preservedRows": 22,
     "tables": 21,
@@ -201,7 +198,7 @@
       "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "Retained prior local32/32 checkpoint; not rerun during this review. Runtime application code is unchanged by M1-R05 test-only repair. Complete production build and browser suite passed all 32 desktop/Pixel 5 cases; runner started and stopped its own API and Next processes and exited cleanly.",
+      "note": "Freshly rerun after the bounded shutdown and stale staging cleanup changes. Production build and all desktop/Pixel 5 browser cases passed; test runner started and stopped its local API and Next processes cleanly.",
       "attempts": [
         {
           "environment": "sandbox",
@@ -241,20 +238,33 @@
             "chromium",
             "mobile-chrome"
           ]
+        },
+        {
+          "environment": "local Windows after f42a95a M1 follow-up",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "Fresh production build and browser run after shutdown/staging cleanup; all desktop and Pixel 5 emulation journeys passed.",
+          "browserProjects": [
+            "chromium",
+            "mobile-chrome"
+          ]
         }
       ],
-      "revision": "working tree based on 4123f5f",
+      "revision": "working tree based on f42a95a after ENG-06/ENG-09 follow-up",
       "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
       "command": "npm run test:m0:browser (client; runner-owned local API and production Next processes)",
       "exitCode": 0,
-      "rerunInReleaseReview": false
+      "rerunInReleaseReview": false,
+      "rerunAfterFollowup": true
     },
     "development": {
       "status": "passed",
       "passed": 32,
       "failed": 0,
       "skipped": 0,
-      "note": "Retained prior local32/32 checkpoint; not rerun during this review. Runtime application code is unchanged by M1-R05 test-only repair. Complete Next development/Strict Mode browser suite passed all 32 desktop/Pixel 5 cases and exited cleanly. One transient ECONNRESET appeared on dashboard proxy reads during the mobile admin case; an immediate repeat of all four bilingual desktop/mobile admin config cases passed without recurrence. Expected 409 conflict and authorization-denial logs are exercised behavior.",
+      "note": "Freshly rerun after the bounded shutdown and stale staging cleanup changes. Next development/Strict Mode and all desktop/Pixel 5 browser cases passed cleanly. Expected stale-config conflict and authorization denial logs were exercised by the suite.",
       "command": "$env:M0_WEB_MODE=dev; npm run test:m0:browser (client; runner-owned local API and Next dev processes)",
       "environment": "local Windows, disposable loopback PostgreSQL, synthetic accounts/content",
       "exitCode": 0,
@@ -288,10 +298,23 @@
             "chromium",
             "mobile-chrome"
           ]
+        },
+        {
+          "environment": "local Windows after f42a95a M1 follow-up",
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "Fresh Next development/Strict Mode run after shutdown/staging cleanup; all desktop and Pixel 5 emulation journeys passed.",
+          "browserProjects": [
+            "chromium",
+            "mobile-chrome"
+          ]
         }
       ],
-      "revision": "working tree based on 4123f5f",
-      "rerunInReleaseReview": false
+      "revision": "working tree based on f42a95a after ENG-06/ENG-09 follow-up",
+      "rerunInReleaseReview": false,
+      "rerunAfterFollowup": true
     },
     "targetedConfig": {
       "status": "superseded by complete production and development suite passes; interrupted attempts retained as history",
@@ -332,7 +355,8 @@
     }
   },
   "remoteCI": {
-    "status": "No current M1 pass verified: no branch PR or commit status checks returned for ad920ce; final reviewed-fix commit still requires Linux CI"
+    "status": "No current M1 PR or commit status checks verified for the follow-up implementation; Linux CI remains required.",
+    "summary": "No current M1 PR or CI status result verified for the latest follow-up; local tests pass, with server function coverage below its 90% threshold."
   },
   "notVerified": [
     "M1-specific bilingual admin/student config and upload manual journeys using persisted-state/operator checks",
@@ -345,7 +369,13 @@
     "exact-head M1 remote CI",
     "Native Linux SIGTERM execution for the repaired process test and final-commit CI",
     "Total cleanup deadline with an indefinitely unresponsive real dependency, real storage outage and shutdown during upload",
-    "Fresh dependency advisory audit during this review; previous scans remain historical"
+    "Fresh dependency advisory audit during this review; previous scans remain historical",
+    "Exact-head M1 remote CI after these follow-up changes",
+    "Global server function coverage threshold (89.82%, required 90%)",
+    "Native Linux SIGTERM execution for the shutdown changes",
+    "Real Supabase/ClamAV, maximum-size resource measurement and physical-device playback",
+    "Representative backup/restore, rollback rehearsal and operator sign-off",
+    "Exact-head M1 remote CI after follow-up changes"
   ],
   "logs": "Local audit/m1-review/*.log files are intentionally gitignored; this record and the review report are committed. M0 evidence is unchanged.",
   "sourceFingerprintMethod": "sha256 of sorted path:contentSha256 entries joined by newline",
@@ -394,15 +424,35 @@
       "client coverage: 17 files / 90 passed / zero skipped",
       "both package typechecks and production builds passed",
       "client lint: 0 errors / 27 warnings",
-      "migration fixture: three migrations, 22 rows / 21 tables preserved; drift rejection, parity and repeat deploy passed"
+      "migration fixture: three migrations, 22 rows / 21 tables preserved; drift rejection, parity and repeat deploy passed",
+      "Post-review local follow-through: server suite 446/446 across 81 files, zero skips; typecheck/build and populated migration fixture passed.",
+      "Fresh coverage ran all 446 tests. Statements 73.87%, branches 66.64%, functions 89.82%, lines 75.11%; command exit 1 is solely the unmet 90% function threshold."
     ],
-    "releaseDisposition": "Not release ready: 25 M1 tasks, 0 Complete / 4 In Progress / 21 Planned; ENG-13 continues across milestones. Local fixtures only; external evidence remains open."
+    "releaseDisposition": "Not release ready: 25 M1 tasks, 0 Complete / 4 In Progress / 21 Planned; ENG-13 continues. Local fixtures only; exact-head CI and external evidence remain open."
   },
   "coverage": {
-    "status": "Internal coverage commands passed; G3 whole-product thresholds not met",
+    "status": "All server tests pass; server function coverage threshold fails at 89.82% versus required 90%; G3 remains open",
     "report": "audit/m1-review/coverage-gaps.json",
-    "sha256": "19d68c143877a6a59425a5afaa73ede807b28e4dda9fc3bc1712e60382322c28",
+    "sha256": "1f993a0c9f8632ffd08f114df39db9674850041596d5b952336266e4ed26cd5f",
     "browserInstrumented": false,
     "childProcessInstrumented": false
+  },
+  "localFollowup": {
+    "date": "2026-10-23",
+    "scope": "ENG-02, ENG-05, ENG-06 and ENG-09 local implementation follow-through",
+    "results": {
+      "serverTests": "446 passed / 81 files / 0 skipped; npm test exit 0",
+      "focusedTests": "18 passed / 3 files before the second process scenario; both process scenarios pass in the full suite",
+      "serverTypecheck": "passed",
+      "serverBuild": "passed",
+      "migrationFixture": "passed; three migrations, 22 rows across 21 tables preserved; drift rejection, parity and repeat deploy passed",
+      "coverage": "all 446 tests pass; command exits 1 because functions are 89.82% against a 90% threshold",
+      "browserProduction": "Fresh run after runtime follow-up: 32 passed / 0 failed / 0 skipped; production build and runner exit clean (desktop Chromium and Pixel 5 emulation)",
+      "browserDevelopment": "Fresh run after runtime follow-up: 32 passed / 0 failed / 0 skipped; development/Strict Mode and runner exit clean (desktop Chromium and Pixel 5 emulation)"
+    },
+    "codeChanges": [
+      "Bound HTTP drain and Prisma disconnect to 15 seconds total, forcing nonzero process exit on cleanup timeout/failure",
+      "Remove only regular .upload files older than 24 hours from the private staging directory at startup and every six hours"
+    ]
   }
 }

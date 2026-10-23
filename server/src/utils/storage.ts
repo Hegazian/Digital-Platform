@@ -39,6 +39,33 @@ export function getUploadStagingRoot(): string {
   return directory;
 }
 
+/** Remove only abandoned regular upload files older than the maximum request lifetime. */
+export async function cleanupStaleUploadStaging(
+  staleAfterMs = 24 * 60 * 60 * 1000,
+  now = Date.now()
+): Promise<number> {
+  if (!Number.isFinite(staleAfterMs) || staleAfterMs < 15 * 60 * 1000) {
+    throw new Error('Upload staging retention must exceed the maximum upload request lifetime.');
+  }
+  const stagingRoot = path.resolve(getUploadStagingRoot());
+  const entries = await fs.promises.readdir(stagingRoot, { withFileTypes: true });
+  let removed = 0;
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.upload')) continue;
+    const filePath = path.resolve(stagingRoot, entry.name);
+    if (path.dirname(filePath) !== stagingRoot) continue;
+    try {
+      const metadata = await fs.promises.lstat(filePath);
+      if (!metadata.isFile() || now - metadata.mtimeMs < staleAfterMs) continue;
+      await fs.promises.unlink(filePath);
+      removed += 1;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+  }
+  return removed;
+}
+
 /**
  * Storage Utility for handling file uploads through the explicitly selected driver.
  */

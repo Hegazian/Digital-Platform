@@ -81,7 +81,7 @@ Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot af
 ## Verification and acceptance tests
 
 - **ENG-05-T01** — Empty chain installs and equals the current Prisma schema; second deploy is a no-op.
-- **ENG-05-T02** — Populated pre-M0 schema diff is empty before baseline resolution; bridge preserves all 21 synthetic rows across 20 tables, sets authVersion to 1, and equals current schema.
+- **ENG-05-T02** — Populated pre-M0 schema diff is empty before baseline resolution; the current migration chain preserves 22 synthetic rows across 21 tables, sets authVersion/config version to 1, normalizes legacy charge currency to EGP, retains the indicative rate, and equals current schema. The earlier 21-row/20-table result predates ENG-02 migration.
 - **ENG-05-T03** — Database drift aborts before DDL; concurrent fixture runs use independent schemas and cleanup never removes an unowned schema. Representative restore/rollback remains separate acceptance evidence; exact branch CI passed.
 - **ENG-05-T90 / cross-account** — Execute the positive operation as its permitted actor, then repeat with student B, teacher B, a pending/rejected teacher and guest as applicable; assert the intended safe DTO/denial and no unauthorized durable side effects. For documentation/build-only work, verify no fixture credentials or false capability claims replace this runtime check.
 - **ENG-05-T91 / concurrency and recovery** — Overlap the relevant command/read with retry, stale version, access revocation or process restart; assert final persisted state and one intended effect. Read-only/documentation work instead checks deterministic output and link/contract consistency. Use real PostgreSQL barriers for transaction claims; mocks do not prove them.

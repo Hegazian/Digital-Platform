@@ -31,6 +31,10 @@ The Code Review plugin exposes PR CI diagnostics in this session. GitHub discove
 
 The user selected **local fixtures only; keep external release checks open**. No production/staging migration, credential rotation, private Supabase/ClamAV canary, maximum-size production load, physical-device playback or representative backup/restore rehearsal was performed. Native Linux process execution requires CI.
 
+## Local implementation follow-through after the review
+
+After the independent review closed, local implementation added a total 15-second shutdown bound: up to ten seconds for HTTP drain and five seconds for Prisma cleanup, followed by a nonzero process exit if cleanup fails or hangs. A process-level regression now covers both successful cleanup and an indefinitely stalled database handshake. The same follow-through adds startup and six-hour cleanup of regular private `.upload` staging files older than 24 hours. The full server suite passes **446/446** with zero skips, typecheck, build and the three-migration populated fixture pass, and fresh production and development/Strict Mode browser suites each pass **32/32** after the runtime follow-up. This follow-through was not part of the reviewer’s original diff/recheck scope; its local verification and source hashes are in [machine-readable evidence](../audit/m1-review/verification.json). The coverage command runs all 446 tests but exits 1 because server function coverage is 89.82%, below its 90% threshold. External gates remain open.
+
 ## M1 release disposition
 
 All 25 M1 tasks remain in the approved scope: four In Progress and 21 Planned at this checkpoint. The introduced review defect is repaired, but shared contracts, taxonomy, lifecycle/access parity, session/MFA concurrency, audit/outbox, canonical curriculum, managed assets and commerce foundations still require their owning implementations and acceptance. Reviewing config/media changes does not complete those tasks.

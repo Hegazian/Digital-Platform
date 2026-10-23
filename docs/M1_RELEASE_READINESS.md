@@ -6,12 +6,13 @@ Status: **NOT RELEASE READY**. Local review and verification do not complete G1.
 
 The [M1 review](M1_REVIEW.md) and [machine-readable evidence](../audit/m1-review/verification.json) distinguish introduced defects, their fixes, planned work and unexecuted acceptance. Current release-review disposition: **Introduced CI-test defect resolved; M1 implementation and external release gates remain open**.
 
-- Server: 442 passed / 0 skipped across 81 files. Windows exercises the registered shutdown handler through test-only IPC; native Linux execution remains a CI requirement.
+- Server: 446 passed / 0 skipped across 81 files. Windows exercises clean shutdown and forced exit through test-only IPC; native Linux execution remains a CI requirement.
 - Client: 90 tests across 17 files; latest recorded lint is 0 errors / 27 warnings.
-- Current whole-source coverage (statements / branches / functions / lines): server 73.92% / 66.49% / 90.27% / 75.15%; client 19.34% / 18.94% / 13.39% / 18.86%. [Uncovered/partial files](../audit/m1-review/coverage-gaps.json) remain assigned to their domain tasks; G3 targets are unmet.
-- Browser: production 32 passed and development 32 passed; these modes repeat desktop/Pixel emulation scenarios, not physical-device acceptance.
+- Current whole-source coverage (statements / branches / functions / lines): server 73.87% / 66.64% / 89.82% / 75.11%; client 19.34% / 18.94% / 13.39% / 18.86%. [Uncovered/partial files](../audit/m1-review/coverage-gaps.json) remain assigned to their domain tasks; G3 targets are unmet.
+- Coverage run: all 446 server tests passed, but the command exits 1 because functions are 89.82% against the 90% threshold.
+- Browser: production 32 passed and development 32 passed after the runtime follow-up; these modes cover desktop/Pixel emulation, not physical-device acceptance.
 - Migration fixture: 3 migrations, 22 synthetic rows / 21 tables preserved. This does not establish a representative backup/restore rehearsal.
-- Remote CI: No current M1 pass verified: no branch PR or commit status checks returned for ad920ce; final reviewed-fix commit still requires Linux CI. A prior commit's result cannot validate later changes.
+- Remote CI: No current M1 PR or commit status checks verified for the follow-up implementation; Linux CI remains required. A prior commit's result cannot validate later changes.
 
 | Review finding | Owning task | Disposition | Required regression |
 |---|---|---|---|

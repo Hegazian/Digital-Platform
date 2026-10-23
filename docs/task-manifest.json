@@ -2152,7 +2152,7 @@
       "migration": "Fixture is generated from the exact 2fbdc8e source snapshot. Existing environments require backup, read-only diff and operator decision before migrate resolve. Keep the additive authVersion column and security boundaries on rollback; after data changes, repair forward.",
       "tests": [
         "Empty chain installs and equals the current Prisma schema; second deploy is a no-op.",
-        "Populated pre-M0 schema diff is empty before baseline resolution; bridge preserves all 21 synthetic rows across 20 tables, sets authVersion to 1, and equals current schema.",
+        "Populated pre-M0 schema diff is empty before baseline resolution; the current migration chain preserves 22 synthetic rows across 21 tables, sets authVersion/config version to 1, normalizes legacy charge currency to EGP, retains the indicative rate, and equals current schema. The earlier 21-row/20-table result predates ENG-02 migration.",
         "Database drift aborts before DDL; concurrent fixture runs use independent schemas and cleanup never removes an unowned schema. Representative restore/rollback remains separate acceptance evidence; exact branch CI passed."
       ],
       "done": [
@@ -2194,7 +2194,7 @@
         "Backend: add /health/live and /health/ready; probe DB, configured private storage and durable dispatch availability with deadlines; reject new commands while draining.",
         "Frontend: surface retryable unavailability while preserving unsent user intent; never translate outage to missing entitlement.",
         "Database: no fallback writes to memory; transaction outcomes remain authoritative.",
-        "Configuration/infrastructure: explicit STORAGE_DRIVER=filesystem only local/test and supabase in production; fail startup for missing production storage; SIGTERM stop readiness, drain HTTP/jobs, close Prisma/Redis then exit with bounded timeout."
+        "Configuration/infrastructure: explicit STORAGE_DRIVER=filesystem only local/test and supabase in production; fail startup for missing production storage; SIGTERM stops readiness, drains HTTP, bounds Prisma cleanup to a fixed total deadline, then forces a nonzero process exit if cleanup stalls. Clean abandoned private staging files on startup and periodically using a retention longer than the upload deadline."
       ],
       "example": "GET /health/live -> 200 {\"status\":\"LIVE\"}; GET /health/ready with DB down -> 503 {\"status\":\"NOT_READY\",\"draining\":false,\"dependencies\":{\"database\":\"unavailable\",\"storage\":\"ready\"}}; draining sets the readiness flag and public response omits internal connection details.",
       "controls": "Health contains no secrets or internal hostnames; detailed probes admin/operator only. Storage outage never writes a new local fallback object. Use durable pending work/503 according to whether command committed.",
@@ -2202,7 +2202,8 @@
       "tests": [
         "F14 database outage readiness is 503 while liveness stays live; recovery returns ready.",
         "Supabase down or Redis dispatcher down preserves pending jobs and does not create local files.",
-        "SIGTERM during upload/commit/job, multi-instance reads and Arabic/English retry UI recover without false success."
+        "SIGTERM drains HTTP and bounds dependency cleanup; a stalled disconnect forces process exit within the total deadline.",
+        "Stale upload staging cleanup deletes only old regular .upload files and retains active files and unrelated data."
       ],
       "done": [
         "A38 outage/restart/drain tests pass.",
@@ -2315,6 +2316,7 @@
         "server/src/modules/videos/video.service.ts",
         "server/src/utils/file-validation.ts",
         "server/src/utils/storage.ts",
+        "server/src/utils/__tests__/storage-readiness.spec.ts",
         "server/scripts/m0-browser.cjs",
         "client/e2e/m0/safety.spec.ts",
         "client/e2e/m0/review.spec.ts"
@@ -2324,7 +2326,7 @@
         "Backend: stage uploads under a private directory with a 500 MiB file limit, one-file multipart constraints and a two-upload per-process admission cap; validate signatures from a bounded read, scan in chunks, stream to storage and clean staging/failed local writes.",
         "Frontend: show truthful upload/processing/failure states in Arabic and English, avoid simulated progress, and permit cancellation/retry.",
         "Database: reuse VideoStatus; persist PROCESSING because no codec/duration probe exists yet. ENH-03 alone may mark managed assets READY after verified processing; no schema migration is needed here.",
-        "Configuration/infrastructure: enforce per-file/concurrent byte limits and request deadlines; preserve storage stream errors and client-disconnect cancellation; implement valid single byte ranges and 416 with Content-Range for unsatisfiable input.",
+        "Configuration/infrastructure: enforce per-file/concurrent byte limits and request deadlines; preserve storage stream errors and client-disconnect cancellation; implement valid single byte ranges and 416 with Content-Range for unsatisfiable input; remove abandoned upload staging files older than the maximum request lifetime.",
         "Integration: hand off resumable uploads, durable cross-replica quotas, codec probing, transcoding/renditions and READY transitions to ENH-03 while preserving the existing endpoint."
       ],
       "example": "POST /api/v1/videos/upload -> 201 data.status=PROCESSING; playback URL -> 409 until a trusted media processor verifies readiness. Range bytes=-500 -> 206 last 500 bytes; malformed/multiple/out-of-range -> 416 Content-Range: bytes */total.",
@@ -2335,7 +2337,8 @@
         "Parallel uploads, disconnect, malformed multipart and storage errors keep API memory bounded and clean staging/partial files.",
         "Unauthorized raw stream denied; Arabic/English upload/processing state and target mobile playback validated.",
         "M1-R01: finish the multipart body, then close the response while a controlled scanner is blocked. Scanner socket/source terminate, staging cleanup succeeds on Windows/Linux and repeated cancellation cannot create more than two live admitted scans.",
-        "M1-R04: guarded browser fixtures seed known supported READY video, isolate/restore lesson attachments and retain actual renewal/pause/position/speed assertions in production/development desktop/mobile jobs. Ordinary uploads separately remain PROCESSING and reject early playback with 409."
+        "M1-R04: guarded browser fixtures seed known supported READY video, isolate/restore lesson attachments and retain actual renewal/pause/position/speed assertions in production/development desktop/mobile jobs. Ordinary uploads separately remain PROCESSING and reject early playback with 409.",
+        "Restart cleanup removes only expired regular .upload files from the private staging directory; active and unrelated files remain."
       ],
       "done": [
         "ENG-09 transport acceptance covers bounded uploads, cancellation/cleanup and protected range playback with known verified READY fixtures. ENH-03 depends on this subgate and owns new-upload processing/READY plus complete A29 media acceptance at G1.",

@@ -66,10 +66,7 @@ async function waitForApi(url: string, child: ChildProcess, getOutput: () => str
   throw new Error(`API did not become ready at ${url}. ${getOutput()}`);
 }
 
-describe('API process-level graceful shutdown', () => {
-  // Windows child.kill('SIGTERM') terminates immediately. Its test-only
-  // bootstrap emits the same signal event; POSIX runners deliver native SIGTERM.
-  it('returns the in-flight readiness result and drains before disconnecting on SIGTERM', async () => {
+async function runShutdownScenario(settleDatabase: boolean): Promise<void> {
     const databaseSockets = new Set<net.Socket>();
     const fakeDatabase = net.createServer((socket) => {
       databaseSockets.add(socket);
@@ -128,14 +125,14 @@ describe('API process-level graceful shutdown', () => {
         draining: true,
         dependencies: { database: 'unavailable', storage: 'ready' },
       });
-      // Readiness has reported the stalled dependency honestly. Settle the fake
-      // handshake so Prisma disconnect can finish; this fixture must not test a
-      // 30-second connection deadline against an eight-second exit assertion.
-      for (const socket of databaseSockets) socket.destroy();
-      const exit = await withTimeout(closed, 8_000);
-      expect(exit).toEqual({ code: 0, signal: null });
+      if (settleDatabase) {
+        // Settle Prisma's fake dependency so this case checks clean shutdown.
+        for (const socket of databaseSockets) socket.destroy();
+      }
+      const exit = await withTimeout(closed, settleDatabase ? 8_000 : 20_000);
+      expect(exit).toEqual({ code: settleDatabase ? 0 : 1, signal: null });
       expect(output).toContain('Received SIGTERM; stopping admission and draining requests.');
-      expect(output).not.toContain('Graceful shutdown deadline exceeded');
+      expect(output.includes('Graceful shutdown deadline exceeded')).toBe(!settleDatabase);
     } finally {
       if (child && child.exitCode === null && child.signalCode === null) {
         child.kill('SIGKILL');
@@ -148,5 +145,16 @@ describe('API process-level graceful shutdown', () => {
       }
       fs.rmSync(uploadsRoot, { recursive: true, force: true });
     }
+}
+
+describe('API process-level graceful shutdown', () => {
+  // Windows child.kill('SIGTERM') terminates immediately. Its test-only
+  // bootstrap emits the same signal event; POSIX runners deliver native SIGTERM.
+  it('returns the in-flight readiness result and exits cleanly after dependency recovery', async () => {
+    await runShutdownScenario(true);
   }, 20_000);
+
+  it('forces a nonzero process exit when dependency cleanup exceeds the total deadline', async () => {
+    await runShutdownScenario(false);
+  }, 30_000);
 });
