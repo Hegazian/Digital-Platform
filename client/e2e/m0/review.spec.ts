@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { devices, test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
 const fixture = JSON.parse(fs.readFileSync(process.env.M0_FIXTURE_PATH!, 'utf8'));
@@ -93,6 +93,89 @@ test('admin inspection loads the actual curriculum from metadata-only course lis
   await expect(page.getByText('1. M0 lesson en', { exact: true })).toBeVisible();
   expect(observed.errors).toEqual([]);
 });
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`admin config saves EGP rate and rejects a stale ${locale} edit`, async ({ browser, page, request }, info) => {
+    const baseURL = 'http://127.0.0.1:3100';
+    const currentPage = page;
+    const staleContext = await browser.newContext({
+      baseURL,
+      ...devices[info.project.name === 'mobile-chrome' ? 'Pixel 5' : 'Desktop Chrome'],
+    });
+    const stalePage = await staleContext.newPage();
+    let originalRate: number | undefined;
+
+    async function openSettings(target: Page) {
+      await target.getByRole('button', { name: /Platform & Domain/ }).click();
+      await expect(target.getByRole('heading', { name: 'Platform & Domain Configuration' })).toBeVisible();
+      const rate = target.locator('#exchange-rate-usd-to-egp');
+      await expect(rate).toBeVisible();
+      return rate;
+    }
+
+    async function restoreRate() {
+      if (originalRate === undefined) return;
+      const token = await currentPage.evaluate(() => localStorage.getItem('accessToken'));
+      if (!token) throw new Error('Admin session token missing during config fixture cleanup.');
+      const headers = { Authorization: `Bearer ${token}` };
+      const latest = await request.get('/api/v1/config', { headers });
+      if (!latest.ok()) throw new Error(`Unable to read config for fixture cleanup (${latest.status()}).`);
+      const latestConfig = (await latest.json()).data;
+      if (Number(latestConfig.exchangeRateUsdToEgp) === originalRate) return;
+      const restored = await request.patch('/api/v1/config', {
+        headers,
+        data: { expectedVersion: latestConfig.version, exchangeRateUsdToEgp: originalRate },
+      });
+      if (!restored.ok()) throw new Error(`Unable to restore config fixture rate (${restored.status()}).`);
+    }
+
+    try {
+      await login(currentPage, 'admin', 'admin');
+      const currentRateInput = await openSettings(currentPage);
+      originalRate = Number(await currentRateInput.inputValue());
+
+      await login(stalePage, 'admin', 'admin');
+      const staleRateInput = await openSettings(stalePage);
+      expect(Number(await staleRateInput.inputValue())).toBe(originalRate);
+
+      if (locale === 'ar') await stalePage.locator('#lang-toggle-btn').click();
+      await expect(stalePage.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+      await expect(stalePage.getByLabel(locale === 'ar'
+        ? 'سعر الصرف الإرشادي — ١ دولار أمريكي = ؟ جنيه مصري'
+        : 'Indicative display rate — 1 USD = ? EGP')).toBeVisible();
+
+      const newRate = originalRate < 999_999 ? originalRate + 1 : originalRate - 1;
+      await currentRateInput.fill(String(newRate));
+      const currentSave = currentPage.waitForResponse((response) => new URL(response.url()).pathname.endsWith('/config') && response.request().method() === 'PUT');
+      await currentPage.getByRole('button', { name: 'Save Platform Settings', exact: true }).click();
+      const saved = await currentSave;
+      expect(saved.status()).toBe(200);
+      expect(Number((await saved.json()).data.exchangeRateUsdToEgp)).toBe(newRate);
+      await expect(currentPage.getByText('Platform configuration and home page content saved successfully!', { exact: true })).toBeVisible();
+
+      await staleRateInput.fill(String(newRate + 1));
+      const staleSave = stalePage.waitForResponse((response) => new URL(response.url()).pathname.endsWith('/config') && response.request().method() === 'PUT');
+      await stalePage.getByRole('button', { name: locale === 'ar' ? 'حفظ إعدادات المنصة' : 'Save Platform Settings', exact: true }).click();
+      const conflict = await staleSave;
+      expect(conflict.status()).toBe(409);
+      expect((await conflict.json()).code).toBe('CONFIG_VERSION_CONFLICT');
+      await expect(stalePage.getByText(locale === 'ar'
+        ? 'تم تغيير الإعدادات في جلسة أخرى. أعد تحميل الإعدادات ثم حاول مرة أخرى.'
+        : 'Settings changed in another session. Reload the settings and try again.', { exact: true })).toBeVisible();
+
+      const currentConfig = await request.get('/api/v1/config', {
+        headers: { Authorization: `Bearer ${await currentPage.evaluate(() => localStorage.getItem('accessToken'))}` },
+      });
+      expect(Number((await currentConfig.json()).data.exchangeRateUsdToEgp)).toBe(newRate);
+    } finally {
+      try {
+        await restoreRate();
+      } finally {
+        await staleContext.close();
+      }
+    }
+  });
+}
 
 test('teacher workspace tabs and developer notice have no unexpected API/browser errors', async ({ page }) => {
   const observed = monitor(page);

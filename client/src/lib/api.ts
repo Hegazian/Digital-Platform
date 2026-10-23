@@ -178,7 +178,9 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
     }
 
     if (!res.ok) {
-      throw new Error(data.message || `API request failed with status ${res.status}`);
+      const error = new Error(data.message || `API request failed with status ${res.status}`);
+      if (typeof data.code === 'string') Object.assign(error, { code: data.code });
+      throw error;
     }
     return data;
   } catch (err: unknown) {

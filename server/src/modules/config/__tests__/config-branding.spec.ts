@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../../../app';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 import { prisma } from '../../../prisma';
 import { persistConfigRevision } from '../config.controller';
 import { generateAccessToken } from '../../../utils/jwt';
@@ -248,6 +249,77 @@ describe('Config-driven branding & settings round-trip', () => {
       await Promise.allSettled([firstWrite, ...(secondWrite ? [secondWrite] : [])]);
     }
   }, 15_000);
+
+  it('recalculates product display USD while preserving the EGP and USD order snapshots', async () => {
+    const initial = (await request(app).get('/api/v1/config')).body.data;
+    const initialRate = Number(initial.exchangeRateUsdToEgp);
+    const productName = `Historical snapshot test product ${randomUUID()}`;
+    let productId: string | undefined;
+    let orderId: string | undefined;
+
+    try {
+      const createdProduct = await request(app)
+        .post('/api/v1/commerce/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          nameEn: productName,
+          nameAr: 'منتج اختبار سجل السعر',
+          productType: 'COURSE',
+          resourceId: randomUUID(),
+          priceEgp: 900,
+        });
+      productId = createdProduct.body.data?.id;
+      expect(createdProduct.status).toBe(201);
+
+      const createdOrder = await request(app)
+        .post('/api/v1/commerce/orders')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .send({
+          productId,
+          paymentMethod: 'MANUAL',
+          idempotencyKey: `snapshot-order-${randomUUID()}`,
+        });
+      expect(createdOrder.status).toBe(201);
+      orderId = createdOrder.body.data.id;
+      const originalEgp = Number(createdOrder.body.data.totalAmountEgp);
+      const originalUsd = Number(createdOrder.body.data.totalAmountUsd);
+
+      const changedRate = initialRate === 60 ? 75 : 60;
+      const changed = await request(app)
+        .patch('/api/v1/config')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          expectedVersion: (await request(app).get('/api/v1/config')).body.data.version,
+          exchangeRateUsdToEgp: changedRate,
+        });
+      expect(changed.status).toBe(200);
+
+      const catalog = await request(app).get('/api/v1/commerce/products');
+      const currentProduct = catalog.body.data.find((product: any) => product.id === productId);
+      expect(Number(currentProduct.priceEgp)).toBe(originalEgp);
+      expect(Number(currentProduct.priceUsd)).toBe(Math.round((originalEgp / changedRate) * 100) / 100);
+
+      const history = await request(app)
+        .get('/api/v1/commerce/orders/me')
+        .set('Authorization', `Bearer ${studentToken}`);
+      const historicalOrder = history.body.data.find((order: any) => order.id === orderId);
+      expect(Number(historicalOrder.totalAmountEgp)).toBe(originalEgp);
+      expect(Number(historicalOrder.totalAmountUsd)).toBe(originalUsd);
+    } finally {
+      try {
+        const current = (await request(app).get('/api/v1/config')).body.data;
+        if (Number(current.exchangeRateUsdToEgp) !== initialRate) {
+          await request(app)
+            .patch('/api/v1/config')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ expectedVersion: current.version, exchangeRateUsdToEgp: initialRate });
+        }
+      } finally {
+        if (orderId) await prisma.order.deleteMany({ where: { id: orderId } });
+        if (productId) await prisma.product.deleteMany({ where: { id: productId } });
+      }
+    }
+  });
 
   it('validation: rejects invalid colors/emails; students cannot write', async () => {
     const bad = await request(app)

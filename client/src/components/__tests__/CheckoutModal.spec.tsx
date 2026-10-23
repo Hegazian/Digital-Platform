@@ -20,10 +20,14 @@ describe('CheckoutModal Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
-    useAppStore.setState({ lang: 'en', dir: 'ltr' });
+    useAppStore.getState().setLang('en');
   });
 
-  it('renders course information and payment options', () => {
+  it.each([
+    { locale: 'en' as const, title: 'Calculus 1st Secondary', total: 'Total', direction: 'ltr' },
+    { locale: 'ar' as const, title: 'تفاضل وتكامل الصف الأول الثانوي', total: 'الإجمالي', direction: 'rtl' },
+  ])('shows the same EGP charge in $locale', ({ locale, title, total, direction }) => {
+    useAppStore.getState().setLang(locale);
     render(
       <CheckoutModal
         course={mockCourse}
@@ -32,8 +36,10 @@ describe('CheckoutModal Component', () => {
       />
     );
 
-    expect(screen.getByText('Calculus 1st Secondary')).toBeInTheDocument();
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(total)).toBeInTheDocument();
     expect(screen.getByText('250 EGP')).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute('dir', direction);
     expect(screen.getByRole('button', { name: /vodafone cash/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /instapay/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /voucher code/i })).toBeInTheDocument();

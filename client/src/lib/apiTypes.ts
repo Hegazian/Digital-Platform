@@ -11,6 +11,7 @@ export interface ApiEnvelope<T> {
 }
 
 export interface ApiErrorBody {
+  code?: string;
   message?: string;
 }
 
@@ -32,4 +33,11 @@ export function errorMessage(err: unknown, fallback = 'Something went wrong'): s
   if (err instanceof Error && err.message) return err.message;
   if (hasMessage(err) && typeof err.message === 'string') return err.message;
   return fallback;
+}
+
+/** Reads a stable API error code without coupling callers to the transport shape. */
+export function errorCode(err: unknown): string | undefined {
+  if (typeof err !== 'object' || err === null || !('code' in err)) return undefined;
+  const code = (err as { code?: unknown }).code;
+  return typeof code === 'string' ? code : undefined;
 }

@@ -65,6 +65,14 @@ describe('API transport and cancellation', () => {
     expect(warning).toHaveBeenCalledWith('API Error [/materials/m1/content]:', 'Storage is unavailable');
   });
 
+  it('preserves stable API error codes for localized caller handling', async () => {
+    transport.mockResolvedValue(json({ code: 'CONFIG_VERSION_CONFLICT', message: 'Configuration changed.' }, 409));
+    await expect(fetchApi('/config', { method: 'PUT' })).rejects.toMatchObject({
+      message: 'Configuration changed.',
+      code: 'CONFIG_VERSION_CONFLICT',
+    });
+  });
+
   it('keeps genuine network failures visible', async () => {
     transport.mockRejectedValue(new TypeError('Failed to fetch'));
     await expect(fetchApi('/courses')).rejects.toThrow('Failed to fetch');

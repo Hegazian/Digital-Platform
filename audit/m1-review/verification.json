@@ -2,13 +2,13 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the current working tree before commit.",
+  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the current working tree before commit. ENG-02 follow-up verifies real-PostgreSQL catalog/order snapshots and bilingual settings/pricing/checkout. The full browser checkpoint remains pending after local runner teardown stalled.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
     "client/src/components/admin/CourseApprovalQueue.tsx": "d958f55d15c18705a55ee00d605e644fc42aac911b7536325780f080e2aa9513",
     "client/src/components/admin/CoursePricingManager.tsx": "5fb7db650b7904dd5ef5df624f04ede72447d20aa76db6a79d6d686e597ccea5",
-    "client/src/components/admin/PlatformSettings.tsx": "46a9bb57bd6c282f8db2269c7f11f1dd477dfd322cadcb54ebf30e58e3358d7d",
+    "client/src/components/admin/PlatformSettings.tsx": "81e00983712de149f09950b9af2b07ec6eb26b3df3588b9851cb160b90ab6fdf",
     "client/src/components/teacher/CourseManager.tsx": "8284771b5a88363b2954b4c8ff7ba265f7273912c29b4f1a536bafbd0b653ff5",
     "client/src/components/teacher/modals/CourseCreateModal.tsx": "957dafa134095d84189771a17002ba143baf0b47e3ebfc1c539a7a27c064bd07",
     "client/src/components/teacher/modals/CourseEditModal.tsx": "2868d0a1f896e710be4a9cdb828d086d614e81d966d2f59243b00ca73a2d9e70",
@@ -16,7 +16,7 @@
     "server/prisma/schema.prisma": "0780a540d3efae53fdf0eea57a682c8e5787d55edcda8061a24bd62da27f277e",
     "server/scripts/migration-upgrade-fixture.cjs": "c88a5a69873370ffc163fd936d14b74d6c0bb32cd68971da6aea8955e7892e22",
     "server/src/app.ts": "2c3b82f139b1448eec34a0bdf462694a5f847a530ae158ba904bd492fff0c46f",
-    "server/src/modules/config/__tests__/config-branding.spec.ts": "43a8c6d7da2978c84a0af79ad8f95fae17036e463fa76a05afea69c644fb1287",
+    "server/src/modules/config/__tests__/config-branding.spec.ts": "1c1677636599ff6878bef0574d1f2ff559a2253b5d5df102ee7f1eb70a386c01",
     "server/src/modules/config/config.controller.ts": "1371dfabd210f309f56fc30a41a04bfb5d647de421f9ff7a816755d781621d4f",
     "server/src/modules/config/config.routes.ts": "65afb08f89902896dcb05c8bef796351ed752a5a8f40ad7832df92ebf71f91d5",
     "server/src/modules/config/config.test.ts": "cd3365308e545dffe02181ee57c3e402a29a309ba399f3f05e5b30270c710c99",
@@ -41,12 +41,18 @@
     "server/src/utils/file-validation.ts": "a81a8d0f258c4cff31d9ca12e97ac92785a10bf3d108237b9d1f54d225cb257d",
     "server/src/utils/schemas.ts": "46094a0d3cebd7704cc5524be5483656b113ebe4de9c8fa8398eb59c12d91afb",
     "server/src/utils/storage.ts": "48087ed64ad750bb6ff1dc64d7f2263ec2f2610caad4eae26d7205c313c0497d",
-    "client/e2e/m0/review.spec.ts": "2a8498ead722c0f0c332e12e042cd4082fdee6878e1d414badd28c1290a4ca69",
+    "client/e2e/m0/review.spec.ts": "4ef20c23f4117e2768baa2557402f7d83c6c56cf3dd5d20a7d01d26afaa0c852",
     "client/e2e/m0/safety.spec.ts": "69213be4256acb31e15e3b40fdf80503237186b0cfa3a7489b661da69d551ca8",
-    "client/src/components/admin/CoursePricingManager.test.tsx": "3173ea4e9d9cc502a025cafefb4690ee462374eedf62e79d8fb790c4e9d8d99b",
-    "server/scripts/m0-browser.cjs": "7e83f75a38878e77d77fd3c3002e4b1c69799a319cb5b23754cd669caf28d4ec"
+    "client/src/components/admin/CoursePricingManager.test.tsx": "f98cc5662a2776ac825ee64d97592c41a16d39bb21a6a9602366ffd6f3c0ef8e",
+    "server/scripts/m0-browser.cjs": "7e83f75a38878e77d77fd3c3002e4b1c69799a319cb5b23754cd669caf28d4ec",
+    "client/src/components/__tests__/CheckoutModal.spec.tsx": "ee9e7d6a42f6770a68e3d9161ec82f09d375debe82038628233122d9d5be24b3",
+    "server/src/modules/commerce/commerce.service.ts": "e611f66af609f14b0bfc44be023de48d9cc42312b87483f1f3d2e0b201d09a1b",
+    "client/src/components/admin/PlatformSettings.test.tsx": "69931164ca6388b36c8f8b152c3d78330856c9906df4b19279aff280c952812b",
+    "client/src/lib/api.test.ts": "d879eb3b0a24944ec43c5576cd382037e858220383aa5ba764f7bccdbaa3fb88",
+    "client/src/lib/api.ts": "bdb1cde16c45c2a8b981bd087fb78bb5329d6da6602a6f01f2547277e82fdc14",
+    "client/src/lib/apiTypes.ts": "212105689da057895249d4939935685e6a4868674652d1cacecaba02492d03da"
   },
-  "sourceFingerprint": "bfd47acb00d3b1c7ad822decf33b0afe57a5425efc578a2e36f4fee11353f082",
+  "sourceFingerprint": "ca8ecb5df70b8e4d6ae3716fe179c256f0dea3dd5717cfa8e630524154fc501f",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -72,7 +78,7 @@
     "typecheck": "passed 2026-10-23",
     "build": "passed 2026-10-23",
     "files": 80,
-    "tests": 440,
+    "tests": 441,
     "skipped": 0,
     "command": "npm test",
     "log": "server-tests.log"
@@ -80,8 +86,8 @@
   "client": {
     "typecheck": "passed 2026-10-23",
     "build": "passed 2026-10-23",
-    "files": 16,
-    "tests": 84,
+    "files": 17,
+    "tests": 90,
     "skipped": 0,
     "command": "npm test",
     "log": "client-tests.log",
@@ -117,11 +123,11 @@
     "findings": 58,
     "acceptanceCases": 42,
     "dependencyEdges": 158,
-    "localLinks": 2324,
+    "localLinks": 2323,
     "headingLinks": 488,
     "errors": 0,
     "archivedOriginalsPreserved": 13,
-    "notes": "Final build and validation passed on 23 October 2026. Source hashes cover 41 current application, regression, and browser fixture files. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
+    "notes": "Documentation build and validation passed on 23 October 2026. Source hashes cover 47 current application, regression, and browser fixture files. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
   },
   "browser": {
     "production": {
@@ -129,7 +135,7 @@
       "passed": 24,
       "failed": 0,
       "skipped": 0,
-      "note": "final network-enabled production run after READY fixture and cancellation assertion fixes",
+      "note": "24/24 retained browser checkpoint passed at fbd0084; full suite not rerun after ENG-02 follow-up. Targeted config attempts are recorded separately.",
       "attempts": [
         {
           "environment": "sandbox",
@@ -158,14 +164,15 @@
           "note": "final production build and retained desktop/mobile browser suite passed after expected dev navigation/document cancellation handling",
           "log": "browser-production-final.log"
         }
-      ]
+      ],
+      "revision": "fbd0084"
     },
     "development": {
       "status": "passed",
       "passed": 24,
       "failed": 0,
       "skipped": 0,
-      "note": "final network-enabled development/Strict Mode run after expected cancellation handling",
+      "note": "24/24 retained browser checkpoint passed at fbd0084; full suite not rerun after ENG-02 follow-up. Targeted config attempts are recorded separately.",
       "command": "M0_WEB_MODE=dev npm run test:m0:browser",
       "environment": "network-enabled",
       "exitCode": 0,
@@ -189,6 +196,32 @@
           "note": "final development/Strict Mode build and retained desktop/mobile browser suite passed",
           "log": "browser-development-final.log"
         }
+      ],
+      "revision": "fbd0084"
+    },
+    "targetedConfig": {
+      "status": "assertions passed; runner teardown interrupted",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "command": "M0_WEB_MODE=prod npm run test:m0:browser -- --grep 'admin config saves' --project chromium",
+      "attempts": [
+        {
+          "environment": "local production; prior request helper",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 1,
+          "note": "Both locales passed on desktop and Pixel 5 emulation; the local Playwright process did not exit during teardown and was interrupted. Synthetic fixture was recovered and removed."
+        },
+        {
+          "environment": "local production; final managed request fixture; chromium",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 1,
+          "note": "Both desktop locale cases emitted passing results; the Playwright wrapper remained open during teardown and was interrupted. Synthetic fixture was recovered and removed."
+        }
       ]
     }
   },
@@ -196,8 +229,9 @@
     "status": "not checked for eventual M1 commit; prior M0 CI is historical only"
   },
   "notVerified": [
+    "clean full production/development browser suite after the ENG-02 follow-up",
+    "browser-based bilingual config conflict and student charge journeys",
     "M1-specific bilingual admin/student config and upload manual journeys",
-    "historical order snapshot behavior after exchange-rate edits",
     "real private Supabase streaming and outage behavior",
     "external ClamAV canaries and maximum-size post-body disconnect load",
     "maximum-size concurrent memory/disk measurements",

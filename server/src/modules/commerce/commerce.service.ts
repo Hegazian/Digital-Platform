@@ -1,7 +1,7 @@
 import { prisma } from '../../prisma';
 import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors';
 import { logAuditAction } from '../audit/audit.service';
-import { egpToUsd } from '../../utils/currency';
+import { egpToUsd, getUsdToEgpRate } from '../../utils/currency';
 import {
   ProductType,
   OrderStatus,
@@ -36,10 +36,21 @@ export class CommerceService {
   }
 
   static async getAllProducts() {
-    return await prisma.product.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [products, exchangeRate] = await Promise.all([
+      prisma.product.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      getUsdToEgpRate(),
+    ]);
+
+    // Product priceUsd is retained as a legacy persisted display field. EGP
+    // is the charge source of truth, so catalog reads derive indicative USD
+    // from the current rate instead of showing the stale rate from creation.
+    return products.map((product) => ({
+      ...product,
+      priceUsd: Math.round((Number(product.priceEgp) / exchangeRate) * 100) / 100,
+    }));
   }
 
   // Orders

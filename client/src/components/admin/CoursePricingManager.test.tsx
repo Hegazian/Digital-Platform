@@ -27,7 +27,7 @@ function deferred<T>() {
 describe('CoursePricingManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useAppStore.setState({ lang: 'en', dir: 'ltr' });
+    useAppStore.getState().setLang('en');
     vi.mocked(fetchApi).mockResolvedValue({ data: subjects } as never);
   });
 
@@ -99,6 +99,34 @@ describe('CoursePricingManager', () => {
     expect(science.getByRole('spinbutton', { name: 'اشتراك شهر واحد بالجنيه المصري لمادة علوم' })).toBeInTheDocument();
     expect(science.getByRole('button', { name: 'حفظ الأسعار' })).toBeInTheDocument();
     expect(science.getAllByText('مدة الاشتراك')).toHaveLength(3);
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+  });
+
+  it('saves the same EGP pricing contract from the Arabic interface', async () => {
+    useAppStore.getState().setLang('ar');
+    vi.mocked(fetchApi)
+      .mockResolvedValueOnce({ data: subjects } as never)
+      .mockResolvedValueOnce({ data: [
+        { period: 'MONTHLY', priceEgp: 275, priceUsd: 5.5, isActive: true },
+        { period: 'SIX_MONTHS', priceEgp: 1000, priceUsd: 20, isActive: true },
+        { period: 'YEARLY', priceEgp: 1800, priceUsd: 36, isActive: true },
+      ] } as never);
+
+    render(<CoursePricingManager />);
+    await screen.findByRole('heading', { name: 'إدارة أسعار المناهج والدورات' });
+    const science = cardFor('Science');
+    fireEvent.change(science.getByRole('spinbutton', { name: 'اشتراك شهر واحد بالجنيه المصري لمادة علوم' }), { target: { value: '275' } });
+    fireEvent.click(science.getByRole('button', { name: 'حفظ الأسعار' }));
+
+    await screen.findByText('تم تحديث أسعار "علوم" بنجاح');
+    expect(fetchApi).toHaveBeenLastCalledWith('/subjects/science/pricing', expect.objectContaining({
+      method: 'PUT',
+      body: JSON.stringify({ pricing: [
+        { period: 'MONTHLY', priceEgp: 275, isActive: true },
+        { period: 'SIX_MONTHS', priceEgp: 1000, isActive: true },
+        { period: 'YEARLY', priceEgp: 1800, isActive: true },
+      ] }),
+    }));
     expect(document.documentElement).toHaveAttribute('dir', 'rtl');
   });
 });

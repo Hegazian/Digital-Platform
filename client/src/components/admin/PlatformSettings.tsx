@@ -17,7 +17,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
-import { errorMessage } from '@/lib/apiTypes';
+import { errorCode, errorMessage } from '@/lib/apiTypes';
+import { useAppStore } from '@/lib/store';
 import {
   DEFAULT_HOME_CONTENT,
   HomeContentConfig,
@@ -48,6 +49,8 @@ interface PlatformConfig {
 }
 
 export default function PlatformSettings() {
+  const lang = useAppStore((state) => state.lang);
+  const t = (en: string, ar: string) => lang === 'ar' ? ar : en;
   const [activeTab, setActiveTab] = useState<'general' | 'home' | 'governance'>('general');
   const [config, setConfig] = useState<PlatformConfig>({
     version: 1,
@@ -138,9 +141,15 @@ export default function PlatformSettings() {
       // Update frontend global config store immediately
       await useConfigStore.getState().fetchConfig();
 
-      setMessage('Platform configuration and home page content saved successfully!');
+      setMessage(t('Platform configuration and home page content saved successfully!', 'تم حفظ إعدادات المنصة ومحتوى الصفحة الرئيسية بنجاح.'));
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to update platform settings'));
+      const message = errorCode(err) === 'CONFIG_VERSION_CONFLICT'
+        ? t(
+          'Settings changed in another session. Reload the settings and try again.',
+          'تم تغيير الإعدادات في جلسة أخرى. أعد تحميل الإعدادات ثم حاول مرة أخرى.'
+        )
+        : errorMessage(err, t('Failed to update platform settings', 'تعذر تحديث إعدادات المنصة'));
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -451,10 +460,11 @@ export default function PlatformSettings() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">
-                      Indicative display rate — 1 USD = ? EGP
+                    <label htmlFor="exchange-rate-usd-to-egp" className="text-xs font-semibold text-slate-300">
+                      {t('Indicative display rate — 1 USD = ? EGP', 'سعر الصرف الإرشادي — ١ دولار أمريكي = ؟ جنيه مصري')}
                     </label>
                     <input
+                      id="exchange-rate-usd-to-egp"
                       type="number"
                       step="0.01"
                       min="0.01"
@@ -463,9 +473,10 @@ export default function PlatformSettings() {
                       className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
                     />
                     <p className="text-[10px] text-slate-500 leading-relaxed">
-                      EGP is the pricing source of truth. Every USD price shown to
-                      students is derived automatically from this rate, so both
-                      currencies always represent the same money.
+                      {t(
+                        'EGP is the pricing source of truth. Every USD price shown to students is derived automatically from this rate, so both currencies always represent the same money.',
+                        'الجنيه المصري هو المصدر المعتمد للتسعير. تُشتق أسعار الدولار المعروضة للطلاب تلقائياً من هذا السعر، لذلك تمثل العملتان القيمة نفسها.'
+                      )}
                     </p>
                   </div>
 
@@ -1191,7 +1202,7 @@ export default function PlatformSettings() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>Save Platform Settings</span>
+              <span>{t('Save Platform Settings', 'حفظ إعدادات المنصة')}</span>
             </button>
           </div>
         </form>
