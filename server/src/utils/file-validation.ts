@@ -75,15 +75,18 @@ export function stagedUploadStorage() {
   };
 }
 
-/** Remove a completed or rejected disk-backed upload after the response closes. */
-export function cleanupStagedUpload(req: Request, res: Response, next: NextFunction) {
-  const file = (req as Request & { file?: Express.Multer.File }).file;
-  if (file?.path) {
-    const cleanup = () => { void fs.promises.unlink(file.path!).catch(() => undefined); };
-    res.once('finish', cleanup);
-    res.once('close', cleanup);
-  }
-  next();
+export interface VideoUploadLifecycle {
+  signal: AbortSignal;
+  complete: () => Promise<void>;
+}
+
+export function videoUploadLifecycle(req: Request): VideoUploadLifecycle | undefined {
+  return (req as Request & { videoUploadLifecycle?: VideoUploadLifecycle }).videoUploadLifecycle;
+}
+
+/** Complete admission and staged-file cleanup after all consumers have stopped. */
+export async function completeVideoUpload(req: Request): Promise<void> {
+  await videoUploadLifecycle(req)?.complete();
 }
 
 
@@ -112,15 +115,27 @@ export async function scanUploadedFile(req: Request, _res: Response, next: NextF
 
   const socket = new net.Socket();
   const source = file.path ? fs.createReadStream(file.path, { highWaterMark: 64 * 1024 }) : undefined;
+  const lifecycle = videoUploadLifecycle(req);
   let response = '';
   let settled = false;
   const finish = (error?: Error) => {
     if (settled) return;
     settled = true;
-    source?.destroy();
     socket.destroy();
-    next(error);
+    const continueAfterSourceClosed = () => {
+      lifecycle?.signal.removeEventListener('abort', onAbort);
+      next(error);
+    };
+    if (source && !source.closed) {
+      source.once('close', continueAfterSourceClosed);
+      source.destroy();
+    } else {
+      continueAfterSourceClosed();
+    }
   };
+  const onAbort = () => finish(new AppError(400, 'Upload was interrupted before scanning completed'));
+  if (lifecycle?.signal.aborted) return onAbort();
+  lifecycle?.signal.addEventListener('abort', onAbort, { once: true });
   socket.setTimeout(15 * 60_000, () => finish(new AppError(503, 'Upload scanner timed out')));
   req.once?.('aborted', () => finish(new AppError(400, 'Upload request was interrupted')));
   socket.on('data', (chunk) => {

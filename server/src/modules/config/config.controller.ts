@@ -1,6 +1,23 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma";
 import { getPublicCapabilities } from "../../utils/capabilities";
+
+export const persistConfigRevision = (
+  transaction: <T>(callback: (tx: Prisma.TransactionClient) => Promise<T>) => Promise<T>,
+  id: string,
+  expectedVersion: number,
+  data: Record<string, unknown>,
+) => transaction(async (tx) => {
+  const result = await tx.appConfig.updateMany({
+    where: { id, version: expectedVersion },
+    data: { ...data, version: { increment: 1 } },
+  });
+  if (result.count !== 1) return null;
+  // The write lock remains held until this transaction commits, so another
+  // admin cannot replace this response's version between update and readback.
+  return tx.appConfig.findUnique({ where: { id } });
+});
 
 export const getAppConfig = async (req: Request, res: Response) => {
   try {
@@ -94,16 +111,15 @@ export const updateAppConfig = async (req: Request, res: Response) => {
       return res.status(409).json({ success: false, code: 'CONFIG_VERSION_CONFLICT', message: 'Configuration changed since it was loaded. Reload and try again.' });
     }
 
-    const result = await prisma.appConfig.updateMany({
-      where: { id: current.id, version: expectedVersion },
-      data: { ...data, version: { increment: 1 } },
-    });
-    if (result.count !== 1) {
+    const config = await persistConfigRevision(
+      (callback) => prisma.$transaction(callback),
+      current.id,
+      expectedVersion,
+      data,
+    );
+    if (!config) {
       return res.status(409).json({ success: false, code: 'CONFIG_VERSION_CONFLICT', message: 'Configuration changed since it was loaded. Reload and try again.' });
     }
-
-    const config = await prisma.appConfig.findUnique({ where: { id: current.id } });
-    if (!config) throw new Error('Updated configuration could not be read back');
 
     res.status(200).json({ success: true, data: { ...config, currency: 'EGP', requireCourseApproval: true, enableCodePlaygrounds: false, enableCollaborativeBoards: false, capabilities: getPublicCapabilities() } });
   } catch (error: any) {

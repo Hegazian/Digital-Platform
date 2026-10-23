@@ -4,7 +4,7 @@ Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed 
 
 ## M1 review supplement
 
-[M1-R01–R04](M1_REVIEW.md) are Open, owned by ENG-09 (upload lifetime and browser fixtures) and ENG-02 (config response atomicity and pricing drafts). They add targeted regressions under existing tasks; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
+[M1-R01–R04](M1_REVIEW.md) are resolved by targeted upload lifetime, exact config readback, pricing draft and READY-fixture regressions owned by ENG-09/ENG-02. The owners remain In Progress for broader acceptance; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
 
 ## Finding disposition — 58 of 58
 

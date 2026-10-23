@@ -2,11 +2,9 @@
 
 ## M1 review verification (23 October 2026)
 
-The [M1 review](M1_REVIEW.md) covers all branch changes and local/untracked files against merge base `322d070`. Fresh full suites pass **80 server files / 437 tests** and **15 client files / 81 tests**, both builds and read-only typechecks; lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, schema parity, repeat deployment and preservation of **22 rows across 21 tables**. [Machine-readable evidence](../audit/m1-review/verification.json) distinguishes every browser attempt and its environment; the first production attempt fails (14 passed / 10 failed), including the confirmed READY-fixture regression and sandbox-blocked fonts. Exact M1 commit CI remains required.
+The [M1 review](M1_REVIEW.md) covers branch changes and local/untracked files against merge base `322d070`. Fresh full suites pass **80 server files / 440 tests** and **16 client files / 83 tests**, with both package typechecks and production builds; lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, schema parity, repeat deployment and preservation of **22 rows across 21 tables**. After fixing the four reported regressions, retained production and development/Strict Mode browser runs each pass **24/24**. Earlier failing attempts remain in [machine-readable evidence](../audit/m1-review/verification.json) for history; exact M1 commit CI remains required.
 
-**M1-R01–R04 are Open.** Existing passes do not cover post-body scan cancellation, interleaved config response versions, subject draft retention or the revised browser fixture. Add the targeted regressions in the review, then execute the [M1 manual journey](M1_MANUAL_TESTING.md). G1 remains open. Historical M0 coverage/advisory/browser values below are not remeasured or attributed to M1 by this pass.
-
-With normal network access, production and development/Strict Mode browser suites each report **21 passed / 3 failed / 0 skipped**. The failures match M1-R04's renewal fixture and inherited pending attachment. Both modes must pass after the fixture fix before merge; the earlier green M0 CI does not waive this failure.
+**M1-R01–R04 are resolved by targeted regressions.** The four code fixes and retained browser checks pass; ENG-02, ENG-05, ENG-06 and ENG-09 remain In Progress for broader acceptance and operator gates. Execute the remaining [M1 manual journey](M1_MANUAL_TESTING.md). G1 remains open. Historical M0 coverage/advisory/browser values below are not remeasured or attributed to M1 by this pass.
 
 ## Current M0 implementation verification (22 October 2026)
 
@@ -126,7 +124,8 @@ G0 allows internal synthetic-data work only. Production storage/scanner canaries
 
 ## Gate G1 — durable foundation (M1)
 
-- [ ] M1-R01–R04 are resolved with targeted regressions; both browser modes pass with isolated READY fixtures while new uploads retain PROCESSING protection. Exact M1 revision CI and bilingual config/upload browser evidence are attached.
+- [x] M1-R01–R04 regression fixes pass; both retained browser modes pass with isolated READY fixtures while normal uploads retain PROCESSING protection.
+- [ ] Exact M1 revision CI and bilingual config/order-preservation, upload/resource, storage/scanner, and actual-device evidence are attached.
 - [ ] ENG-09 transport acceptance closes independently using known supported READY fixtures; ENH-03 subsequently supplies managed processing/READY and complete A29 media evidence. Neither task waives the G1 end-to-end gate.
 - [ ] Checked-in migrations upgrade both empty and populated prior database; canonical lessons/IDs/progress/previews and access/payment history preserved.
 - [ ] Shared contracts and route validation classification, coherent Egyptian taxonomy and side-effect-free public reads.

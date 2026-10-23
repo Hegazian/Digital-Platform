@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../../../app';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../../prisma';
+import { persistConfigRevision } from '../config.controller';
 import { generateAccessToken } from '../../../utils/jwt';
 import { egpToUsd } from '../../../utils/currency';
 
@@ -164,7 +166,88 @@ describe('Config-driven branding & settings round-trip', () => {
     ]);
     expect([first.status, second.status].sort()).toEqual([200, 409]);
     expect([first.body.code, second.body.code].filter(Boolean)).toEqual(['CONFIG_VERSION_CONFLICT']);
+    const saved = first.status === 200 ? first : second;
+    const current = await request(app).get('/api/v1/config');
+    expect(saved.body.data.version).toBe(version + 1);
+    expect(['First write', 'Second write']).toContain(saved.body.data.sloganEn);
+    expect(current.body.data.version).toBe(saved.body.data.version);
+    expect(current.body.data.sloganEn).toBe(saved.body.data.sloganEn);
+
+    const stale = await request(app).patch('/api/v1/config')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ expectedVersion: version, sloganEn: 'Stale overwrite' });
+    expect(stale.status).toBe(409);
+    expect((await request(app).get('/api/v1/config')).body.data.sloganEn).toBe(saved.body.data.sloganEn);
   });
+
+  it('keeps the conditional config write locked through its readback when a real PostgreSQL writer races', async () => {
+    const config = await prisma.appConfig.findFirstOrThrow();
+    const version = config.version;
+    const readbackReached = deferred<void>();
+    const allowReadback = deferred<void>();
+    const staleUpdateStarted = deferred<void>();
+    let holdReadback = true;
+    let observeStaleUpdate = false;
+    const controlledTransaction = <T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> => prisma.$transaction<T>((tx) => callback(new Proxy(tx, {
+      get(target, property) {
+        if (property !== 'appConfig') return Reflect.get(target, property, target);
+        return new Proxy(target.appConfig, {
+          get(delegate, methodName) {
+            const method = Reflect.get(delegate, methodName, delegate);
+            if (methodName === 'findUnique') {
+              return async (args: any) => {
+                if (holdReadback) {
+                  holdReadback = false;
+                  readbackReached.resolve();
+                  await allowReadback.promise;
+                }
+                return method.call(delegate, args);
+              };
+            }
+            if (methodName === 'updateMany') {
+              return (args: any) => {
+                if (observeStaleUpdate && args.where?.version === version) {
+                  observeStaleUpdate = false;
+                  staleUpdateStarted.resolve();
+                }
+                return method.call(delegate, args);
+              };
+            }
+            return typeof method === 'function' ? method.bind(delegate) : method;
+          },
+        });
+      },
+    }) as Prisma.TransactionClient), { timeout: 12_000 });
+    const write = (sloganEn: string) => persistConfigRevision(
+      controlledTransaction,
+      config.id,
+      version,
+      { sloganEn },
+    );
+    const firstWrite = write('Barrier writer A');
+    let secondWrite: Promise<unknown> | undefined;
+    try {
+      await waitForBarrier(readbackReached.promise, 'the transactional readback');
+      observeStaleUpdate = true;
+      const competingWrite = write('Barrier writer B');
+      secondWrite = competingWrite;
+      await waitForBarrier(staleUpdateStarted.promise, 'the competing conditional update');
+      // Let writer A finish its transactional readback so PostgreSQL can let
+      // writer B recheck the version predicate and report a zero-row update.
+      allowReadback.resolve();
+      const [first, second] = await Promise.all([firstWrite, competingWrite]);
+      expect(first?.sloganEn).toBe('Barrier writer A');
+      expect(first?.version).toBe(version + 1);
+      expect(second).toBeNull();
+
+      const persisted = await prisma.appConfig.findUniqueOrThrow({ where: { id: config.id } });
+      expect(persisted.sloganEn).toBe(first?.sloganEn);
+      expect(persisted.version).toBe(first?.version);
+    } finally {
+      allowReadback.resolve();
+      await Promise.allSettled([firstWrite, ...(secondWrite ? [secondWrite] : [])]);
+    }
+  }, 15_000);
 
   it('validation: rejects invalid colors/emails; students cannot write', async () => {
     const bad = await request(app)
@@ -183,3 +266,23 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(anon.status).toBe(401);
   });
 });
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
+}
+
+async function waitForBarrier(promise: Promise<void>, description: string) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`Did not reach ${description}`)), 3_000);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}

@@ -7,8 +7,12 @@ function monitor(page: Page) {
   const failedApi: string[] = [];
   const pending = new Set<string>();
   const developer: string[] = [];
+  const requestFailures: Array<{ url: string; reason: string }> = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
+    // Chromium logs these without the failed URL; requestfailed below records
+    // the resource and reason so an intentional cancellation can be asserted.
+    if (message.text().startsWith('Failed to load resource:')) return;
     if (['error', 'warning'].includes(message.type())) errors.push(message.text());
   });
   page.on('request', (request) => {
@@ -19,8 +23,15 @@ function monitor(page: Page) {
     if (response.url().includes('/api/v1/') && response.status() >= 400) failedApi.push(`${response.status()} ${new URL(response.url()).pathname}`);
   });
   page.on('requestfinished', (request) => pending.delete(request.url()));
-  page.on('requestfailed', (request) => pending.delete(request.url()));
-  return { errors, failedApi, developer, settle: () => expect.poll(() => pending.size, { timeout: 15_000 }).toBe(0) };
+  page.on('requestfailed', (request) => {
+    pending.delete(request.url());
+    const reason = request.failure()?.errorText || 'unknown';
+    // Next dev cancels superseded React Server Component navigation requests
+    // during Strict Mode refreshes; they do not represent failed app data.
+    if (reason === 'net::ERR_ABORTED' && new URL(request.url()).searchParams.has('_rsc')) return;
+    requestFailures.push({ url: request.url(), reason });
+  });
+  return { errors, failedApi, developer, requestFailures, settle: () => expect.poll(() => pending.size, { timeout: 15_000 }).toBe(0) };
 }
 async function login(page: Page, name: string, role: string) {
   await page.goto('/login');
@@ -68,6 +79,7 @@ test('admin dashboard tabs and staged developer controls have no unexpected API 
   await observed.settle();
   expect(observed.developer).toEqual([]);
   expect(observed.failedApi).toEqual([]);
+  expect(observed.requestFailures).toEqual([]);
   expect(observed.errors).toEqual([]);
 });
 
@@ -103,6 +115,7 @@ test('teacher workspace tabs and developer notice have no unexpected API/browser
   await observed.settle();
   expect(observed.developer).toEqual([]);
   expect(observed.failedApi).toEqual([]);
+  expect(observed.requestFailures).toEqual([]);
   expect(observed.errors).toEqual([]);
 });
 
@@ -174,5 +187,12 @@ test('changing a document cancels the old request without warnings or stale cont
   release();
   await page.unroute(`**/materials/${course.materialId}/content`);
   await expect(page.getByTitle('M0 second PDF')).toBeVisible();
+  await observed.settle();
+  await expect.poll(() => observed.requestFailures.some(({ url }) => url.includes(`/materials/${course.materialId}/content`))).toBe(true);
+  expect(observed.requestFailures).toEqual(expect.arrayContaining([
+    expect.objectContaining({ url: expect.stringContaining(`/materials/${course.materialId}/content`), reason: 'net::ERR_ABORTED' }),
+    expect.objectContaining({ url: expect.stringMatching(/^blob:/), reason: 'net::ERR_ABORTED' }),
+  ]));
+  expect(observed.requestFailures.every(({ reason }) => reason === 'net::ERR_ABORTED')).toBe(true);
   expect(observed.errors).toEqual([]);
 });

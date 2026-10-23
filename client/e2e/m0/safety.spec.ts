@@ -1,7 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
-import path from 'node:path';
-
 const fixture = JSON.parse(fs.readFileSync(process.env.M0_FIXTURE_PATH!, 'utf8'));
 
 async function login(page: Page, email: string) {
@@ -75,19 +73,9 @@ test('pending and rejected teachers cannot obtain a platform session', async ({ 
   }
 });
 
-test('renews a real paused video while preserving position and speed', async ({ page, request }, info) => {
+test('renews a real paused video while preserving position and speed', async ({ page }, info) => {
   await login(page, fixture.users[info.project.name].email);
-  const bytes = fs.readFileSync(path.join(__dirname, '../fixtures/renewal.webm'));
-  const loginResponse = await request.post('/api/v1/auth/login', { data: { email: fixture.users.teacher.email, password: fixture.password } });
-  expect(loginResponse.status()).toBe(200);
-  const token = (await loginResponse.json()).data.tokens.accessToken;
-  const headers = { Authorization: `Bearer ${token}` };
-  const uploaded = await request.post('/api/v1/videos/upload', { headers, multipart: { file: { name: 'm0.webm', mimeType: 'video/webm', buffer: Buffer.from(bytes) } } });
-  expect(uploaded.status()).toBe(201);
-  const video = (await uploaded.json()).data;
-  const attached = await request.post(`/api/v1/courses/lessons/${fixture.courses.en.lessonId}/video`, { headers, data: { videoUrl: video.videoUrl, title: 'M0 clip' } });
-  expect(attached.ok()).toBeTruthy();
-  const videoId = (await attached.json()).data.id;
+  const videoId = fixture.renewalVideoId;
   await page.clock.install();
   await page.goto(`/courses/${fixture.courses.en.id}`);
   const player = page.locator('video');

@@ -163,13 +163,14 @@ for(const id of m1Evidence.review.openFindings) {
  check(m1Review.includes('| '+id+' |'),'Missing M1 review finding '+id);
  check(byId.get(id==='M1-R02'||id==='M1-R03'?'ENG-02':'ENG-09').status==='In Progress','Open M1 findings cannot have a Complete owner');
 }
+for(const id of m1Evidence.review.resolvedFindings||[])check(m1Review.includes('**'+id+' — resolved'),'Resolved M1 finding lacks resolution evidence: '+id);
 for(const app of ['server','client'])check(current.includes(`${m1Evidence[app].files} files / ${m1Evidence[app].tests} tests passed`),'Current M1 test counts differ from evidence: '+app);
 for(const mode of ['production','development']) {
  const result=m1Evidence.browser[mode];
  if(['passed','failed'].includes(result.status))check(current.includes(`${result.passed ?? result.tests} passed / ${result.failed ?? 0} failed / ${result.skipped} skipped; ${result.status}`),'Current M1 browser result differs from evidence: '+mode);
 }
 check(handoff.includes('ENG-09 / ENH-03 acceptance boundary') && handoff.includes('M1-R04'),'M1 handoff omits transport/processing or browser-fixture follow-through');
-check(!gates.includes('- [x] M1-R01'),'M1 findings incorrectly marked accepted');
+check(gates.includes('- [x] M1-R01–R04 regression fixes pass') && gates.includes('- [ ] Exact M1 revision CI'),'M1 regression resolution or remaining release gate is missing');
 for(const [file,hash] of Object.entries(m1Evidence.sourceFiles))check(fs.existsSync(path.join(root,file)) && crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')===hash,'M1 source changed since recorded verification: '+file);
 check(current.includes(`**${implementationCommit}**`),'Current status omits the verified application commit');
 for(const app of ['server','client']) {

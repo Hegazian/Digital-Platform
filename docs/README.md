@@ -1,6 +1,6 @@
 # Implementation documentation — start here
 
-Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains 62 unfinished tasks; 15 completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. The [M1 review](M1_REVIEW.md) records four Open P2 findings; fix them under ENG-09/ENG-02 before advancing. Fresh results, failing browser evidence and [manual checks](M1_MANUAL_TESTING.md) feed [the M1 handoff](NEXT_STEPS.md). ENG-05/06 operational gates remain open.
+Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains 62 unfinished tasks; 15 completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. The [M1 review](M1_REVIEW.md) records four resolved code regressions and the remaining acceptance gates under ENG-09/ENG-02. Fresh test/browser results and [manual checks](M1_MANUAL_TESTING.md) feed [the M1 handoff](NEXT_STEPS.md). ENG-05/06 operational gates remain open.
 
 > A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
@@ -8,7 +8,7 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 
 1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
 2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
-3. Resolve [M1-R01–R04](M1_REVIEW.md) under ENG-09/ENG-02: upload lifetime, atomic config responses, pricing draft retention and compatible READY browser fixtures. Follow [manual checks](M1_MANUAL_TESTING.md), keep ENG-05/06 rehearsals open and use the [M1 dependency waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 retains full-product verification ownership.
+3. Keep [M1-R01–R04](M1_REVIEW.md) regressions passing under ENG-09/ENG-02: upload lifetime, atomic config responses, pricing draft retention and compatible READY browser fixtures. Complete the remaining task evidence, follow [manual checks](M1_MANUAL_TESTING.md), keep ENG-05/06 rehearsals open and use the [M1 dependency waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 retains full-product verification ownership.
 4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [operations](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
 5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
 6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
@@ -21,9 +21,9 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 |---|---|
 | [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
 | [Next implementation steps](NEXT_STEPS.md) | ENG-05 restore/recovery gate, ENG-06 implementation, remaining M1 dependency waves and release evidence |
-| [M1 review](M1_REVIEW.md) | Four Open P2 findings, owners, regressions and verified limitations |
+| [M1 review](M1_REVIEW.md) | Four resolved code findings, owners, regressions and remaining acceptance limits |
 | [M1 manual verification](M1_MANUAL_TESTING.md) | Step-by-step config, pricing, upload, playback and operations checks |
-| [ENG-02 implementation evidence](ENG02_IMPLEMENTATION.md) | Config versioning, EGP semantics, local tests and open concurrency/draft findings |
+| [ENG-02 implementation evidence](ENG02_IMPLEMENTATION.md) | Config versioning, EGP semantics, resolved concurrency/draft regressions and remaining acceptance |
 | [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md) | Baseline rationale, local and remote migration checks, and outstanding adoption gates |
 | [ENG-06 implementation evidence](ENG06_IMPLEMENTATION.md) | Liveness/readiness, storage selection, graceful drain, local tests and remaining outage checks |
 | [ENG-09 implementation evidence](ENG09_IMPLEMENTATION.md) | Bounded video upload staging/streaming, accurate processing state, range tests and remaining M1 acceptance |

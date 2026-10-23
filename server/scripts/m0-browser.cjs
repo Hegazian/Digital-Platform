@@ -58,6 +58,25 @@ async function main() {
     const assignment = await db.assignment.create({ data: { lessonId: lesson.id, createdById: fixture.users.teacher.id, titleEn: 'M0 assignment', titleAr: 'واجب الاختبار', maxAttempts: 3 } });
     fixture.courses[locale] = { id: course.id, lessonId: lesson.id, materialId: material.id, secondMaterialId: secondMaterial.id, assignmentId: assignment.id };
   }
+  const renewalVideoId = crypto.randomUUID();
+  const renewalSource = path.join(client, 'e2e', 'fixtures', 'renewal.webm');
+  const renewalName = 'renewal.webm';
+  const renewalObjectName = `${crypto.randomUUID()}.webm`;
+  const renewalDirectory = path.join(env.UPLOADS_DIR, 'lesson-videos', renewalVideoId);
+  fs.mkdirSync(renewalDirectory, { recursive: true });
+  fs.copyFileSync(renewalSource, path.join(renewalDirectory, renewalObjectName));
+  await db.video.create({
+    data: {
+      id: renewalVideoId,
+      teacherId: fixture.users.teacher.id,
+      videoUrl: `/uploads/lesson-videos/${renewalVideoId}/${renewalObjectName}`,
+      originalFileName: renewalName,
+      sizeBytes: fs.statSync(renewalSource).size,
+      status: 'READY',
+    },
+  });
+  await db.lesson.update({ where: { id: fixture.courses.en.lessonId }, data: { videoId: renewalVideoId } });
+  fixture.renewalVideoId = renewalVideoId;
   fs.writeFileSync(env.M0_FIXTURE_PATH, JSON.stringify(fixture));
   npm(['run', 'build'], server);
   if (env.M0_WEB_MODE !== 'dev') npm(['run', 'build'], client, { NODE_ENV: 'production' });

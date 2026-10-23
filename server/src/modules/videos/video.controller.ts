@@ -9,6 +9,7 @@ import path from 'path';
 import jwt from 'jsonwebtoken';
 import { boundObjectKey } from '../../utils/media-references';
 import { VideoStatus } from '@prisma/client';
+import { completeVideoUpload, videoUploadLifecycle } from '../../utils/file-validation';
 
 export class VideoController {
   /**
@@ -21,18 +22,14 @@ export class VideoController {
       }
 
       const userId = req.user!.userId;
-      const transferCancellation = new AbortController();
-      req.once('aborted', () => transferCancellation.abort());
-      res.once('close', () => {
-        if (!res.writableEnded) transferCancellation.abort();
-      });
+      const uploadLifecycle = videoUploadLifecycle(req);
       const video = await VideoService.uploadVideo(
         userId,
         req.file.path,
         req.file.originalname,
         req.file.mimetype,
         req.file.size,
-        transferCancellation.signal
+        uploadLifecycle?.signal
       );
 
       res.status(201).json({
@@ -41,6 +38,8 @@ export class VideoController {
       });
     } catch (error) {
       next(error);
+    } finally {
+      await completeVideoUpload(req);
     }
   }
 

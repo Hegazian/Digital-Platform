@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, Save, RefreshCw, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 import { errorMessage } from '@/lib/apiTypes';
+import { useAppStore } from '@/lib/store';
 
 interface PricingTier {
   period: 'MONTHLY' | 'SIX_MONTHS' | 'YEARLY';
@@ -36,6 +37,9 @@ interface RawSubject {
 }
 
 export default function CoursePricingManager() {
+  const lang = useAppStore((state) => state.lang);
+  const isArabic = lang === 'ar';
+  const t = (en: string, ar: string) => isArabic ? ar : en;
   const [subjects, setSubjects] = useState<SubjectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -114,24 +118,41 @@ export default function CoursePricingManager() {
     setError(null);
 
     try {
-      await fetchApi(`/subjects/${subject.id}/pricing`, {
+      const saved = await fetchApi(`/subjects/${subject.id}/pricing`, {
         method: 'PUT',
         body: JSON.stringify({ pricing: subject.pricing.map(({ period, priceEgp, isActive }) => ({ period, priceEgp, isActive })) }),
       });
-      await loadSubjects();
+      const confirmed = new Map<RawPricing['period'], RawPricing>(
+        (saved.data || []).map((tier: RawPricing) => [tier.period, tier]),
+      );
+      const submitted = new Map(subject.pricing.map((tier) => [tier.period, tier]));
+      setSubjects((current) => current.map((item) => {
+        if (item.id !== subject.id) return item;
+        return {
+          ...item,
+          pricing: item.pricing.map((draft) => {
+            const submittedTier = submitted.get(draft.period);
+            const serverTier = confirmed.get(draft.period);
+            if (!submittedTier || !serverTier || draft.priceEgp !== submittedTier.priceEgp || draft.isActive !== submittedTier.isActive) return draft;
+            return { ...draft, priceEgp: Number(serverTier.priceEgp), priceUsd: Number(serverTier.priceUsd), isActive: Boolean(serverTier.isActive) };
+          }),
+        };
+      }));
 
-      setMessage(`Pricing for "${subject.nameEn}" updated successfully!`);
+      setMessage(isArabic
+        ? `تم تحديث أسعار "${subject.nameAr || subject.nameEn}" بنجاح`
+        : `Pricing for "${subject.nameEn}" updated successfully!`);
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to update pricing'));
+      setError(isArabic ? 'فشل تحديث الأسعار. حاول مرة أخرى.' : errorMessage(err, 'Failed to update pricing'));
     } finally {
       setSavingId(null);
     }
   };
 
-  const periodLabels = {
-    MONTHLY: '1 Month Access',
-    SIX_MONTHS: '6 Months (Term Pass)',
-    YEARLY: 'Full Year (Annual Pass)',
+  const periodLabels: Record<PricingTier['period'], string> = {
+    MONTHLY: t('1 Month Access', 'اشتراك شهر واحد'),
+    SIX_MONTHS: t('6 Months (Term Pass)', 'اشتراك ٦ أشهر'),
+    YEARLY: t('Full Year (Annual Pass)', 'اشتراك عام دراسي كامل'),
   };
 
   return (
@@ -141,10 +162,10 @@ export default function CoursePricingManager() {
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-400" />
-            <span>Curriculum & Course Pricing Management</span>
+            <span>{t('Curriculum & Course Pricing Management', 'إدارة أسعار المناهج والدورات')}</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Configure subscription costs in EGP. Any USD equivalent is indicative and calculated from the current display rate.
+            {t('Configure subscription costs in EGP. Any USD equivalent is indicative and calculated from the current display rate.', 'حدد أسعار الاشتراكات بالجنيه المصري. قيمة الدولار تقريبية وتُحسب وفق سعر العرض الحالي.')}
           </p>
         </div>
         <button
@@ -152,7 +173,7 @@ export default function CoursePricingManager() {
           className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>Reload</span>
+          <span>{t('Reload', 'إعادة التحميل')}</span>
         </button>
       </div>
 
@@ -173,13 +194,13 @@ export default function CoursePricingManager() {
       {loading ? (
         <div className="glass-panel p-12 rounded-2xl border border-slate-800 text-center">
           <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs text-slate-400 font-medium">Loading pricing matrix...</p>
+          <p className="text-xs text-slate-400 font-medium">{t('Loading pricing matrix...', 'جارٍ تحميل الأسعار...')}</p>
         </div>
       ) : subjects.length === 0 ? (
         <div className="glass-panel p-12 rounded-2xl border border-slate-800 text-center space-y-2">
           <Layers className="w-10 h-10 text-slate-500 mx-auto" />
-          <h3 className="text-sm font-bold text-white">No Subjects Found</h3>
-          <p className="text-xs text-slate-400">Add subjects first to configure subscription prices.</p>
+          <h3 className="text-sm font-bold text-white">{t('No Subjects Found', 'لا توجد مواد دراسية')}</h3>
+          <p className="text-xs text-slate-400">{t('Add subjects first to configure subscription prices.', 'أضف المواد الدراسية أولاً لتحديد أسعار الاشتراكات.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -198,7 +219,7 @@ export default function CoursePricingManager() {
                       <p className="text-xs text-slate-400">{subject.nameAr}</p>
                     </div>
                     <span className="text-[10px] font-semibold uppercase px-2.5 py-1 rounded-full bg-slate-800 text-indigo-300">
-                      Secondary Stage
+                      {t('Subject pricing', 'أسعار المادة')}
                     </span>
                   </div>
 
@@ -216,16 +237,19 @@ export default function CoursePricingManager() {
                         <div className="space-y-0.5">
                           <span className="text-xs font-bold text-slate-200">{periodLabels[p.period]}</span>
                           <span className="block text-[10px] text-slate-500 uppercase tracking-wider">
-                            Billing Plan
+                            {t('Billing Plan', 'مدة الاشتراك')}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-emerald-400">EGP</span>
+                            <span className="text-[11px] font-bold text-emerald-400"><bdi>EGP</bdi></span>
                             <input
                               type="number"
                               min="0"
+                              aria-label={isArabic
+                                ? `${periodLabels[p.period]} بالجنيه المصري لمادة ${subject.nameAr || subject.nameEn}`
+                                : `${periodLabels[p.period]} EGP price for ${subject.nameEn}`}
                               value={p.priceEgp}
                               onChange={(e) =>
                                 handlePriceChange(
@@ -239,7 +263,9 @@ export default function CoursePricingManager() {
                             />
                           </div>
 
-                          <span className="text-xs text-slate-500">{p.priceUsd === undefined ? 'USD equivalent pending save' : `≈ $${p.priceUsd.toFixed(2)} USD`}</span>
+                          <span className="text-xs text-slate-500">{p.priceUsd === undefined
+                            ? t('USD equivalent pending save', 'القيمة التقريبية بالدولار بعد الحفظ')
+                            : <bdi dir="ltr">≈ ${p.priceUsd.toFixed(2)} USD</bdi>}</span>
                         </div>
                       </div>
                     ))}
@@ -253,11 +279,11 @@ export default function CoursePricingManager() {
                     className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition disabled:opacity-50"
                   >
                     {isSaving ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div aria-label={t('Saving pricing', 'جارٍ حفظ الأسعار')} role="status" className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Save className="w-3.5 h-3.5" />
                     )}
-                    <span>Save Pricing</span>
+                    <span>{t('Save Pricing', 'حفظ الأسعار')}</span>
                   </button>
                 </div>
               </div>

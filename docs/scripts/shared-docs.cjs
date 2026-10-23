@@ -54,7 +54,7 @@ function writeShared(ctx) {
  for(const m of Object.keys(milestoneNames)) for(const t of tasks.filter(t=>t.milestone===m))visit(t);
  write('docs/README.md', `# Implementation documentation — start here
 
-Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains ${tasks.filter(t=>t.status!=='Complete').length} unfinished tasks; ${tasks.filter(t=>t.status==='Complete').length} completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. The [M1 review](M1_REVIEW.md) records four Open P2 findings; fix them under ENG-09/ENG-02 before advancing. Fresh results, failing browser evidence and [manual checks](M1_MANUAL_TESTING.md) feed [the M1 handoff](NEXT_STEPS.md). ENG-05/06 operational gates remain open.
+Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) records the findings, corrections, verification and integration decision. [Current status](CURRENT_STATUS.md) records test evidence and production holds. The active backlog contains ${tasks.filter(t=>t.status!=='Complete').length} unfinished tasks; ${tasks.filter(t=>t.status==='Complete').length} completed specifications are [archived](archive/completed/README.md). G1–G3 remain open. The [M1 review](M1_REVIEW.md) records four resolved code regressions and the remaining acceptance gates under ENG-09/ENG-02. Fresh test/browser results and [manual checks](M1_MANUAL_TESTING.md) feed [the M1 handoff](NEXT_STEPS.md). ENG-05/06 operational gates remain open.
 
 > A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
@@ -62,7 +62,7 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 
 1. Read [product scope](PRODUCT_SCOPE.md) and confirm the uploader/editor responsibility and required teacher review.
 2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
-3. Resolve [M1-R01–R04](M1_REVIEW.md) under ENG-09/ENG-02: upload lifetime, atomic config responses, pricing draft retention and compatible READY browser fixtures. Follow [manual checks](M1_MANUAL_TESTING.md), keep ENG-05/06 rehearsals open and use the [M1 dependency waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 retains full-product verification ownership.
+3. Keep [M1-R01–R04](M1_REVIEW.md) regressions passing under ENG-09/ENG-02: upload lifetime, atomic config responses, pricing draft retention and compatible READY browser fixtures. Complete the remaining task evidence, follow [manual checks](M1_MANUAL_TESTING.md), keep ENG-05/06 rehearsals open and use the [M1 dependency waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 retains full-product verification ownership.
 4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [operations](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
 5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
 6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
@@ -75,9 +75,9 @@ Refreshed: **23 October 2026**. [The final M0 review](M0_FINAL_REVIEW.md) record
 |---|---|
 | [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
 | [Next implementation steps](NEXT_STEPS.md) | ENG-05 restore/recovery gate, ENG-06 implementation, remaining M1 dependency waves and release evidence |
-| [M1 review](M1_REVIEW.md) | Four Open P2 findings, owners, regressions and verified limitations |
+| [M1 review](M1_REVIEW.md) | Four resolved code findings, owners, regressions and remaining acceptance limits |
 | [M1 manual verification](M1_MANUAL_TESTING.md) | Step-by-step config, pricing, upload, playback and operations checks |
-| [ENG-02 implementation evidence](ENG02_IMPLEMENTATION.md) | Config versioning, EGP semantics, local tests and open concurrency/draft findings |
+| [ENG-02 implementation evidence](ENG02_IMPLEMENTATION.md) | Config versioning, EGP semantics, resolved concurrency/draft regressions and remaining acceptance |
 | [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md) | Baseline rationale, local and remote migration checks, and outstanding adoption gates |
 | [ENG-06 implementation evidence](ENG06_IMPLEMENTATION.md) | Liveness/readiness, storage selection, graceful drain, local tests and remaining outage checks |
 | [ENG-09 implementation evidence](ENG09_IMPLEMENTATION.md) | Bounded video upload staging/streaming, accurate processing state, range tests and remaining M1 acceptance |
@@ -127,7 +127,7 @@ ${tasks.filter(t=>t.status!=='Complete').map(t=>`| ${taskLink(t.id)} — ${t.tit
 
 ## Remaining execution queue
 
-**Resolve M1-R01–R04 under ENG-09/ENG-02**, complete ENG-05/06 operational evidence and continue ENG-13, then use the [five M1 waves](NEXT_STEPS.md#m1-implementation-waves). The dependency graph below is the complete reference; this queue excludes Complete tasks:
+**Keep M1-R01–R04 regressions green under ENG-09/ENG-02**, complete ENG-05/06 operational evidence and continue ENG-13, then use the [five M1 waves](NEXT_STEPS.md#m1-implementation-waves). The dependency graph below is the complete reference; this queue excludes Complete tasks:
 
 ${Object.keys(milestoneNames).map(m=>`- **${m}:** ${ordered.filter(t=>t.milestone===m && t.status!=='Complete').map(t=>taskLink(t.id)+(t.status==='In Progress'?' (continuing)':'')).join(', ') || 'Internal engineering complete; retain regression evidence and external traffic holds.'}`).join('\n')}
 
@@ -151,7 +151,7 @@ Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed 
 
 ## M1 review supplement
 
-[M1-R01–R04](M1_REVIEW.md) are Open, owned by ENG-09 (upload lifetime and browser fixtures) and ENG-02 (config response atomicity and pricing drafts). They add targeted regressions under existing tasks; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
+[M1-R01–R04](M1_REVIEW.md) are resolved by targeted upload lifetime, exact config readback, pricing draft and READY-fixture regressions owned by ENG-09/ENG-02. The owners remain In Progress for broader acceptance; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
 
 ## Finding disposition — 58 of 58
 
@@ -191,7 +191,7 @@ The [archive manifest](manifest.json) records original path and SHA-256. The gen
 
 ${JSON.parse(read('docs/archive/manifest.json')).map(x=>`- [${x.path}](${x.path}) — superseded; exact pre-update copy.`).join('\n')}
 `);
-const entry = (title, body, archive) => { const prefix = archive.includes('/server/') || archive.includes('/client/') ? '../docs/' : 'docs/'; return `# ${title}\n\n**Updated: 23 October 2026**, M0 application checkpoint **${implementationCommit}**. M0 engineering is finalized for internal synthetic data; G1–G3 and production onboarding remain gated by operator evidence. See [current results and remaining gaps](${prefix}CURRENT_STATUS.md). ENG-05 and ENG-06 code and exact-head CI passed; their representative restore and infrastructure rehearsals remain open. M1 implementation is active with ENG-09/ENG-02; [the M1 review](${prefix}M1_REVIEW.md) records four Open P2 findings and failing browser-fixture acceptance. See the [current M1 handoff](${prefix}NEXT_STEPS.md). Previous content is [superseded and preserved](${archive}).\n\n${body}\n`; };
+const entry = (title, body, archive) => { const prefix = archive.includes('/server/') || archive.includes('/client/') ? '../docs/' : 'docs/'; return `# ${title}\n\n**Updated: 23 October 2026**, M0 application checkpoint **${implementationCommit}**. M0 engineering is finalized for internal synthetic data; G1–G3 and production onboarding remain gated by operator evidence. See [current results and remaining gaps](${prefix}CURRENT_STATUS.md). ENG-05 and ENG-06 code and exact-head CI passed; their representative restore and infrastructure rehearsals remain open. M1 implementation is active with ENG-09/ENG-02; [the M1 review](${prefix}M1_REVIEW.md) records four resolved code findings, passing browser-fixture checks and remaining task acceptance. See the [current M1 handoff](${prefix}NEXT_STEPS.md). Previous content is [superseded and preserved](${archive}).\n\n${body}\n`; };
  write('README.md', entry('Educational platform for Egyptian students', `A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide content through uploads, structured imports and manual editors. The platform reviews, publishes, protects and presents that content, manages assessments and progress, and controls enrollment and paid access.
 
 Educational content creation belongs to uploaders. AI tutoring, generation and provider integrations are outside the revised product scope; the tutor interface, route, provider dependency and key configuration have been removed. Technical validation/scanning/transcoding/thumbnail processing of supplied files is permitted. Arabic/English interface support is required; uploader-supplied courses may be Arabic, English or bilingual.

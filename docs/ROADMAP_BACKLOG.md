@@ -87,7 +87,7 @@ M0's engineering/G0 checkpoint is finalized for internal synthetic data. ENG-13 
 
 ## Remaining execution queue
 
-**Resolve M1-R01–R04 under ENG-09/ENG-02**, complete ENG-05/06 operational evidence and continue ENG-13, then use the [five M1 waves](NEXT_STEPS.md#m1-implementation-waves). The dependency graph below is the complete reference; this queue excludes Complete tasks:
+**Keep M1-R01–R04 regressions green under ENG-09/ENG-02**, complete ENG-05/06 operational evidence and continue ENG-13, then use the [five M1 waves](NEXT_STEPS.md#m1-implementation-waves). The dependency graph below is the complete reference; this queue excludes Complete tasks:
 
 - **M0:** [ENG-13](tasks/ENG-13.md) (continuing)
 - **M1:** [ENG-05](tasks/ENG-05.md) (continuing), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md), [COM-01](tasks/COM-01.md), [SEC-06](tasks/SEC-06.md), [SEC-07](tasks/SEC-07.md), [SEC-12](tasks/SEC-12.md), [SEC-13](tasks/SEC-13.md), [SEC-14](tasks/SEC-14.md), [COM-03](tasks/COM-03.md), [COM-02](tasks/COM-02.md), [COM-05](tasks/COM-05.md), [ENG-07](tasks/ENG-07.md), [COM-06](tasks/COM-06.md), [COM-07](tasks/COM-07.md), [COM-11](tasks/COM-11.md), [LRN-07](tasks/LRN-07.md), [ENG-02](tasks/ENG-02.md) (continuing), [ENG-04](tasks/ENG-04.md), [ENG-06](tasks/ENG-06.md) (continuing), [ENH-01](tasks/ENH-01.md), [ENG-08](tasks/ENG-08.md), [ENG-09](tasks/ENG-09.md) (continuing), [ENG-14](tasks/ENG-14.md), [ENH-03](tasks/ENH-03.md)

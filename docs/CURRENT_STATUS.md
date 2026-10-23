@@ -2,24 +2,24 @@
 
 Documentation refreshed **23 October 2026**. Reviewed M0 application and main-integration checkpoint: **34723cd** on codex/finalize-milestone-0. Original audit baseline: **2fbdc8e**; first M0 checkpoint: **fbe5fbf**. This page summarizes [historical M0 evidence](../audit/final-m0/verification.json), [the integration review](M0_FINAL_REVIEW.md) and the last recorded [reliability CI run](https://github.com/Hegazian/Digital-Platform/actions/runs/39820430062) for **34723cdded64a751b6a36c208a69421f4a57ac44**. A prior run is never attributed to later code; final integration CI is recorded separately when available.
 
-**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 5 In Progress, 57 Planned**. ENG-02, ENG-05, ENG-06, ENG-09 and ENG-13 are In Progress. ENG-05's exact branch CI passed; representative backup/restore and rollback evidence remain open. ENG-02 local checks pass but M1-R02/R03 remain Open; exact M1 commit CI and bilingual browser acceptance remain. ENG-09 unit/API regressions pass but M1-R04 breaks retained browser fixtures and M1-R01 invalidates the hard active-scan/disk bound; load, Supabase/scanner and target-device acceptance remain open. ENH-03 owns subsequent managed processing. See [ENG-02 evidence](ENG02_IMPLEMENTATION.md), [ENG-05 evidence](ENG05_IMPLEMENTATION.md) and [ENG-09 evidence](ENG09_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
+**M0 / G0 is complete for internal synthetic-data work. G1–G3 remain open; the product is not ready for real-student or paid production onboarding.** The current task inventory is **77: 15 Complete, 5 In Progress, 57 Planned**. ENG-02, ENG-05, ENG-06, ENG-09 and ENG-13 are In Progress. The four M1 review regressions are fixed and their targeted tests pass; production and development retained browser suites each pass 24/24. ENG-05's exact branch CI passed; representative backup/restore and rollback evidence remain open. ENG-02 still needs bilingual end-to-end config and historical order snapshot evidence. ENG-09 still needs measured load, real Supabase/scanner and target-device acceptance. ENH-03 owns subsequent managed processing. See [ENG-02 evidence](ENG02_IMPLEMENTATION.md), [ENG-05 evidence](ENG05_IMPLEMENTATION.md) and [ENG-09 evidence](ENG09_IMPLEMENTATION.md). No task is marked complete by documenting or passing only its local synthetic fixture.
 
 ## M1 verification — 23 October (current working tree)
 
-[Review](M1_REVIEW.md), [manual instructions](M1_MANUAL_TESTING.md) and [machine-readable evidence](../audit/m1-review/verification.json) cover M1 changes against merge base 322d070. Source hashes identify the tested files before commit. **M1-R01–R04 are Open**; passing the current suites does not resolve them.
+[Review](M1_REVIEW.md), [manual instructions](M1_MANUAL_TESTING.md) and [machine-readable evidence](../audit/m1-review/verification.json) cover M1 changes against merge base 322d070. Source hashes identify the tested files in this working tree. **M1-R01–R04 are resolved by focused regressions**; the owning tasks remain in progress for broader acceptance and operational gates.
 
 | M1 check | Fresh recorded result |
 |---|---|
-| M1 server tests | 80 files / 437 tests passed |
-| M1 client tests | 15 files / 81 tests passed |
+| M1 server tests | 80 files / 440 tests passed |
+| M1 client tests | 16 files / 84 tests passed |
 | M1 typechecks / production builds | Both packages passed |
 | M1 client lint | 0 errors / 27 warnings |
 | M1 migration fixture | Passed; 3 migrations; 22 rows / 21 tables preserved; repeat deploy and schema parity |
-| Retained production browser smoke | 21 passed / 3 failed / 0 skipped; failed — network-enabled rerun; READY fixture and shared-attachment failures (M1-R04) |
-| Retained development browser smoke | 21 passed / 3 failed / 0 skipped; failed — network-enabled dev/Strict Mode; same READY fixture and attachment failures (M1-R04) |
+| Retained production browser smoke | 24 passed / 0 failed / 0 skipped; passed — final network-enabled production run after READY fixture and cancellation assertion fixes |
+| Retained development browser smoke | 24 passed / 0 failed / 0 skipped; passed — final network-enabled development/Strict Mode run after expected cancellation handling |
 | M1 exact commit remote CI | Required after commit/push; earlier M0 CI is historical |
 
-M1-specific config/upload browser journeys, load measurements, real Supabase/ClamAV, representative restore/rollback and actual devices remain open. The coverage and advisory scans below are historical M0 evidence; neither was refreshed by this pass.
+M1-specific manual config/order checks, maximum-size load measurements, real Supabase/ClamAV, representative restore/rollback, actual devices and exact-head remote CI remain open. The coverage and advisory scans below are historical M0 evidence; neither was refreshed by this pass.
 
 ## Historical M0 verification — 22 October (sources stated below)
 
@@ -60,4 +60,4 @@ Automated Paymob/Fawry, guardian portal, certificates, offline packs, realtime w
 
 ## Current execution frontier
 
-**M1 requires changes. Resolve M1-R01/R04 under ENG-09 and M1-R02/R03 under ENG-02 first; see [the review](M1_REVIEW.md).** [ENG-05](tasks/ENG-05.md) and [ENG-06](tasks/ENG-06.md) code and exact-head CI are green; both stay In Progress pending named operator/infrastructure rehearsals. Other dependency-ready M1 work is none beyond Wave 1. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3. The [next-steps handoff](NEXT_STEPS.md) defines the ordered waves and remaining acceptance evidence.
+**The M1 review findings are fixed, but M1/G1 is not complete.** [ENG-02](tasks/ENG-02.md) and [ENG-09](tasks/ENG-09.md) remain In Progress for bilingual, order-preservation, measured-load, real-storage/scanner and device acceptance. [ENG-05](tasks/ENG-05.md) and [ENG-06](tasks/ENG-06.md) remain In Progress pending representative database recovery and real infrastructure rehearsals. The remaining M1 tasks are dependency-blocked by those gates; the [next-steps handoff](NEXT_STEPS.md) identifies the next authorized work. Continue [ENG-13](tasks/ENG-13.md) throughout M1–M3.

@@ -4,6 +4,8 @@ import { requireUploadScanner, scanUploadedFile } from '../file-validation';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { EventEmitter } from 'events';
+import { completeVideoUpload } from '../file-validation';
 
 afterEach(() => vi.unstubAllEnvs());
 describe('fail-closed upload scanning', () => {
@@ -63,6 +65,59 @@ describe('fail-closed upload scanning', () => {
       });
       expect(error).toBeUndefined();
       expect(Buffer.concat(received).includes(payload)).toBe(true);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('stops a completed-body scan and closes the staged file before upload cleanup on disconnect', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'edu-video-abort-'));
+    const filePath = path.join(directory, 'upload');
+    fs.writeFileSync(filePath, Buffer.alloc(256 * 1024, 0x5a));
+    const controller = new AbortController();
+    const request = new EventEmitter() as EventEmitter & {
+      file: Express.Multer.File;
+      videoUploadLifecycle: { signal: AbortSignal; complete: () => Promise<void> };
+    };
+    request.file = { path: filePath, size: 256 * 1024 } as Express.Multer.File;
+    request.videoUploadLifecycle = {
+      signal: controller.signal,
+      complete: async () => fs.promises.unlink(filePath),
+    };
+    let received = Buffer.alloc(0);
+    const server = net.createServer((socket) => {
+      socket.on('data', (chunk) => {
+        received = Buffer.concat([received, Buffer.from(chunk)]);
+        const prefix = Buffer.from('zINSTREAM\0');
+        if (!received.subarray(0, prefix.length).equals(prefix)) return;
+        let offset = prefix.length;
+        while (offset + 4 <= received.length) {
+          const size = received.readUInt32BE(offset);
+          offset += 4;
+          if (size === 0) {
+            controller.abort();
+            return;
+          }
+          if (offset + size > received.length) return;
+          offset += size;
+        }
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('CLAMAV_HOST', '127.0.0.1');
+    vi.stubEnv('CLAMAV_PORT', String((server.address() as net.AddressInfo).port));
+    try {
+      const error: any = await new Promise((resolve, reject) => {
+        void scanUploadedFile(request as any, {} as any, (scanError) => {
+          if (scanError?.statusCode !== 400) return reject(scanError || new Error('Expected interrupted scan error'));
+          void completeVideoUpload(request as any).then(resolve, reject);
+        });
+      });
+      expect(error).toBeUndefined();
+      expect(received.subarray(0, 9).toString()).toBe('zINSTREAM');
+      expect(fs.existsSync(filePath)).toBe(false);
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       fs.rmSync(directory, { recursive: true, force: true });

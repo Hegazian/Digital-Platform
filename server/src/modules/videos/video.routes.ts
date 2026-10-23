@@ -1,9 +1,10 @@
-import { cleanupStagedUpload, stagedUploadStorage, validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
+import { stagedUploadStorage, validateUploadedFile, scanUploadedFile, requireUploadScanner, completeVideoUpload, VideoUploadLifecycle } from '../../utils/file-validation';
 import { Router } from 'express';
 import { VideoController } from './video.controller';
 import { authenticate, requireApprovedTeacher } from '../auth/auth.middleware';
 import multer from 'multer';
 import { AppError, BadRequestError } from '../../utils/errors';
+import { unlink } from 'fs/promises';
 
 const router = Router();
 const MAX_CONCURRENT_VIDEO_UPLOADS = 2;
@@ -15,14 +16,27 @@ function admitVideoUpload(req: import('express').Request, res: import('express')
     return next(new AppError(503, 'Video upload capacity is temporarily full. Retry shortly.'));
   }
   activeVideoUploads += 1;
-  let released = false;
-  const release = () => {
-    if (released) return;
-    released = true;
-    activeVideoUploads = Math.max(0, activeVideoUploads - 1);
+  let releasePromise: Promise<void> | undefined;
+  const controller = new AbortController();
+  const lifecycle: VideoUploadLifecycle = {
+    signal: controller.signal,
+    complete: () => {
+      if (!releasePromise) {
+        releasePromise = (async () => {
+          const stagedFile = (req as import('express').Request & { file?: Express.Multer.File }).file;
+          if (stagedFile?.path) await unlink(stagedFile.path).catch(() => undefined);
+          activeVideoUploads = Math.max(0, activeVideoUploads - 1);
+        })();
+      }
+      return releasePromise;
+    },
   };
-  res.once('finish', release);
-  res.once('close', release);
+  (req as import('express').Request & { videoUploadLifecycle?: VideoUploadLifecycle }).videoUploadLifecycle = lifecycle;
+  req.once('aborted', () => controller.abort());
+  res.once('finish', () => { void completeVideoUpload(req); });
+  res.once('close', () => {
+    if (!res.writableFinished) controller.abort();
+  });
   req.setTimeout(15 * 60_000, () => req.destroy());
   next();
 }
@@ -56,10 +70,14 @@ const upload = multer({
 });
 
 // Upload endpoint (Approved Teachers Only)
-router.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, admitVideoUpload, upload.single('file'), cleanupStagedUpload, validateUploadedFile, scanUploadedFile, VideoController.uploadVideo);
+router.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, admitVideoUpload, upload.single('file'), validateUploadedFile, scanUploadedFile, VideoController.uploadVideo);
 
 // Playback & Security endpoints (Authenticated Users with Entitlement Check)
 router.get('/:videoId/playback-url', authenticate, VideoController.getPlaybackUrl);
 router.get('/:videoId/stream', VideoController.streamLocalVideo); // Token is passed in query for this one
+
+router.use((error: unknown, req: import('express').Request, _res: import('express').Response, next: import('express').NextFunction) => {
+  void completeVideoUpload(req).finally(() => next(error));
+});
 
 export default router;

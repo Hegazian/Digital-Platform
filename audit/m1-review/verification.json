@@ -2,12 +2,12 @@
   "date": "2026-10-23",
   "branch": "codex/milestone-1",
   "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
-  "scope": "Tracked committed/staged/unstaged and untracked M1 changes against origin/main; checks on the working tree before the review checkpoint commit.",
+  "scope": "Initial review compared codex/milestone-1 with origin/main at the recorded merge base and included staged, unstaged, and untracked files; this resolution record covers the current working tree before commit.",
   "sourceFiles": {
     "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
     "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
     "client/src/components/admin/CourseApprovalQueue.tsx": "d958f55d15c18705a55ee00d605e644fc42aac911b7536325780f080e2aa9513",
-    "client/src/components/admin/CoursePricingManager.tsx": "cb82fc954763e48bf27dc70269b625e87cd8375f157049e35fd3071e8c1c3aa8",
+    "client/src/components/admin/CoursePricingManager.tsx": "5fb7db650b7904dd5ef5df624f04ede72447d20aa76db6a79d6d686e597ccea5",
     "client/src/components/admin/PlatformSettings.tsx": "46a9bb57bd6c282f8db2269c7f11f1dd477dfd322cadcb54ebf30e58e3358d7d",
     "client/src/components/teacher/CourseManager.tsx": "8284771b5a88363b2954b4c8ff7ba265f7273912c29b4f1a536bafbd0b653ff5",
     "client/src/components/teacher/modals/CourseCreateModal.tsx": "957dafa134095d84189771a17002ba143baf0b47e3ebfc1c539a7a27c064bd07",
@@ -16,8 +16,8 @@
     "server/prisma/schema.prisma": "0780a540d3efae53fdf0eea57a682c8e5787d55edcda8061a24bd62da27f277e",
     "server/scripts/migration-upgrade-fixture.cjs": "c88a5a69873370ffc163fd936d14b74d6c0bb32cd68971da6aea8955e7892e22",
     "server/src/app.ts": "2c3b82f139b1448eec34a0bdf462694a5f847a530ae158ba904bd492fff0c46f",
-    "server/src/modules/config/__tests__/config-branding.spec.ts": "377bd49de0d59f72386e6742c7006d81ef2c7d90801a938846e7167b68b61b2c",
-    "server/src/modules/config/config.controller.ts": "10e2f94d12f1eb98dc98f4a85cbb4ef6fb721fea6518095a9c22935d74aab7ae",
+    "server/src/modules/config/__tests__/config-branding.spec.ts": "43a8c6d7da2978c84a0af79ad8f95fae17036e463fa76a05afea69c644fb1287",
+    "server/src/modules/config/config.controller.ts": "1371dfabd210f309f56fc30a41a04bfb5d647de421f9ff7a816755d781621d4f",
     "server/src/modules/config/config.routes.ts": "65afb08f89902896dcb05c8bef796351ed752a5a8f40ad7832df92ebf71f91d5",
     "server/src/modules/config/config.test.ts": "cd3365308e545dffe02181ee57c3e402a29a309ba399f3f05e5b30270c710c99",
     "server/src/modules/courses/__tests__/course.dynamic-subject.spec.ts": "e19c800fc4c470d97fed9dda23a567898d7bc418de32fb763b607c4b2ecbfcc5",
@@ -28,21 +28,25 @@
     "server/src/modules/courses/course.service.ts": "f4b54ceb4c37a9917e0c08eb8ab7366bcf401feab75a63693a43a13530c95e91",
     "server/src/modules/courses/e2e-demo.test.ts": "7d463d5a0130db856a85cc2464168f7666c82ad96d4220ec9774ef036ce69f80",
     "server/src/modules/courses/subject.service.ts": "a78e2d9f666b1f96bad8dc3ca4a7f4097a4026ec75afff0e1150fd1e0f5f31b0",
-    "server/src/modules/videos/__tests__/video.integration.spec.ts": "b108b85e7b6371996642686c44a972a3efe00cdc316bcc788021692ae3650f2a",
+    "server/src/modules/videos/__tests__/video.integration.spec.ts": "600448728c035c2c17c06c145d8398102d26f692a369fd4d6d9b08190d387ee7",
     "server/src/modules/videos/__tests__/video.service.spec.ts": "1e6aa1da703ac9f35a26581c32cebc61b73045d6e103b5ad8c311c6d2fff698e",
-    "server/src/modules/videos/video.controller.ts": "ae4656b4acd33a4172c0aab92ab630f1479367546a0269c7b2ee28c14f6789cb",
-    "server/src/modules/videos/video.routes.ts": "25c760ca3230b30b58177fc40d70afaf44d56f570b230e52713a00d81cfb49f2",
+    "server/src/modules/videos/video.controller.ts": "b74fa8e44da9f61b18830dd25bd213816881cd36e713a33b6ce8817c2d578cdd",
+    "server/src/modules/videos/video.routes.ts": "64c398c2051ed3fc4978a97eee5514393c0a8536c366d2f161ce937eea34dd9f",
     "server/src/modules/videos/video.service.ts": "4e1c0d1afac429be20d698c79e17fa0237e3b44e0e809d1a85ba2fa7c98b71c8",
     "server/src/utils/__tests__/file-validation.spec.ts": "8baffdd26a4f61cb286886b2bb60210bc3dc45508a363a77c92b82178c8a5e93",
-    "server/src/utils/__tests__/scanner.spec.ts": "c96bcca2ed6444ffcfc0b8ed591a7d02ad36ec820a522473a70cea9829f10a64",
+    "server/src/utils/__tests__/scanner.spec.ts": "eb5d5e24d51987f842a54c2e3f1f402d515b67cc52676db62031ce8830695f1b",
     "server/src/utils/__tests__/storage-readiness.spec.ts": "48274baa204f017d1cca0c08c6bc3d1e2ed8b8735e6fb593d6fe128d022ef259",
     "server/src/utils/__tests__/validate.spec.ts": "3469e5d001eec083961c3df651585562eda7ca04c832f3d480989f3f85442119",
     "server/src/utils/currency.ts": "5fdebc88751694ad4286403d4deffd05c01c9af3e1091b6bdbd8b3e7548ca575",
-    "server/src/utils/file-validation.ts": "bf0bc62ce7c4be902cc0bc625fdd7e44f2c97d245891d572d8787edfd6eee69b",
+    "server/src/utils/file-validation.ts": "a81a8d0f258c4cff31d9ca12e97ac92785a10bf3d108237b9d1f54d225cb257d",
     "server/src/utils/schemas.ts": "46094a0d3cebd7704cc5524be5483656b113ebe4de9c8fa8398eb59c12d91afb",
-    "server/src/utils/storage.ts": "48087ed64ad750bb6ff1dc64d7f2263ec2f2610caad4eae26d7205c313c0497d"
+    "server/src/utils/storage.ts": "48087ed64ad750bb6ff1dc64d7f2263ec2f2610caad4eae26d7205c313c0497d",
+    "client/e2e/m0/review.spec.ts": "2a8498ead722c0f0c332e12e042cd4082fdee6878e1d414badd28c1290a4ca69",
+    "client/e2e/m0/safety.spec.ts": "69213be4256acb31e15e3b40fdf80503237186b0cfa3a7489b661da69d551ca8",
+    "client/src/components/admin/CoursePricingManager.test.tsx": "3173ea4e9d9cc502a025cafefb4690ee462374eedf62e79d8fb790c4e9d8d99b",
+    "server/scripts/m0-browser.cjs": "7e83f75a38878e77d77fd3c3002e4b1c69799a319cb5b23754cd669caf28d4ec"
   },
-  "sourceFingerprint": "ff87c72a6727342d6d816bfda22726f8778c95d04377ce0cff306fa6e3a6e8b2",
+  "sourceFingerprint": "bfd47acb00d3b1c7ad822decf33b0afe57a5425efc578a2e36f4fee11353f082",
   "environment": {
     "os": "win32",
     "node": "v26.7.0",
@@ -51,30 +55,33 @@
   },
   "review": {
     "mode": "single independent read-only subagent",
-    "status": "changes required",
-    "openFindings": [
+    "status": "four reported code findings resolved locally; M1/G1 acceptance remains open",
+    "openFindings": [],
+    "report": "docs/M1_REVIEW.md",
+    "reproductions": "In-memory scanner cancellation and config write/readback interleavings; pricing draft loss traced through state replacement. Same reviewer traced all ten initial browser failures to baseline sandbox font errors and the new PROCESSING fixture/attachment contamination.",
+    "initialDisposition": "changes required",
+    "resolvedFindings": [
       "M1-R01",
       "M1-R02",
       "M1-R03",
       "M1-R04"
     ],
-    "report": "docs/M1_REVIEW.md",
-    "reproductions": "In-memory scanner cancellation and config write/readback interleavings; pricing draft loss traced through state replacement. Same reviewer traced all ten initial browser failures to baseline sandbox font errors and the new PROCESSING fixture/attachment contamination."
+    "resolutionEvidence": "Controlled real-HTTP/ClamAV-protocol upload disconnect and admission regression; real-PostgreSQL transaction barrier and API conflict/readback regressions; pricing draft component regression; production and development/Strict Mode browser suites each 24/24."
   },
   "server": {
-    "typecheck": "passed by reviewer",
-    "build": "passed",
+    "typecheck": "passed 2026-10-23",
+    "build": "passed 2026-10-23",
     "files": 80,
-    "tests": 437,
+    "tests": 440,
     "skipped": 0,
     "command": "npm test",
     "log": "server-tests.log"
   },
   "client": {
-    "typecheck": "passed by reviewer with incremental cache disabled",
-    "build": "passed",
-    "files": 15,
-    "tests": 81,
+    "typecheck": "passed 2026-10-23",
+    "build": "passed 2026-10-23",
+    "files": 16,
+    "tests": 84,
     "skipped": 0,
     "command": "npm test",
     "log": "client-tests.log",
@@ -110,19 +117,19 @@
     "findings": 58,
     "acceptanceCases": 42,
     "dependencyEdges": 158,
-    "localLinks": 2328,
-    "headingLinks": 490,
+    "localLinks": 2324,
+    "headingLinks": 488,
     "errors": 0,
     "archivedOriginalsPreserved": 13,
-    "notes": "Final validation passed with zero errors. One report-write attempt hit a transient Windows file-open error; immediate retry succeeded."
+    "notes": "Final build and validation passed on 23 October 2026. Source hashes cover 41 current application, regression, and browser fixture files. Validation checks documentation consistency only; it does not establish unfinished M1 operator or production acceptance."
   },
   "browser": {
     "production": {
-      "status": "failed",
-      "passed": 21,
-      "failed": 3,
+      "status": "passed",
+      "passed": 24,
+      "failed": 0,
       "skipped": 0,
-      "note": "network-enabled rerun; READY fixture and shared-attachment failures (M1-R04)",
+      "note": "final network-enabled production run after READY fixture and cancellation assertion fixes",
       "attempts": [
         {
           "environment": "sandbox",
@@ -141,34 +148,65 @@
           "exitCode": 1,
           "note": "two renewal failures and mobile document-switch fixture contamination",
           "log": "browser-production-unrestricted.log"
+        },
+        {
+          "environment": "network-enabled",
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "final production build and retained desktop/mobile browser suite passed after expected dev navigation/document cancellation handling",
+          "log": "browser-production-final.log"
         }
       ]
     },
     "development": {
-      "status": "failed",
-      "passed": 21,
-      "failed": 3,
+      "status": "passed",
+      "passed": 24,
+      "failed": 0,
       "skipped": 0,
-      "note": "network-enabled dev/Strict Mode; same READY fixture and attachment failures (M1-R04)",
+      "note": "final network-enabled development/Strict Mode run after expected cancellation handling",
       "command": "M0_WEB_MODE=dev npm run test:m0:browser",
       "environment": "network-enabled",
-      "exitCode": 1,
-      "log": "browser-development.log"
+      "exitCode": 0,
+      "log": "browser-development.log",
+      "attempts": [
+        {
+          "environment": "network-enabled",
+          "passed": 18,
+          "failed": 6,
+          "skipped": 0,
+          "exitCode": 1,
+          "note": "initial rerun exposed expected Next dev RSC cancellation and duplicate Strict Mode document-fetch cancellation in overly strict assertions",
+          "log": "browser-development-assertion-rerun.log"
+        },
+        {
+          "environment": "network-enabled",
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0,
+          "exitCode": 0,
+          "note": "final development/Strict Mode build and retained desktop/mobile browser suite passed",
+          "log": "browser-development-final.log"
+        }
+      ]
     }
   },
   "remoteCI": {
     "status": "not checked for eventual M1 commit; prior M0 CI is historical only"
   },
   "notVerified": [
-    "M1-R01–R04 fix regressions (findings remain open)",
-    "M1-specific bilingual admin/student config and upload browser journeys",
+    "M1-specific bilingual admin/student config and upload manual journeys",
+    "historical order snapshot behavior after exchange-rate edits",
     "real private Supabase streaming and outage behavior",
-    "external ClamAV canaries and post-body disconnect load",
+    "external ClamAV canaries and maximum-size post-body disconnect load",
     "maximum-size concurrent memory/disk measurements",
     "actual-device playback",
     "representative database/object restore and rollback",
     "production deployment or migration adoption",
+    "exact-head M1 remote CI",
     "fresh advisory audit or whole-source coverage measurement"
   ],
-  "logs": "Local audit/m1-review/*.log files are intentionally gitignored; this record and the review report are committed. M0 evidence is unchanged."
+  "logs": "Local audit/m1-review/*.log files are intentionally gitignored; this record and the review report are committed. M0 evidence is unchanged.",
+  "sourceFingerprintMethod": "sha256 of sorted path:contentSha256 entries joined by newline"
 }
