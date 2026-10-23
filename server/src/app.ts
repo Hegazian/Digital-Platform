@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import { Logger } from './utils/logger';
-import { ConflictError, NotFoundError, BadRequestError } from './utils/errors';
+import { AppError, ConflictError, NotFoundError, BadRequestError } from './utils/errors';
 
 import authRoutes from './modules/auth/auth.routes';
 import { subjectRouter, courseRouter } from './modules/courses/course.routes';
@@ -178,6 +178,11 @@ app.use('/api/v1/careers', careersRoutes);
 // 7. Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const requestId = req.headers['x-request-id'] as string;
+
+  if (err?.name === 'MulterError') {
+    err = new AppError(err.code === 'LIMIT_FILE_SIZE' ? 413 : 400,
+      err.code === 'LIMIT_FILE_SIZE' ? 'Uploaded file exceeds the 500 MB limit' : 'Upload contains an invalid multipart form');
+  }
 
   // Map well-known Prisma errors to safe HTTP semantics instead of raw 500s.
   if (err?.code === 'P2002') {

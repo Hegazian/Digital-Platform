@@ -79,14 +79,14 @@ export const createCourseSchema = z
     thumbnail: z.string().optional(),
     isFree: z.boolean().optional(),
     priceEgp: z.number().optional(),
-    priceUsd: z.number().optional(),
+    priceUsd: z.never().optional(),
   })
   .refine((d) => Boolean(d.subjectId || d.subjectName), {
     message: 'A subject ID or subject name is required',
     path: ['subjectName'],
   })
   .refine(
-    (d) => !(d.isFree && ((d.priceEgp ?? 0) > 0 || (d.priceUsd ?? 0) > 0)),
+    (d) => !(d.isFree && (d.priceEgp ?? 0) > 0),
     { message: 'A free course cannot have a positive price', path: ['isFree'] }
   );
 
@@ -435,8 +435,7 @@ export const createGradeSubjectSchema = z.object({
 export const subjectPricingEntrySchema = z.object({
   period: z.enum(['MONTHLY', 'SIX_MONTHS', 'YEARLY']),
   priceEgp: z.number().min(0, 'priceEgp must be non-negative'),
-  // Optional: USD is derived server-side from the configured exchange rate.
-  priceUsd: z.number().min(0).optional(),
+  priceUsd: z.never().optional(),
 });
 
 export const createSubjectSchema = z.object({
@@ -471,10 +470,10 @@ export const updateCourseSchema = z
     academicYearId: z.string().nullable().optional(),
     isFree: z.boolean().optional(),
     priceEgp: z.number().min(0).optional(),
-    priceUsd: z.number().min(0).optional(),
+    priceUsd: z.never().optional(),
   })
   .refine(
-    (d) => !(d.isFree && ((d.priceEgp ?? 0) > 0 || (d.priceUsd ?? 0) > 0)),
+    (d) => !(d.isFree && (d.priceEgp ?? 0) > 0),
     { message: 'A free course cannot have a positive price', path: ['isFree'] }
   );
 

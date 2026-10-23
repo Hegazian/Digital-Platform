@@ -103,7 +103,6 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
   const [editDesc, setEditDesc] = useState('');
   const [editSubjectId, setEditSubjectId] = useState('');
   const [editPriceEgp, setEditPriceEgp] = useState('150');
-  const [editPriceUsd, setEditPriceUsd] = useState('10');
   const [editStatus, setEditStatus] = useState('DRAFT');
   const [editIsPublished, setEditIsPublished] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -209,7 +208,6 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
     setEditDesc(course.description || '');
     setEditSubjectId(course.subjectId || course.subject?.id || '');
     setEditPriceEgp(String(course.priceEgp || 150));
-    setEditPriceUsd(String(course.priceUsd || 10));
     setEditStatus(course.status || 'DRAFT');
     setEditIsPublished(Boolean(course.isPublished));
   };
@@ -231,7 +229,6 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
           description: editDesc,
           subjectId: editSubjectId,
           priceEgp: parseFloat(editPriceEgp) || 150,
-          priceUsd: parseFloat(editPriceUsd) || 10,
           status: editStatus,
           isPublished: editIsPublished || editStatus === 'PUBLISHED',
         }),
@@ -466,7 +463,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                       ) : (
                         <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                           <DollarSign className="w-3 h-3" />
-                          <span>Course Price: {course.priceEgp || 150} EGP (${course.priceUsd || 10} USD) • Unlocks All Lessons</span>
+                          <span>Course Price: {course.priceEgp ?? 150} EGP (≈ ${course.priceUsd ?? 10} indicative USD) • Unlocks All Lessons</span>
                         </span>
                       )}
                     </div>
@@ -758,7 +755,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                 <p className="text-[11px] text-slate-400">
                   Students pay this single flat fee to gain unrestricted access to all chapters, video lectures, PDFs, and quizzes in this course.
                 </p>
-                <div className="grid grid-cols-2 gap-4 pt-1">
+                <div className="grid gap-4 pt-1">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-300 mb-1">Price in EGP</label>
                     <input
@@ -770,17 +767,7 @@ export default function CourseApprovalQueue({ onCourseReviewed }: CourseApproval
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">Price in USD ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={editPriceUsd}
-                      onChange={(e) => setEditPriceUsd(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
+                  <p className="text-xs text-slate-500">USD display is indicative and derived from the current rate.</p>
                 </div>
               </div>
 

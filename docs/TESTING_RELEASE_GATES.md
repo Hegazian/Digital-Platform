@@ -1,5 +1,13 @@
 # Testing strategy and release gates
 
+## M1 review verification (23 October 2026)
+
+The [M1 review](M1_REVIEW.md) covers all branch changes and local/untracked files against merge base `322d070`. Fresh full suites pass **80 server files / 437 tests** and **15 client files / 81 tests**, both builds and read-only typechecks; lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, schema parity, repeat deployment and preservation of **22 rows across 21 tables**. [Machine-readable evidence](../audit/m1-review/verification.json) distinguishes every browser attempt and its environment; the first production attempt fails (14 passed / 10 failed), including the confirmed READY-fixture regression and sandbox-blocked fonts. Exact M1 commit CI remains required.
+
+**M1-R01–R04 are Open.** Existing passes do not cover post-body scan cancellation, interleaved config response versions, subject draft retention or the revised browser fixture. Add the targeted regressions in the review, then execute the [M1 manual journey](M1_MANUAL_TESTING.md). G1 remains open. Historical M0 coverage/advisory/browser values below are not remeasured or attributed to M1 by this pass.
+
+With normal network access, production and development/Strict Mode browser suites each report **21 passed / 3 failed / 0 skipped**. The failures match M1-R04's renewal fixture and inherited pending attachment. Both modes must pass after the fixture fix before merge; the earlier green M0 CI does not waive this failure.
+
 ## Current M0 implementation verification (22 October 2026)
 
 The reviewed application/integration checkpoint is **34723cd**. [Current status](CURRENT_STATUS.md), [fresh machine-readable evidence](../audit/final-m0/verification.json) and [the final review](M0_FINAL_REVIEW.md) record the latest tests, browser modes, exact CI revisions and limitations. Earlier [round-two evidence](../audit/review-round-2/verification.json) and [M0 checkpoint](../audit/m0/verification.json) remain historical; their counts are not attributed to this integration.
@@ -118,6 +126,8 @@ G0 allows internal synthetic-data work only. Production storage/scanner canaries
 
 ## Gate G1 — durable foundation (M1)
 
+- [ ] M1-R01–R04 are resolved with targeted regressions; both browser modes pass with isolated READY fixtures while new uploads retain PROCESSING protection. Exact M1 revision CI and bilingual config/upload browser evidence are attached.
+- [ ] ENG-09 transport acceptance closes independently using known supported READY fixtures; ENH-03 subsequently supplies managed processing/READY and complete A29 media evidence. Neither task waives the G1 end-to-end gate.
 - [ ] Checked-in migrations upgrade both empty and populated prior database; canonical lessons/IDs/progress/previews and access/payment history preserved.
 - [ ] Shared contracts and route validation classification, coherent Egyptian taxonomy and side-effect-free public reads.
 - [ ] Private managed asset lifecycle, upload completion verification/scanning/processing/quota, protected legacy delivery; direct public aliases fail.

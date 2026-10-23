@@ -44,10 +44,12 @@ describe('Config API Endpoints', () => {
   });
 
   it('PUT /api/v1/config - should update platform settings and host domain for admins', async () => {
+    const current = await request(app).get('/api/v1/config');
     const res = await request(app)
       .put('/api/v1/config')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
+        expectedVersion: current.body.data.version,
         siteNameEn: 'EduPlatform Master',
         hostDomain: 'learn.eduplatform.com',
         supportEmail: 'admin@eduplatform.com',
@@ -63,10 +65,12 @@ describe('Config API Endpoints', () => {
   });
 
   it('PATCH /api/v1/config - should update config for admins', async () => {
+    const current = await request(app).get('/api/v1/config');
     const res = await request(app)
       .patch('/api/v1/config')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
+        expectedVersion: current.body.data.version,
         siteNameEn: 'Updated EduPlatform',
       });
 

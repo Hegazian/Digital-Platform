@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const {date,implementationCommit,evidence,waves} = require('./current-state.cjs');
+const {date,implementationCommit,evidence,m1:m1Evidence,waves} = require('./current-state.cjs');
 const {retiredRootDocs,historicalDocMoves,taskDocument} = require('./doc-layout.cjs');
 const root = path.resolve(__dirname,'../..');
 const read = p => fs.readFileSync(path.join(root,p),'utf8');
@@ -95,7 +95,7 @@ if(fs.existsSync(path.join(root,integrationManifest))) {
  for(const entry of integration.files)check(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,entry.archive))).digest('hex')===entry.sha256,'Archived integration input changed: '+entry.archive);
  check(!fs.existsSync(path.join(root,'server/prisma/migrations/0001_init/migration.sql')),'Competing initial baseline must remain outside executable migrations');
 }
-const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','ENG05_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
+const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','M1_REVIEW.md','M1_MANUAL_TESTING.md','ENG02_IMPLEMENTATION.md','ENG05_IMPLEMENTATION.md','ENG06_IMPLEMENTATION.md','ENG09_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,historicalDocMoves['docs/'+p] || 'docs/'+p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>historicalDocMoves['docs/'+p] || 'docs/'+p),...tasks.map(t=>t.documentPath),'README.md','server/README.md','client/README.md','docs/archive/INDEX.md','docs/archive/completed/README.md','docs/archive/reviews/README.md','docs/M0_FINAL_REVIEW.md'];
 let links=0,anchors=0;
@@ -157,6 +157,20 @@ for(const p of activePaths.filter(p=>!p.includes('/tasks/') && !p.includes('/arc
 }
 check(suspicious.length===0,'Review active AI requirement matches: '+suspicious.join('\n'));
 const current=read('docs/CURRENT_STATUS.md');
+const m1Review=read('docs/M1_REVIEW.md');
+const handoff=read('docs/NEXT_STEPS.md');
+for(const id of m1Evidence.review.openFindings) {
+ check(m1Review.includes('| '+id+' |'),'Missing M1 review finding '+id);
+ check(byId.get(id==='M1-R02'||id==='M1-R03'?'ENG-02':'ENG-09').status==='In Progress','Open M1 findings cannot have a Complete owner');
+}
+for(const app of ['server','client'])check(current.includes(`${m1Evidence[app].files} files / ${m1Evidence[app].tests} tests passed`),'Current M1 test counts differ from evidence: '+app);
+for(const mode of ['production','development']) {
+ const result=m1Evidence.browser[mode];
+ if(['passed','failed'].includes(result.status))check(current.includes(`${result.passed ?? result.tests} passed / ${result.failed ?? 0} failed / ${result.skipped} skipped; ${result.status}`),'Current M1 browser result differs from evidence: '+mode);
+}
+check(handoff.includes('ENG-09 / ENH-03 acceptance boundary') && handoff.includes('M1-R04'),'M1 handoff omits transport/processing or browser-fixture follow-through');
+check(!gates.includes('- [x] M1-R01'),'M1 findings incorrectly marked accepted');
+for(const [file,hash] of Object.entries(m1Evidence.sourceFiles))check(fs.existsSync(path.join(root,file)) && crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')===hash,'M1 source changed since recorded verification: '+file);
 check(current.includes(`**${implementationCommit}**`),'Current status omits the verified application commit');
 for(const app of ['server','client']) {
  const label=app==='server'?'Server':'Client';

@@ -1,35 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, FileVideo } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { errorMessage } from '../lib/apiTypes';
+import { useAppStore } from '@/lib/store';
 
 interface VideoUploaderProps {
   onUploadComplete?: (videoUrlOrId: string) => void;
 }
 
 export default function VideoUploader({ onUploadComplete }: VideoUploaderProps) {
+  const { lang } = useAppStore();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const uploadController = useRef<AbortController | null>(null);
+  const t = (en: string, ar: string) => lang === 'ar' ? ar : en;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
-      if (!selected.type.startsWith('video/')) {
-        setError('Please select a valid video file (MP4, WebM).');
+      if (!/\.(mp4|webm|mov|avi|mkv|mpeg|mpg)$/i.test(selected.name)) {
+        setError(t('Choose a supported video file.', 'يرجى اختيار ملف فيديو مدعوم.'));
         return;
       }
       if (selected.size > 500 * 1024 * 1024) {
-        setError('File size exceeds 500MB limit.');
+        setError(t('File size exceeds the 500 MB limit.', 'حجم الملف يتجاوز الحد الأقصى 500 ميجابايت.'));
         return;
       }
       setFile(selected);
       setError(null);
       setSuccess(false);
+      setProcessing(false);
     }
   };
 
@@ -38,48 +43,50 @@ export default function VideoUploader({ onUploadComplete }: VideoUploaderProps) 
 
     setIsUploading(true);
     setError(null);
-    setUploadProgress(0);
+    const controller = new AbortController();
+    uploadController.current = controller;
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      // We simulate progress for better UX
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => (prev < 90 ? prev + 10 : prev));
-      }, 200);
-
       const res = await fetchApi('/videos/upload', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
-      clearInterval(interval);
-      setUploadProgress(100);
       setSuccess(true);
+      setProcessing(res.data?.status !== 'READY');
       setFile(null);
       if (onUploadComplete) {
         onUploadComplete(res.data?.videoUrl || res.data?.id || 'uploaded-video-url');
       }
     } catch (err: unknown) {
-      setError(errorMessage(err, 'Failed to upload video'));
-      setUploadProgress(0);
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        setError(errorMessage(err, t('Failed to upload video', 'تعذر رفع الفيديو')));
+      }
     } finally {
       setIsUploading(false);
+      uploadController.current = null;
     }
   };
+
+  const cancelUpload = () => uploadController.current?.abort();
 
   return (
     <div className="glass-card rounded-2xl p-6 border border-slate-800">
       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
         <FileVideo className="w-5 h-5 text-indigo-400" />
-        Upload Video Lesson
+        {t('Upload Video Lesson', 'رفع فيديو للدرس')}
       </h3>
 
       {success && (
         <div className="mb-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-3">
           <CheckCircle className="w-5 h-5" />
-          <p className="text-sm font-bold">Video uploaded successfully!</p>
+          <p className="text-sm font-bold">{processing
+            ? t('Video uploaded. Processing is required before playback.', 'تم رفع الفيديو. يجب إكمال المعالجة قبل تشغيله.')
+            : t('Video uploaded and ready for playback.', 'تم رفع الفيديو وأصبح جاهزاً للتشغيل.')}</p>
         </div>
       )}
 
@@ -94,15 +101,15 @@ export default function VideoUploader({ onUploadComplete }: VideoUploaderProps) 
         <label className="border-2 border-dashed border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-800/50 hover:border-indigo-500 transition-colors group">
           <input
             type="file"
-            accept="video/*"
+            accept=".mp4,.webm,.mov,.avi,.mkv,.mpeg,.mpg"
             className="hidden"
             onChange={handleFileChange}
           />
           <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-indigo-600/20 group-hover:text-indigo-400 transition-colors">
             <Upload className="w-8 h-8 text-slate-400 group-hover:text-indigo-400" />
           </div>
-          <p className="text-sm font-bold text-slate-300 mb-1">Click to browse or drag and drop</p>
-          <p className="text-xs text-slate-500">MP4, WebM (Max 500MB)</p>
+          <p className="text-sm font-bold text-slate-300 mb-1">{t('Click to browse for a video', 'اضغط لاختيار فيديو')}</p>
+          <p className="text-xs text-slate-500">{t('MP4, WebM, MOV, AVI, MKV (max 500 MB)', 'MP4 وWebM وMOV وAVI وMKV (بحد أقصى 500 ميجابايت)')}</p>
         </label>
       ) : (
         <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
@@ -128,29 +135,22 @@ export default function VideoUploader({ onUploadComplete }: VideoUploaderProps) 
                 <X className="w-5 h-5" />
               </button>
             )}
+            {isUploading && (
+              <button type="button" onClick={cancelUpload} aria-label={t('Cancel upload', 'إلغاء الرفع')}
+                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
 
-          {isUploading && (
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>Uploading...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
+          {isUploading && <p role="status" className="mb-4 text-xs text-slate-400">{t('Uploading securely…', 'جارٍ رفع الفيديو بأمان…')}</p>}
 
           <button
             onClick={handleUpload}
             disabled={isUploading}
             className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isUploading ? 'Uploading...' : 'Confirm Upload'}
+            {isUploading ? t('Uploading…', 'جارٍ الرفع…') : t('Upload Video', 'رفع الفيديو')}
           </button>
         </div>
       )}

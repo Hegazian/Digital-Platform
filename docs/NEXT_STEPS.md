@@ -1,14 +1,29 @@
 # Next implementation steps
 
-Updated **22 October 2026**. M0/G0 is complete for internal synthetic-data work. The latest reliability commit **34723cdded64a751b6a36c208a69421f4a57ac44** is pushed and all five exact-head GitHub checks passed. ENG-05 and ENG-06 remain In Progress for their explicit external rehearsal evidence; M1 implementation starts with dependency-ready ENG-09. G1–G3 and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Updated **23 October 2026**. M0/G0 is complete for internal synthetic-data work. The latest reliability commit **34723cdded64a751b6a36c208a69421f4a57ac44** is pushed and all five exact-head GitHub checks passed. ENG-05 and ENG-06 remain In Progress for external rehearsal evidence. M1 review found four Open P2 issues: M1-R01/R04 (ENG-09), M1-R02/R03 (ENG-02). [Review](M1_REVIEW.md), [fresh evidence](../audit/m1-review/verification.json) and [manual checks](M1_MANUAL_TESTING.md) define the immediate work. G1–G3 and production onboarding remain gated. Current verification and task counts are in [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## Start here
 
 1. Retain the committed M0 regressions and review the [current status](CURRENT_STATUS.md), [target architecture](TARGET_ARCHITECTURE.md), [contracts](API_DATA_CONTRACTS.md) and [operations holds](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
-2. Continue M1 implementation with **[ENG-09](tasks/ENG-09.md)**; strict byte-range handling is implemented and tested. Finish bounded upload/streaming, processing state/MIME correctness, concurrency and target-device acceptance under its remaining criteria.
+2. Resolve **M1-R01/R04** in [ENG-09](tasks/ENG-09.md), then **M1-R02/R03** in [ENG-02](tasks/ENG-02.md), with the regressions below. Existing suites pass but do not cover these failures. Complete config browser/order-preservation and transport load/storage/device acceptance, obtain exact M1 commit CI and retain all operational gates. ENH-03 owns new-upload-to-READY after ENG-09 transport acceptance; unverified new uploads stay PROCESSING.
 3. Keep **[ENG-05](tasks/ENG-05.md)** and **[ENG-06](tasks/ENG-06.md)** In Progress while an authorized operator performs representative restore/rollback review and real storage outage/process shutdown rehearsals. Never apply generated baseline SQL to existing tables blindly.
 4. Continue **[ENG-13](tasks/ENG-13.md)** throughout: keep local gates green, add semantic domain/component/concurrency tests with each task, and work toward the existing release coverage target. Resolve development advisory exceptions before paid release or 19 January 2027.
 5. Follow the M1 waves; complete each task's prerequisites and acceptance evidence. Review **G1** using real upgrade, private-storage, access, session and outage evidence; then advance to M2 authoring/learning and M3 manual paid pilot. Keep all staged features denied at the API.
+
+## Immediate implementation packages
+
+All four findings are Open. This pass reviewed application changes and updated documentation; it did not implement fixes. These subtasks use existing owners and do not add duplicate backlog IDs.
+
+1. **ENG-09 / M1-R01 — upload lifetime.** Cancel on premature response close after multipart consumption, stop file/scanner streams, and coordinate admission release with work termination and cleanup. Add controlled slow-scanner tests for this exact interleaving, repeated cancellations alongside two active uploads, Windows/Linux cleanup and late-close safety. Finish maximum-size memory/disk, real storage/scanner, timeout/restart and known READY fixture device checks. See [required regressions](M1_REVIEW.md#required-regression-evidence).
+2. **ENG-02 / M1-R02 — atomic config response.** Return exactly the row/version produced by the conditional save using a returning update or correctly isolated transaction. Add real PostgreSQL barriers and prove A's subsequent stale save conflicts after B changes config. Preserve strict EGP validation and historical order snapshots.
+3. **ENG-02 / M1-R03 — preserve pricing drafts.** Reconcile the saved subject from the server response while retaining unrelated/newer edits, including input typed during save. Add two-subject success/failure/in-flight tests and Arabic/English browser checks. COM-11 continues to own atomic pricing and history.
+4. **ENG-09 / M1-R04 — restore browser evidence.** Seed known supported READY media through guarded test setup, isolate attachments and preserve renewal/pause/position/speed assertions. Normal uploads must still return PROCESSING and deny early playback. Rerun both browser modes without treating sandbox font failures as M1 defects.
+5. **Evidence and review.** Rerun targeted regressions, package checks and retained production/development browser jobs. Collect exact-commit CI after an authorized push; keep M1-specific browser acceptance separate from smoke results. Close each finding after focused review and its regressions pass. Finish ENG-05/06 rehearsals below; task statuses remain In Progress until their acceptance is satisfied.
+6. **Unlock Wave 2.** Once ENG-05's operator gate closes, start ENH-02 shared contracts and ENH-01 taxonomy, then the remaining Wave 2 primitives according to each task's prerequisites. Consumers reuse these contracts and policies.
+
+### ENG-09 / ENH-03 acceptance boundary
+
+ENH-03 depends on ENG-09, ENG-05, ENG-06, ENG-07, ENH-02 and completed SEC-02/03 controls. ENG-09 therefore closes transport acceptance with known verified READY fixtures, staging/scan/storage limits, ranges and truthful new-upload PROCESSING state. It does not wait for ENH-03 renditions. ENH-03 then owns managed assets, resumable completion verification, durable quotas/workers, codec/duration checks and READY transitions, including complete new-upload A29/G1 acceptance. Never mark unverified media READY merely to pass a playback test.
 
 ## ENG-05 operational follow-through
 
@@ -25,15 +40,15 @@ First-task exclusions: no taxonomy, canonical course migration, managed asset sc
 
 ## M1 implementation waves
 
-Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. ENG-05 and ENG-06 remain In Progress pending representative database and real infrastructure rehearsals; ENG-09 has started. 22 other M1 tasks remain Planned; ENG-13 also remains In Progress. Wave 1 is ready from the current completed-dependency set.
+Waves respect the existing dependency graph; they are not dates or estimates. Within a wave, read each task's dependency list before starting. ENG-05 and ENG-06 remain In Progress pending representative database and real infrastructure rehearsals; ENG-02 and ENG-09 have Open review findings. 21 other M1 tasks remain Planned; ENG-13 also remains In Progress. Wave 1 is ready from the current completed-dependency set.
 
 ### Wave 1 — Migration baseline and independent reliability
 
 [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-09](tasks/ENG-09.md), [ENG-02](tasks/ENG-02.md).
 
-ENG-05 and ENG-06 code and branch CI pass; continue representative restore/recovery and real storage/process rehearsals while implementing bounded media/range handling and persisted configuration with EGP charge semantics.
+Close M1-R01 upload lifetime, M1-R04 browser fixtures and M1-R02/R03 config/pricing regressions first. ENG-05 and ENG-06 have historical M0 CI; finish representative restore/recovery and real storage/process rehearsals. Complete ENG-09 transport/device acceptance using known READY fixtures and ENG-02 bilingual acceptance. ENH-03 owns subsequent processing.
 
-Exit evidence: Exact-head remote CI; ENG-05 restored-copy diff/restore rehearsal; ENG-06 real storage outage and process signal/drain tests; ENG-09 range/disconnect tests; ENG-02 config reload and EGP assertions.
+Exit evidence: Exact-head remote CI; ENG-05 restored-copy diff/restore rehearsal; ENG-06 real storage outage and process signal/drain tests; ENG-09 real upload, bounded memory, scan, cleanup, playback/range and target-device tests; ENG-02 migration fixture, stale-write conflict, rate readback and bilingual admin/student EGP display.
 
 ### Wave 2 — Shared data, identity and commerce primitives
 

@@ -1,5 +1,7 @@
 # ENG-05 migration implementation evidence
 
+M1 follow-through, **23 October 2026**: the full chain now includes the additive ENG-02 config version/currency migration. A fresh `npm run db:migrate:fixture` passes empty installation/parity, drift rejection, populated adoption and repeated deploy, preserving **22 rows across 21 tables** including AppConfig and its indicative rate. See [M1 evidence](../audit/m1-review/verification.json). Earlier row counts and CI below remain historical. The current M1 commit still needs its own CI; representative restored-copy review, backup/restore and rollback remain Open.
+
 Status: **In Progress**. The baseline and synthetic migration tests are implemented. Exact-head Node 22 CI passed for commit `b6dd8d462a1f4d111f94c6125259d0576738beb9`; an authorized representative backup/restore rehearsal and production adoption review remain open. See the [full ENG-05 acceptance criteria](tasks/ENG-05.md), [migration artifacts](../server/prisma/fixtures/migrations-readme.md) and [next steps](NEXT_STEPS.md#eng-05-operational-follow-through).
 
 ## Migration design

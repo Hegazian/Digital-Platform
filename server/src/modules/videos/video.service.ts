@@ -1,5 +1,5 @@
 import { prisma } from '../../prisma';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
+import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../../utils/errors';
 import { VideoStatus } from '@prisma/client';
 import { StorageService } from '../../utils/storage';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
@@ -11,22 +11,29 @@ export class VideoService {
   /**
    * Upload a video to Supabase Storage (or local fallback) and create a record.
    */
-  static async uploadVideo(teacherId: string, fileBuffer: Buffer, fileName: string, mimeType: string, sizeBytes: number) {
+  static async uploadVideo(teacherId: string, filePath: string, fileName: string, mimeType: string, sizeBytes: number, signal?: AbortSignal) {
     // 1. Upload to storage bucket "lesson-videos"
     const videoId = randomUUID();
-    const videoUrl = await StorageService.uploadFile(fileBuffer, fileName, mimeType, 'lesson-videos', videoId);
+    const videoUrl = await StorageService.uploadFileFromPath(filePath, fileName, mimeType, sizeBytes, 'lesson-videos', videoId, signal);
 
     // 2. Create database record
-    return await prisma.video.create({
-      data: {
-        id: videoId,
-        teacherId,
-        videoUrl,
-        originalFileName: fileName,
-        sizeBytes,
-        status: VideoStatus.READY, // MP4s are ready immediately
-      },
-    });
+    try {
+      return await prisma.video.create({
+        data: {
+          id: videoId,
+          teacherId,
+          videoUrl,
+          originalFileName: fileName,
+          sizeBytes,
+          // Signature and MIME validation cannot verify codecs/duration. Keep every new upload
+          // non-playable until the managed media probe/processing worker marks it READY.
+          status: VideoStatus.PROCESSING,
+        },
+      });
+    } catch (error) {
+      await StorageService.deleteFile(videoUrl).catch(() => undefined);
+      throw error;
+    }
   }
 
   /**
@@ -103,6 +110,7 @@ export class VideoService {
     if (!video || !video.videoUrl) {
       throw new NotFoundError('Video file not found');
     }
+    if (video.status !== VideoStatus.READY) throw new ConflictError('Video is still processing and cannot be played yet.');
 
     if (/^https?:\/\//i.test(video.videoUrl)) return externalContentUrl(video.videoUrl);
     const internalPath = boundObjectKey(video.videoUrl, 'lesson-videos', video.id);

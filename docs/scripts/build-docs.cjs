@@ -39,7 +39,7 @@ const statusOverrides = {
   'SEC-01': 'Complete', 'SEC-02': 'Complete', 'SEC-03': 'Complete',
   'SEC-04': 'Complete', 'SEC-05': 'Complete', 'SEC-08': 'Complete',
   'SEC-09': 'Complete', 'SEC-10': 'Complete', 'SEC-11': 'Complete',
-  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-05': 'In Progress', 'ENG-06': 'In Progress', 'ENG-09': 'In Progress', 'ENG-13': 'In Progress',
+  'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-02': 'In Progress', 'ENG-05': 'In Progress', 'ENG-06': 'In Progress', 'ENG-09': 'In Progress', 'ENG-13': 'In Progress',
   'ENG-15': 'Complete'
 };
 
@@ -249,7 +249,7 @@ ${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [current verification]
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **${implementationCommit}**. ${taskUpdate(t)} The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **23 October 2026** against reviewed M0 application commit **${implementationCommit}**. ${taskUpdate(t)} The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

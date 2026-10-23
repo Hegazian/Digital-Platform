@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import net from 'net';
+import fs from 'fs';
+import { randomUUID } from 'crypto';
+import { getUploadStagingRoot } from './storage';
 import { AppError, BadRequestError } from './errors';
 
 const extensionByMime: Record<string, Set<string>> = {
@@ -35,13 +38,50 @@ function hasSignature(mime: string, bytes: Buffer): boolean {
   return false;
 }
 
-export function validateUploadedFile(req: Request, _res: Response, next: NextFunction) {
+export async function validateUploadedFile(req: Request, _res: Response, next: NextFunction) {
   const file = (req as Request & { file?: Express.Multer.File }).file;
   if (!file) return next();
-  const extension = file.originalname.slice(file.originalname.lastIndexOf('.')).toLowerCase();
-  const allowedExtensions = extensionByMime[file.mimetype];
-  if (!allowedExtensions || !allowedExtensions.has(extension) || !hasSignature(file.mimetype, file.buffer)) {
-    return next(new BadRequestError('Uploaded file content, extension, and declared type must match a supported format.'));
+  try {
+    const extension = file.originalname.slice(file.originalname.lastIndexOf('.')).toLowerCase();
+    const allowedExtensions = extensionByMime[file.mimetype];
+    const bytes = file.buffer ?? (file.path ? await readSignatureBytes(file.path) : Buffer.alloc(0));
+    if (!allowedExtensions || !allowedExtensions.has(extension) || !hasSignature(file.mimetype, bytes)) {
+      return next(new BadRequestError('Uploaded file content, extension, and declared type must match a supported format.'));
+    }
+    next();
+  } catch {
+    next(new BadRequestError('Uploaded file could not be read for validation.'));
+  }
+}
+
+async function readSignatureBytes(filePath: string): Promise<Buffer> {
+  const handle = await fs.promises.open(filePath, 'r');
+  try {
+    const bytes = Buffer.alloc(8192);
+    const { bytesRead } = await handle.read(bytes, 0, bytes.length, 0);
+    return bytes.subarray(0, bytesRead);
+  } finally { await handle.close(); }
+}
+
+/** Create an unpredictable private temporary path for disk-backed large uploads. */
+export function stagedUploadStorage() {
+  return {
+    destination: (_req: Request, _file: Express.Multer.File, callback: (error: Error | null, destination: string) => void) => {
+      try { callback(null, getUploadStagingRoot()); } catch (error) { callback(error as Error, ''); }
+    },
+    filename: (_req: Request, _file: Express.Multer.File, callback: (error: Error | null, filename: string) => void) => {
+      callback(null, `${randomUUID()}.upload`);
+    },
+  };
+}
+
+/** Remove a completed or rejected disk-backed upload after the response closes. */
+export function cleanupStagedUpload(req: Request, res: Response, next: NextFunction) {
+  const file = (req as Request & { file?: Express.Multer.File }).file;
+  if (file?.path) {
+    const cleanup = () => { void fs.promises.unlink(file.path!).catch(() => undefined); };
+    res.once('finish', cleanup);
+    res.once('close', cleanup);
   }
   next();
 }
@@ -56,7 +96,7 @@ export function requireUploadScanner(_req: Request, _res: Response, next: NextFu
 }
 
 /**
- * Scan in-memory uploads with a ClamAV daemon before any storage or DB write.
+ * Scan uploads with bounded memory before any storage or DB write.
  * Production fails closed unless a scanner is configured and returns a clean result.
  */
 export async function scanUploadedFile(req: Request, _res: Response, next: NextFunction) {
@@ -71,15 +111,18 @@ export async function scanUploadedFile(req: Request, _res: Response, next: NextF
   if (!Number.isInteger(port) || port < 1 || port > 65535) return next(new AppError(503, 'Upload scanning is misconfigured'));
 
   const socket = new net.Socket();
+  const source = file.path ? fs.createReadStream(file.path, { highWaterMark: 64 * 1024 }) : undefined;
   let response = '';
   let settled = false;
   const finish = (error?: Error) => {
     if (settled) return;
     settled = true;
+    source?.destroy();
     socket.destroy();
     next(error);
   };
-  socket.setTimeout(60_000, () => finish(new AppError(503, 'Upload scanner timed out')));
+  socket.setTimeout(15 * 60_000, () => finish(new AppError(503, 'Upload scanner timed out')));
+  req.once?.('aborted', () => finish(new AppError(400, 'Upload request was interrupted')));
   socket.on('data', (chunk) => {
     response += chunk.toString('utf8');
     if (!response.includes('\0')) return;
@@ -102,12 +145,25 @@ export async function scanUploadedFile(req: Request, _res: Response, next: NextF
       try {
         await write(Buffer.from('zINSTREAM\0'));
         const chunkSize = 64 * 1024;
-        for (let offset = 0; offset < file.buffer.length; offset += chunkSize) {
-          const chunk = file.buffer.subarray(offset, Math.min(offset + chunkSize, file.buffer.length));
-          const size = Buffer.alloc(4);
-          size.writeUInt32BE(chunk.length, 0);
-          await write(size);
-          await write(chunk);
+        if (source) {
+          for await (const item of source) {
+            const buffer = Buffer.isBuffer(item) ? item : Buffer.from(item);
+            for (let offset = 0; offset < buffer.length; offset += chunkSize) {
+              const chunk = buffer.subarray(offset, Math.min(offset + chunkSize, buffer.length));
+              const size = Buffer.alloc(4);
+              size.writeUInt32BE(chunk.length, 0);
+              await write(size);
+              await write(chunk);
+            }
+          }
+        } else {
+          for (let offset = 0; offset < file.buffer.length; offset += chunkSize) {
+            const chunk = file.buffer.subarray(offset, Math.min(offset + chunkSize, file.buffer.length));
+            const size = Buffer.alloc(4);
+            size.writeUInt32BE(chunk.length, 0);
+            await write(size);
+            await write(chunk);
+          }
         }
         await write(Buffer.alloc(4));
       } catch {

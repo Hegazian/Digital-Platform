@@ -1,6 +1,9 @@
 import net from 'net';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { requireUploadScanner, scanUploadedFile } from '../file-validation';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 afterEach(() => vi.unstubAllEnvs());
 describe('fail-closed upload scanning', () => {
@@ -36,4 +39,33 @@ describe('fail-closed upload scanning', () => {
       }
     },
   );
+
+  it('sends a staged file to ClamAV in bounded chunks without a Buffer field', async () => {
+    const payload = Buffer.from('staged video payload');
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'edu-video-scanner-'));
+    const filePath = path.join(directory, 'upload');
+    fs.writeFileSync(filePath, payload);
+    const received: Buffer[] = [];
+    const server = net.createServer((socket) => {
+      socket.on('data', (chunk) => {
+        received.push(Buffer.from(chunk));
+        const bytes = Buffer.concat(received);
+        if (bytes.subarray(-4).equals(Buffer.alloc(4))) socket.end('stream: OK\0');
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('CLAMAV_HOST', '127.0.0.1');
+    vi.stubEnv('CLAMAV_PORT', String((server.address() as net.AddressInfo).port));
+    try {
+      const error: any = await new Promise((resolve) => {
+        void scanUploadedFile({ file: { path: filePath, size: payload.length } } as any, {} as any, resolve);
+      });
+      expect(error).toBeUndefined();
+      expect(Buffer.concat(received).includes(payload)).toBe(true);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

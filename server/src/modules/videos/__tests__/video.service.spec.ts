@@ -28,6 +28,8 @@ vi.mock('../../../prisma', () => ({
 vi.mock('../../../utils/storage', () => ({
   StorageService: {
     uploadFile: vi.fn(),
+    uploadFileFromPath: vi.fn(),
+    deleteFile: vi.fn(),
     getSignedUrl: vi.fn(),
   },
 }));
@@ -38,28 +40,53 @@ describe('VideoService', () => {
   });
 
   describe('uploadVideo', () => {
-    it('should upload to storage and create a video record with status READY', async () => {
+    it('streams the upload to storage and keeps it processing until a media probe verifies playback', async () => {
       const mockVideo = {
         id: 'video-123',
         teacherId: 'teacher-1',
-        status: 'READY',
+        status: 'PROCESSING',
         videoUrl: 'uploads/test.mp4',
       };
 
-      (StorageService.uploadFile as any).mockResolvedValue('uploads/test.mp4');
+      (StorageService.uploadFileFromPath as any).mockResolvedValue('/uploads/lesson-videos/video-123/test.mp4');
       (prisma.video.create as any).mockResolvedValue(mockVideo);
 
-      const result = await VideoService.uploadVideo('teacher-1', Buffer.from('data'), 'test.mp4', 'video/mp4', 100);
+      const signal = new AbortController().signal;
+      const result = await VideoService.uploadVideo('teacher-1', 'C:/staging/file.upload', 'test.mp4', 'video/mp4', 100, signal);
 
-      expect(StorageService.uploadFile).toHaveBeenCalled();
+      expect(StorageService.uploadFileFromPath).toHaveBeenCalledWith('C:/staging/file.upload', 'test.mp4', 'video/mp4', 100, 'lesson-videos', expect.any(String), signal);
       expect(prisma.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           teacherId: 'teacher-1',
-          status: 'READY',
-          videoUrl: 'uploads/test.mp4',
+          status: 'PROCESSING',
+          videoUrl: '/uploads/lesson-videos/video-123/test.mp4',
         }),
       });
       expect(result).toEqual(mockVideo);
+    });
+
+    it.each([
+      ['clip.avi', 'video/x-msvideo'],
+      ['clip.mkv', 'video/x-matroska'],
+      ['clip.mov', 'video/quicktime'],
+    ])('leaves unprocessed %s pending instead of claiming it is playable', async (fileName, mimeType) => {
+      (StorageService.uploadFileFromPath as any).mockResolvedValue(`lesson-videos/video-456/${fileName}`);
+      (prisma.video.create as any).mockImplementation(({ data }: any) => data);
+
+      const result = await VideoService.uploadVideo('teacher-1', 'C:/staging/file.upload', fileName, mimeType, 100);
+
+      expect(result.status).toBe('PROCESSING');
+      expect(prisma.video.create).toHaveBeenCalledWith({ data: expect.objectContaining({ status: 'PROCESSING' }) });
+    });
+
+    it('removes the stored object if the database record cannot be created', async () => {
+      (StorageService.uploadFileFromPath as any).mockResolvedValue('/uploads/lesson-videos/video-789/clip.mp4');
+      (StorageService.deleteFile as any).mockResolvedValue(undefined);
+      (prisma.video.create as any).mockRejectedValue(new Error('database unavailable'));
+
+      await expect(VideoService.uploadVideo('teacher-1', 'C:/staging/file.upload', 'clip.mp4', 'video/mp4', 100))
+        .rejects.toThrow('database unavailable');
+      expect(StorageService.deleteFile).toHaveBeenCalledWith('/uploads/lesson-videos/video-789/clip.mp4');
     });
   });
 

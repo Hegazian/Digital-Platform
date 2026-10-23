@@ -229,5 +229,18 @@ describe('Course Governance & Lifecycle Unit Tests', () => {
         expect.objectContaining({ data: expect.objectContaining({ priceEgp: 250, priceUsd: 5.21 }) })
       );
     });
+
+    it('does not turn a display-only USD input into a course charge', async () => {
+      (prisma.course.findUnique as any).mockResolvedValue({
+        id: 'c1', teacherId: 't1', isFree: true, titleEn: 'Old', titleAr: 'قديم',
+      });
+      (prisma.course.update as any).mockImplementation((args: any) => Promise.resolve({ ...args.data, id: 'c1' }));
+
+      await CourseService.updateCourse('c1', 't1', { priceUsd: 25 });
+
+      expect(prisma.product.findFirst).not.toHaveBeenCalled();
+      expect(prisma.product.update).not.toHaveBeenCalled();
+      expect(prisma.product.create).not.toHaveBeenCalled();
+    });
   });
 });

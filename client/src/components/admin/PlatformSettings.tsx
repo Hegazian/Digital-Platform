@@ -28,6 +28,7 @@ import {
 } from '@/lib/configStore';
 
 interface PlatformConfig {
+  version: number;
   siteNameEn: string;
   siteNameAr: string;
   siteDescriptionEn: string;
@@ -49,6 +50,7 @@ interface PlatformConfig {
 export default function PlatformSettings() {
   const [activeTab, setActiveTab] = useState<'general' | 'home' | 'governance'>('general');
   const [config, setConfig] = useState<PlatformConfig>({
+    version: 1,
     siteNameEn: 'EduPlatform',
     siteNameAr: 'منصة التعليم',
     siteDescriptionEn: 'Next-generation Egyptian secondary education platform',
@@ -110,10 +112,28 @@ export default function PlatformSettings() {
     setError(null);
 
     try {
-      await fetchApi('/config', {
+      const saved = await fetchApi('/config', {
         method: 'PUT',
-        body: JSON.stringify(config),
+        body: JSON.stringify({
+          expectedVersion: config.version,
+          siteNameEn: config.siteNameEn,
+          siteNameAr: config.siteNameAr,
+          siteDescriptionEn: config.siteDescriptionEn,
+          siteDescriptionAr: config.siteDescriptionAr,
+          sloganEn: config.sloganEn,
+          sloganAr: config.sloganAr,
+          hostDomain: config.hostDomain,
+          supportEmail: config.supportEmail,
+          currency: 'EGP',
+          exchangeRateUsdToEgp: Number(config.exchangeRateUsdToEgp),
+          allowTeacherRegistration: config.allowTeacherRegistration,
+          primaryColor: config.primaryColor,
+          homeContent: config.homeContent,
+        }),
       });
+      if (saved.data?.version) {
+        setConfig((current) => ({ ...current, version: saved.data.version }));
+      }
 
       // Update frontend global config store immediately
       await useConfigStore.getState().fetchConfig();
@@ -422,20 +442,17 @@ export default function PlatformSettings() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-300">Default Currency</label>
-                    <select
-                      value={config.currency || 'EGP'}
-                      onChange={(e) => setConfig({ ...config, currency: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="EGP">EGP (Egyptian Pound)</option>
-                      <option value="USD">USD (US Dollar)</option>
-                      <option value="SAR">SAR (Saudi Riyal)</option>
-                    </select>
+                    <input
+                      value="EGP (Egyptian Pound)"
+                      readOnly
+                      aria-readonly="true"
+                      className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 text-xs"
+                    />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-300">
-                      Exchange Rate — 1 USD = ? EGP
+                      Indicative display rate — 1 USD = ? EGP
                     </label>
                     <input
                       type="number"

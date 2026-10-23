@@ -41,7 +41,10 @@ describe('SubjectService Unit Tests', () => {
 
       const result = await SubjectService.getAllSubjects();
 
-      expect(result).toEqual(mockSubjects);
+      expect(result[0].pricing).toEqual([
+        { period: 'MONTHLY', priceEgp: 200, priceUsd: 4.17 },
+        { period: 'YEARLY', priceEgp: 1800, priceUsd: 37.5 },
+      ]);
       expect(prisma.subject.findMany).toHaveBeenCalledWith({
         include: { pricing: true },
       });

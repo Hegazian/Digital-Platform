@@ -36,7 +36,6 @@ export default function CourseEditModal({
   const [description, setDescription] = useState('');
   const [subjectName, setSubjectName] = useState('');
   const [priceEgp, setPriceEgp] = useState('150');
-  const [priceUsd, setPriceUsd] = useState('10');
   const [isFree, setIsFree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +47,6 @@ export default function CourseEditModal({
       setDescription(course.description || '');
       setSubjectName(course.subject?.nameEn || '');
       setPriceEgp(String(course.priceEgp || 150));
-      setPriceUsd(String(course.priceUsd || 10));
       setIsFree(Boolean(course.isFree));
       setError('');
     }
@@ -76,7 +74,6 @@ export default function CourseEditModal({
             ? {}
             : {
                 priceEgp: parseFloat(priceEgp) || 150,
-                priceUsd: parseFloat(priceUsd) || 10,
               }),
         }),
       });
@@ -173,7 +170,7 @@ export default function CourseEditModal({
                 </span>
               </span>
             </label>
-            <div className={`grid grid-cols-2 gap-3 ${isFree ? 'opacity-40 pointer-events-none' : ''}`}>
+            <div className={`${isFree ? 'opacity-40 pointer-events-none' : ''}`}>
               <div>
                 <label className="block text-[10px] text-slate-400 mb-1">Price (EGP)</label>
                 <input
@@ -182,18 +179,6 @@ export default function CourseEditModal({
                   step="10"
                   value={priceEgp}
                   onChange={(e) => setPriceEgp(e.target.value)}
-                  disabled={isFree}
-                  className="glass-input w-full text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Price (USD $)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={priceUsd}
-                  onChange={(e) => setPriceUsd(e.target.value)}
                   disabled={isFree}
                   className="glass-input w-full text-xs"
                 />

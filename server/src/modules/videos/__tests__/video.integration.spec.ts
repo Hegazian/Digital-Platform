@@ -4,6 +4,7 @@ import { Role, TeacherStatus } from '@prisma/client';
 import app from '../../../app';
 import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
+import { StorageService } from '../../../utils/storage';
 
 describe('Video Pipeline Integration Tests', () => {
   let teacherToken: string;
@@ -12,6 +13,7 @@ describe('Video Pipeline Integration Tests', () => {
   let studentId: string;
   let subjectId: string;
   let courseId: string;
+  const uploadedVideoIds: string[] = [];
 
   beforeAll(async () => {
     // Teacher
@@ -59,6 +61,9 @@ describe('Video Pipeline Integration Tests', () => {
   });
 
   afterAll(async () => {
+    const uploadedVideos = await prisma.video.findMany({ where: { id: { in: uploadedVideoIds } }, select: { videoUrl: true } });
+    for (const video of uploadedVideos) if (video.videoUrl) await StorageService.deleteFile(video.videoUrl);
+    await prisma.video.deleteMany({ where: { id: { in: uploadedVideoIds } } });
     if (courseId) {
       await prisma.course.deleteMany({ where: { id: courseId } });
     }
@@ -70,6 +75,36 @@ describe('Video Pipeline Integration Tests', () => {
   });
 
   describe('POST /api/v1/videos/upload', () => {
+    it('streams a validated upload from private staging and reports processing until probed', async () => {
+      const fixture = Buffer.from('0000ftypisom' + 'video payload');
+      const res = await request(app)
+        .post('/api/v1/videos/upload')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .attach('file', fixture, { filename: 'lesson.mp4', contentType: 'video/mp4' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.status).toBe('PROCESSING');
+      expect(res.body.data.sizeBytes).toBe(fixture.length);
+      expect(res.body.data.videoUrl).toContain('/uploads/lesson-videos/');
+      uploadedVideoIds.push(res.body.data.id);
+
+      const playback = await request(app)
+        .get(`/api/v1/videos/${res.body.data.id}/playback-url`)
+        .set('Authorization', `Bearer ${teacherToken}`);
+      expect(playback.status).toBe(409);
+    });
+
+    it('rejects mismatched media and does not create a video record', async () => {
+      const before = await prisma.video.count({ where: { teacherId } });
+      const res = await request(app)
+        .post('/api/v1/videos/upload')
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .attach('file', Buffer.from('not an mp4 file'), { filename: 'bad.mp4', contentType: 'video/mp4' });
+
+      expect(res.status).toBe(400);
+      expect(await prisma.video.count({ where: { teacherId } })).toBe(before);
+    });
+
     it('should block non-teachers from uploading', async () => {
       const res = await request(app)
         .post('/api/v1/videos/upload')

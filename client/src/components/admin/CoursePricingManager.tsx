@@ -8,7 +8,7 @@ import { errorMessage } from '@/lib/apiTypes';
 interface PricingTier {
   period: 'MONTHLY' | 'SIX_MONTHS' | 'YEARLY';
   priceEgp: number;
-  priceUsd: number;
+  priceUsd?: number;
   isActive: boolean;
 }
 
@@ -62,7 +62,7 @@ export default function CoursePricingManager() {
           return {
             period,
             priceEgp: found ? Number(found.priceEgp) : period === 'MONTHLY' ? 200 : period === 'SIX_MONTHS' ? 1000 : 1800,
-            priceUsd: found ? Number(found.priceUsd) : period === 'MONTHLY' ? 10 : period === 'SIX_MONTHS' ? 50 : 90,
+            priceUsd: found ? Number(found.priceUsd) : undefined,
             isActive: found ? Boolean(found.isActive) : true,
           };
         });
@@ -91,7 +91,7 @@ export default function CoursePricingManager() {
   const handlePriceChange = (
     subjectId: string,
     period: 'MONTHLY' | 'SIX_MONTHS' | 'YEARLY',
-    field: 'priceEgp' | 'priceUsd',
+    field: 'priceEgp',
     value: number
   ) => {
     setSubjects((prev) =>
@@ -116,8 +116,9 @@ export default function CoursePricingManager() {
     try {
       await fetchApi(`/subjects/${subject.id}/pricing`, {
         method: 'PUT',
-        body: JSON.stringify({ pricing: subject.pricing }),
+        body: JSON.stringify({ pricing: subject.pricing.map(({ period, priceEgp, isActive }) => ({ period, priceEgp, isActive })) }),
       });
+      await loadSubjects();
 
       setMessage(`Pricing for "${subject.nameEn}" updated successfully!`);
     } catch (err: unknown) {
@@ -143,7 +144,7 @@ export default function CoursePricingManager() {
             <span>Curriculum & Course Pricing Management</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Configure subscription costs, term pass rates, and international USD pricing for secondary school curriculums.
+            Configure subscription costs in EGP. Any USD equivalent is indicative and calculated from the current display rate.
           </p>
         </div>
         <button
@@ -238,23 +239,7 @@ export default function CoursePricingManager() {
                             />
                           </div>
 
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-indigo-400">USD</span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={p.priceUsd}
-                              onChange={(e) =>
-                                handlePriceChange(
-                                  subject.id,
-                                  p.period,
-                                  'priceUsd',
-                                  parseFloat(e.target.value) || 0
-                                )
-                              }
-                              className="w-16 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs font-bold text-right focus:outline-none focus:border-indigo-500"
-                            />
-                          </div>
+                          <span className="text-xs text-slate-500">{p.priceUsd === undefined ? 'USD equivalent pending save' : `≈ $${p.priceUsd.toFixed(2)} USD`}</span>
                         </div>
                       </div>
                     ))}

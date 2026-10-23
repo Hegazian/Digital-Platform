@@ -2,7 +2,7 @@ import { prisma } from '../../prisma';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../utils/errors';
 import { VideoStatus, Role } from '@prisma/client';
 import { logAuditAction } from '../audit/audit.service';
-import { egpToUsd, usdToEgp } from '../../utils/currency';
+import { egpToUsd, getUsdToEgpRate } from '../../utils/currency';
 import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
 import { externalMaterialUrl, materialDeliveryUrl } from '../materials/material-reference';
 import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
@@ -137,11 +137,12 @@ export class CourseService {
       : [];
     const productMap = new Map(products.map((p) => [p.resourceId, p]));
 
+    const exchangeRate = await getUsdToEgpRate();
     const enrichedCourses = courses.map((c) => {
       const prod = productMap.get(c.id);
       // Free courses always display as free, regardless of any stale product row.
       const priceEgp = c.isFree ? 0 : prod ? Number(prod.priceEgp) : 150;
-      const priceUsd = c.isFree ? 0 : prod ? Number(prod.priceUsd) : 10;
+      const priceUsd = c.isFree ? 0 : Math.round((priceEgp / exchangeRate) * 100) / 100;
       const enriched = {
         ...c,
         priceEgp,
@@ -206,10 +207,11 @@ export class CourseService {
     const product = prisma.product
       ? await prisma.product.findFirst({ where: { productType: 'COURSE', resourceId: course.id } })
       : null;
+    const priceEgp = course.isFree ? 0 : product ? Number(product.priceEgp) : 150;
     const enriched = {
       ...course,
-      priceEgp: course.isFree ? 0 : product ? Number(product.priceEgp) : 150,
-      priceUsd: course.isFree ? 0 : product ? Number(product.priceUsd) : 10,
+      priceEgp,
+      priceUsd: course.isFree ? 0 : await egpToUsd(priceEgp),
       productId: product?.id,
     };
     return canManage ? enriched : this.sanitizeCourseContent(enriched);
@@ -356,13 +358,9 @@ export class CourseService {
 
     // Pricing rules (see isFree flag):
     // - isFree true  -> product prices are forced to 0
-    // - isFree false -> EGP is the single source of truth; USD is always
-    //   DERIVED via the configured exchange rate. A legacy client that sends
-    //   only priceUsd gets it converted back to EGP first.
-    if (
-      (data.isFree !== undefined || data.priceEgp !== undefined || data.priceUsd !== undefined) &&
-      prisma.product
-    ) {
+    // - isFree false -> EGP is the single writable charge amount; USD is
+    //   derived for display and is never accepted as a pricing input.
+    if ((data.isFree !== undefined || data.priceEgp !== undefined) && prisma.product) {
       const willBeFree = data.isFree ?? course.isFree;
       let priceEgp: number;
       let priceUsd: number;
@@ -381,9 +379,6 @@ export class CourseService {
 
         if (data.priceEgp !== undefined) {
           priceEgp = Number(data.priceEgp);
-        } else if (data.priceUsd !== undefined && !currentPaid) {
-          // Legacy caller sent USD only: convert to the canonical EGP amount.
-          priceEgp = await usdToEgp(Number(data.priceUsd));
         } else {
           priceEgp = currentPaid ? Number(currentPaid.priceEgp) : 150;
         }

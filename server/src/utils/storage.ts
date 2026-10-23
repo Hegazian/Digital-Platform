@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { pipeline } from 'stream/promises';
 import { randomUUID } from 'crypto';
 
 /**
@@ -28,6 +29,14 @@ export function getUploadsRoot(): string {
   } catch {
     return path.resolve(process.cwd(), 'uploads');
   }
+}
+
+/** Private, same-host staging area used only while an upload is validated and transferred. */
+export function getUploadStagingRoot(): string {
+  const directory = path.join(getUploadsRoot(), '.staging');
+  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  try { fs.chmodSync(directory, 0o700); } catch { /* Windows ACLs are managed by the host. */ }
+  return directory;
 }
 
 /**
@@ -147,6 +156,55 @@ export class StorageService {
     return `/uploads/${bucketName}/${uniqueFileName}`;
   }
 
+  /** Upload a staged file without loading its contents into API memory. */
+  static async uploadFileFromPath(filePath: string, fileName: string, mimeType: string, sizeBytes: number, bucketName: string, scope: string, signal?: AbortSignal): Promise<string> {
+    const extension = path.extname(fileName).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    if (!scope || !/^[a-f0-9-]+$/i.test(scope)) throw new Error('Invalid storage scope');
+    const uniqueFileName = `${scope}/${randomUUID()}${extension}`;
+    const driver = this.driver();
+
+    if (driver === 'filesystem') {
+      if (process.env.NODE_ENV === 'production') throw new Error('Production cannot use filesystem storage');
+      const destination = path.join(getUploadsRoot(), bucketName, uniqueFileName);
+      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+      try {
+        await pipeline(fs.createReadStream(filePath), fs.createWriteStream(destination, { flags: 'wx', mode: 0o600 }), { signal });
+      } catch (error) {
+        await fs.promises.unlink(destination).catch(() => undefined);
+        throw error;
+      }
+      return `/uploads/${bucketName}/${uniqueFileName}`;
+    }
+
+    const { base, key } = this.supabaseConfig();
+    let response: Response;
+    try {
+      response = await fetch(`${base}/storage/v1/object/${bucketName}/${uniqueFileName}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'API-Key': key,
+          'Content-Type': mimeType,
+          'Content-Length': String(sizeBytes),
+          'x-upsert': 'false',
+        },
+        body: fs.createReadStream(filePath) as any,
+        // Node's fetch requires duplex mode for a streaming request body.
+        duplex: 'half',
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15 * 60_000)]) : AbortSignal.timeout(15 * 60_000),
+      } as RequestInit & { duplex: 'half' });
+    } catch {
+      await this.deleteFile(`${bucketName}/${uniqueFileName}`).catch(() => undefined);
+      throw new Error('Private storage upload failed');
+    }
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => undefined);
+      await this.deleteFile(`${bucketName}/${uniqueFileName}`).catch(() => undefined);
+      throw new Error('Private storage upload failed');
+    }
+    return `${bucketName}/${uniqueFileName}`;
+  }
+
   /**
    * Generates a secure, temporary signed URL for private bucket objects.
    * Expires only for the requested, bounded delivery interval.
@@ -202,7 +260,23 @@ export class StorageService {
       const realRoot = fs.realpathSync(root);
       const realFilePath = fs.realpathSync(localFilePath);
       if (realFilePath.startsWith(realRoot + path.sep)) fs.unlinkSync(realFilePath);
+      return;
     }
-    // Note: Supabase deletion can be added here if needed
+    const driver = this.driver();
+    if (driver !== 'supabase') return;
+    const objectPath = fileUrl.replace(/^\//, '');
+    if (!/^(?:lesson-videos|lesson-materials|submission-files)\/[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*$/.test(objectPath)) return;
+    const { base, key } = this.supabaseConfig();
+    const encodedPath = objectPath.split('/').map(encodeURIComponent).join('/');
+    try {
+      const response = await fetch(`${base}/storage/v1/object/${encodedPath}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${key}`, 'API-Key': key },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!response.ok && response.status !== 404) throw new Error('Private storage cleanup failed');
+    } catch {
+      throw new Error('Private storage cleanup failed');
+    }
   }
 }

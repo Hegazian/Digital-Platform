@@ -3,6 +3,7 @@ import request from 'supertest';
 import app from '../../../app';
 import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
+import { egpToUsd } from '../../../utils/currency';
 
 /**
  * Configuration-driven platform branding (regression lock).
@@ -73,6 +74,7 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(res.body.data.sloganEn).toBe('');
     expect(res.body.data.hostDomain).toBe('localhost:3000');
     expect(res.body.data.currency).toBe('EGP');
+    expect(res.body.data.version).toBe(1);
     expect(res.body.data.requireCourseApproval).toBe(true);
     expect(res.body.data.capabilities).toEqual({ codeExecution: false, collaborativeBoards: false, developerIntegrations: false, automatedPaymentGateways: false });
   });
@@ -87,10 +89,11 @@ describe('Config-driven branding & settings round-trip', () => {
       hostDomain: 'learn.mawsoaa.com',
       supportEmail: 'hello@mawsoaa.com',
       currency: 'EGP',
+      exchangeRateUsdToEgp: 49,
       requireCourseApproval: false,
       allowTeacherRegistration: false,
       primaryColor: '#7c3aed',
-      capabilities: { developerIntegrations: true, automatedPaymentGateways: true },
+      expectedVersion: (await request(app).get('/api/v1/config')).body.data.version,
     };
 
     const put = await request(app)
@@ -114,6 +117,8 @@ describe('Config-driven branding & settings round-trip', () => {
     expect(cfg.enableCollaborativeBoards).toBe(false);
     expect(cfg.allowTeacherRegistration).toBe(false);
     expect(cfg.primaryColor).toBe('#7c3aed');
+    expect(cfg.version).toBe(payload.expectedVersion + 1);
+    expect(Number(cfg.exchangeRateUsdToEgp)).toBe(49);
     expect(cfg.capabilities.developerIntegrations).toBe(false);
     expect(put.body.data.capabilities).toEqual(cfg.capabilities);
   });
@@ -123,6 +128,7 @@ describe('Config-driven branding & settings round-trip', () => {
       .patch('/api/v1/config')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
+        expectedVersion: (await request(app).get('/api/v1/config')).body.data.version,
         sloganEn: 'Today’s students. Tomorrow’s doctors.',
         siteDescriptionEn: null,
         siteDescriptionAr: null,
@@ -133,24 +139,47 @@ describe('Config-driven branding & settings round-trip', () => {
     const get = await request(app).get('/api/v1/config');
     expect(get.body.data.sloganEn).toBe('Today’s students. Tomorrow’s doctors.');
     expect(Number(get.body.data.exchangeRateUsdToEgp)).toBe(50);
+    expect(await egpToUsd(50)).toBe(1);
     // Partial patch must not have clobbered other fields:
     expect(get.body.data.siteNameEn).toBe('Mawsoaa Academy');
+  });
+
+  it('rejects unknown or non-EGP fields and stale concurrent edits', async () => {
+    const version = (await request(app).get('/api/v1/config')).body.data.version;
+    const unknown = await request(app)
+      .patch('/api/v1/config')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ expectedVersion: version, capabilities: { developerIntegrations: true } });
+    expect(unknown.status).toBe(400);
+
+    const otherCurrency = await request(app)
+      .patch('/api/v1/config')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ expectedVersion: version, currency: 'USD' });
+    expect(otherCurrency.status).toBe(400);
+
+    const [first, second] = await Promise.all([
+      request(app).patch('/api/v1/config').set('Authorization', `Bearer ${adminToken}`).send({ expectedVersion: version, sloganEn: 'First write' }),
+      request(app).patch('/api/v1/config').set('Authorization', `Bearer ${adminToken}`).send({ expectedVersion: version, sloganEn: 'Second write' }),
+    ]);
+    expect([first.status, second.status].sort()).toEqual([200, 409]);
+    expect([first.body.code, second.body.code].filter(Boolean)).toEqual(['CONFIG_VERSION_CONFLICT']);
   });
 
   it('validation: rejects invalid colors/emails; students cannot write', async () => {
     const bad = await request(app)
       .put('/api/v1/config')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ primaryColor: 'not-a-color', supportEmail: 'nope' });
+      .send({ expectedVersion: (await request(app).get('/api/v1/config')).body.data.version, primaryColor: 'not-a-color', supportEmail: 'nope' });
     expect(bad.status).toBe(400);
 
     const forbidden = await request(app)
       .put('/api/v1/config')
       .set('Authorization', `Bearer ${studentToken}`)
-      .send({ siteNameEn: 'Hacked' });
+      .send({ expectedVersion: 1, siteNameEn: 'Hacked' });
     expect(forbidden.status).toBe(403);
 
-    const anon = await request(app).put('/api/v1/config').send({ siteNameEn: 'Hacked' });
+    const anon = await request(app).put('/api/v1/config').send({ expectedVersion: 1, siteNameEn: 'Hacked' });
     expect(anon.status).toBe(401);
   });
 });

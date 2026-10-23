@@ -476,7 +476,7 @@ export default function CourseManager({
                     ) : (
                       <span className="text-emerald-400 font-semibold flex items-center gap-1">
                         <DollarSign className="w-3.5 h-3.5" />
-                        <span>Single Course Fee: {selectedCourse.priceEgp || 150} EGP (${selectedCourse.priceUsd || 10})</span>
+                        <span>Single Course Fee: {selectedCourse.priceEgp ?? 150} EGP (≈ ${selectedCourse.priceUsd ?? 10} indicative USD)</span>
                       </span>
                     )}
                   </div>

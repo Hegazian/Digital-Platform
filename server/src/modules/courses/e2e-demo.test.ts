@@ -111,7 +111,7 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
 
   // STEP 1: Teacher creates course and strict ownership is verified
   it('Step 1: Course Authoring, Single-Course Pricing & Ownership Enforcement', async () => {
-    // 1.1 Course Owner creates course with single course price (180 EGP / 12 USD)
+    // 1.1 Course Owner sets the authoritative single course price in EGP.
     const courseRes = await request(app)
       .post('/api/v1/courses')
       .set('Authorization', `Bearer ${teacherToken}`)
@@ -121,7 +121,6 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
         description: 'Complete masterclass on 1st secondary physics mechanics.',
         subjectId: testSubject.id,
         priceEgp: 180,
-        priceUsd: 12,
       });
 
     expect(courseRes.status).toBe(201);
@@ -235,9 +234,9 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         pricing: [
-          { period: SubscriptionPeriod.MONTHLY, priceEgp: 250, priceUsd: 12 },
-          { period: SubscriptionPeriod.SIX_MONTHS, priceEgp: 1200, priceUsd: 60 },
-          { period: SubscriptionPeriod.YEARLY, priceEgp: 2200, priceUsd: 110 },
+          { period: SubscriptionPeriod.MONTHLY, priceEgp: 250 },
+          { period: SubscriptionPeriod.SIX_MONTHS, priceEgp: 1200 },
+          { period: SubscriptionPeriod.YEARLY, priceEgp: 2200 },
         ],
       });
     expect(pricingRes.status).toBe(200);
@@ -329,7 +328,6 @@ describe('Comprehensive LMS Lifecycle: Course Authoring, Single-Course Pricing &
       .send({
         titleEn: 'Kinematics and Newton Laws (Admin Verified Edition)',
         priceEgp: 200,
-        priceUsd: 15,
         description: 'Updated comprehensive description curated by Administrator.',
       });
 

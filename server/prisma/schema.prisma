@@ -846,6 +846,7 @@ model LiveSession {
 
 model AppConfig {
   id                        String   @id @default(uuid())
+  version                   Int      @default(1)
   siteNameEn                String   @default("EduPlatform")
   siteNameAr                String   @default("منصة التعليم")
   siteDescriptionEn         String?

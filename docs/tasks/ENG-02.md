@@ -5,7 +5,7 @@
 | Stable ID | ENG-02 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Platform engineering |
 | Dependencies | [ENG-01](../archive/completed/M0/ENG-01.md) |
 | Original finding / request | [ENG-02 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **22 October 2026** against application commit **34723cd**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **23 October 2026** against reviewed M0 application commit **34723cd**. M1 implements strict EGP config/pricing, expectedVersion and persisted indicative rates with an additive AppConfig.version migration. M1-R02 (non-atomic update/readback) and M1-R03 (saving one subject discards another pricing draft) are Open and owned here. Existing stale-write tests do not establish exact saved-response/version atomicity. Resolve both and add real PostgreSQL interleaving and component regressions. Fresh checks pass: 437 server and 81 client tests, typechecks, both builds, lint 0 errors / 27 warnings, and the migration fixture preserving 22 rows across 21 tables. See [review/regressions](../M1_REVIEW.md), [evidence](../ENG02_IMPLEMENTATION.md) and [manual checks](../M1_MANUAL_TESTING.md). Exact M1 commit CI, bilingual browser and order-preservation evidence remain required. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 
@@ -29,51 +29,61 @@ The quoted finding is historical evidence tied to baseline commit **2fbdc8e**, 2
 
 ## Intended behavior and ownership boundary
 
-Supported exchange-rate configuration round-trips honestly; EGP is canonical charge currency and optional converted prices are display-only.
+Supported exchange-rate configuration round-trips honestly; EGP is the only writable charge currency and optional USD conversions are indicative display values.
 
 Platform engineering owns this change. Shared implementation must use the owning tasks in the [ownership register](../TARGET_ARCHITECTURE.md#implementation-ownership); dependent tasks adapt their domain and add regression evidence, rather than build a second policy/engine. All interface changes follow [API contracts](../API_DATA_CONTRACTS.md). Exclusions: automatic educational creation/translation/narration/captions, unrelated feature enablement and destructive historical-data cleanup. A production rollout is separate from this documentation deliverable.
 
 ## Ordered implementation changes
 
-1. Backend: include exchangeRateUsdToEgp in strict update schema if retaining informational conversion; validate positive finite bounds, persist and return stored value/version.
-2. Frontend: label conversion as indicative, show saved value after readback; checkout never converts a displayed USD float into the authoritative charge.
-3. Database: version config update and snapshot EGP product/order amounts independently of mutable rate.
-4. Configuration/infrastructure: invalidate shared config/rate caches and reject unknown fields rather than silently strip successful no-op updates.
+1. Backend: validate strict config updates and positive finite rate; require expectedVersion and use a conditional version increment so stale concurrent edits return 409. Reject USD course/subject pricing inputs instead of converting them into EGP charges.
+2. Frontend: submit only EGP prices, display EGP as the fixed charge currency, calculate/display USD as indicative and retain the config version for the next save.
+3. Database: add an expand-only config version column with default 1; existing product/order EGP snapshots remain authoritative and are never repriced.
+4. Configuration/infrastructure: remove process-local rate caching so a new rate is visible across API instances; derive returned USD prices from current EGP and normalize legacy config currency to EGP.
 
 Implementation locations (existing source entry points; new models/modules described above are proposed):
 
+- [server/prisma/schema.prisma](<../../server/prisma/schema.prisma>)
+- [server/prisma/migrations/20261023000000_eng02_config_version/migration.sql](<../../server/prisma/migrations/20261023000000_eng02_config_version/migration.sql>)
 - [server/src/modules/config/config.routes.ts](<../../server/src/modules/config/config.routes.ts>)
-- [server/src/utils/schemas.ts](<../../server/src/utils/schemas.ts>)
+- [server/src/modules/config/config.controller.ts](<../../server/src/modules/config/config.controller.ts>)
+- [server/src/modules/courses/course.service.ts](<../../server/src/modules/courses/course.service.ts>)
+- [server/src/modules/courses/subject.service.ts](<../../server/src/modules/courses/subject.service.ts>)
 - [server/src/utils/currency.ts](<../../server/src/utils/currency.ts>)
+- [server/src/utils/schemas.ts](<../../server/src/utils/schemas.ts>)
 - [client/src/components/admin/PlatformSettings.tsx](<../../client/src/components/admin/PlatformSettings.tsx>)
+- [client/src/components/admin/CoursePricingManager.tsx](<../../client/src/components/admin/CoursePricingManager.tsx>)
+- [client/src/components/teacher/modals/CourseCreateModal.tsx](<../../client/src/components/teacher/modals/CourseCreateModal.tsx>)
+- [client/src/components/teacher/modals/CourseEditModal.tsx](<../../client/src/components/teacher/modals/CourseEditModal.tsx>)
 
 ## API, type and schema contract
 
 Concrete intended boundary example (IDs and dates are illustrative, not production fixtures):
 
 ```text
-PATCH /api/v1/config {"exchangeRateUsdToEgp":60,"expectedVersion":2} -> {"data":{"exchangeRateUsdToEgp":60,"version":3}}; zero/NaN/string -> 422.
+PATCH /api/v1/config {"exchangeRateUsdToEgp":60,"expectedVersion":2} -> {"success":true,"data":{"exchangeRateUsdToEgp":60,"version":3}}; stale version or unknown field -> 409 or 400.
 ```
 
 Apply strict body/query/param schemas, bounded arrays/strings, UUID/cuid formats matching actual IDs, cross-resource relationship checks and UTC ISO instants. Return the C01 error envelope with stable code/messageKey/requestId; do not echo secrets. Money is integer EGP piastres, not a floating charge. Locale text is uploader-provided and never synthesized. Exact shared DTO fields and validation rules are normative in the [contract register](../API_DATA_CONTRACTS.md#contract-register); this example does not create an alternate envelope.
 
 ## Authorization, concurrency and failure handling
 
-Admin only; expected version prevents concurrent overwrite. Product prices/order snapshots remain EGP integer minor units. If product owner removes conversion entirely, remove field/UI together and return explicit unsupported-field errors, not fake success.
+Admin only; expected version prevents concurrent overwrite. Product prices/order snapshots remain EGP integer minor units. USD fields in course or subject write requests are rejected and must never be converted into a new charge.
 
 Commands validate the current actor at execution time. Repeated mutations use the owning contract's scoped idempotency or expected version; stale edits return 409/412 rather than silently overwrite. Retry only retryable infrastructure/serialization failures with bounded backoff, never validation/authorization failures. A durable write must not report success from process memory. Record request/entity/actor IDs and safe error codes, with no credentials, answer keys, student bodies or signed URLs in logs. Operations must expose stalled work for manual recovery.
 
 ## Migration, compatibility and rollback
 
-Retain original stored rates for audit; no retroactive repricing of paid/pending orders. Config rollback restores an earlier version for future display only.
+Add the column with default 1 without recreating app_configs; retain prior rate values, normalize only the unsupported charge-currency preference to EGP, and never reprice existing orders. Rollback code keeps the additive column and historical EGP snapshots.
 
 Follow [expand/backfill/verify/cutover](../MIGRATION_OPERATIONS.md): snapshot affected data, count/checksum before and after, retain old IDs/history and test on a representative copy. Reversible code rollback must retain security guards and compatible schema; use a forward fix once new data exists. Do not roll back to public files, leaked keys, permissive authorization or an enabled staged feature.
 
 ## Verification and acceptance tests
 
-- **ENG-02-T01** — F10 rate 60 persists after fresh GET and cache miss; invalid/unknown fields fail visibly.
-- **ENG-02-T02** — Concurrent config edits produce conflict and no partial update.
-- **ENG-02-T03** — Arabic/English admin save and student charge display use same EGP amount, no hidden exchange conversion.
+- **ENG-02-T01** — F10 rate 60 persists after fresh GET and catalog USD equivalents recalculate from the new rate.
+- **ENG-02-T02** — Concurrent config edits produce conflict and no partial update; USD course/subject price inputs fail validation.
+- **ENG-02-T03** — Arabic/English admin save and student charge display use the same EGP amount; no exchange-rate change mutates existing order snapshots.
+- **ENG-02-T04** — M1-R02: use real PostgreSQL barriers to interleave B between A update/readback; each response contains its own exact saved fields/version, and A cannot overwrite unseen B changes on a later save.
+- **ENG-02-T05** — M1-R03: edit subject A and B, save A and preserve B drafts; failed requests and edits made during an in-flight save retain all newer unsaved input in Arabic/English.
 - **ENG-02-T90 / cross-account** — Execute the positive operation as its permitted actor, then repeat with student B, teacher B, a pending/rejected teacher and guest as applicable; assert the intended safe DTO/denial and no unauthorized durable side effects. For documentation/build-only work, verify no fixture credentials or false capability claims replace this runtime check.
 - **ENG-02-T91 / concurrency and recovery** — Overlap the relevant command/read with retry, stale version, access revocation or process restart; assert final persisted state and one intended effect. Read-only/documentation work instead checks deterministic output and link/contract consistency. Use real PostgreSQL barriers for transaction claims; mocks do not prove them.
 - **ENG-02-T92 / Arabic, English and browser** — Exercise affected views in both interface locales after reload, with correct lang/dir, formatting, keyboard focus and localized failures. For backend-only/config tasks, cover API locale/error keys and the consuming smoke journey; no new UI is required just to satisfy a test label.

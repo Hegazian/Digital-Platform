@@ -1,6 +1,10 @@
 # Audit and acceptance traceability
 
-Audit baseline **2fbdc8e**, 21 October 2026. Current disposition refreshed **22 October** against **34723cd**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed **23 October**; historical M0 application checkpoint **34723cd**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+
+## M1 review supplement
+
+[M1-R01–R04](M1_REVIEW.md) are Open, owned by ENG-09 (upload lifetime and browser fixtures) and ENG-02 (config response atomicity and pricing drafts). They add targeted regressions under existing tasks; the original 58 finding IDs and 42 acceptance dispositions remain unchanged. Fresh M1 evidence is separate from historical M0 coverage/CI.
 
 ## Finding disposition — 58 of 58
 
@@ -52,7 +56,7 @@ Every finding keeps its original ID in exactly one file, has a release milestone
 | LRN-15 | [LRN-15](tasks/LRN-15.md) — Repair catalog routing, search, filters and pagination | M2 | Planned | [A41](#a41); required before assigned milestone exit. Tests LRN-15-T01 onward and T90–T92. |
 | LRN-16 | [LRN-16](tasks/LRN-16.md) — Complete Arabic/English interface and uploader-supplied locales | M2 | Planned | [A32](#a32), [A42](#a42); required before assigned milestone exit. Tests LRN-16-T01 onward and T90–T92. |
 | ENG-01 | [ENG-01](archive/completed/M0/ENG-01.md) — Repair the Zod 4 build blocker and nested config schema | M0 | Complete | [A01](#a01); required before assigned milestone exit. Tests ENG-01-T01 onward and T90–T92. |
-| ENG-02 | [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | M1 | Planned | [A18](#a18); required before assigned milestone exit. Tests ENG-02-T01 onward and T90–T92. |
+| ENG-02 | [ENG-02](tasks/ENG-02.md) — Make config updates persist and keep EGP charge semantics | M1 | In Progress | [A18](#a18); required before assigned milestone exit. Tests ENG-02-T01 onward and T90–T92. |
 | ENG-03 | [ENG-03](archive/completed/M0/ENG-03.md) — Enforce server capability controls for staged features | M0 | Complete | [A14](#a14); required before assigned milestone exit. Tests ENG-03-T01 onward and T90–T92. |
 | ENG-04 | [ENG-04](tasks/ENG-04.md) — Validate every request boundary with shared schemas | M1 | Planned | [A04](#a04); required before assigned milestone exit. Tests ENG-04-T01 onward and T90–T92. |
 | ENG-05 | [ENG-05](tasks/ENG-05.md) — Introduce versioned migrations and upgrade verification | M1 | In Progress | [A01](#a01), [A39](#a39); required before assigned milestone exit. Tests ENG-05-T01 onward and T90–T92. |

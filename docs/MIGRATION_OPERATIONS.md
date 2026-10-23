@@ -1,5 +1,7 @@
 # Migration and operations plan
 
+M1 update, **23 October 2026**: the additive [ENG-02 migration](../server/prisma/migrations/20261023000000_eng02_config_version/migration.sql) follows the immutable baseline/auth bridge, making three migrations for fresh installs. It adds `AppConfig.version=1`, normalizes the unsupported charge-currency preference to EGP and preserves the indicative rate. Export current config before adoption; existing EGP financial snapshots must not be repriced. The [fresh disposable fixture](../audit/m1-review/verification.json) preserves 22 rows across 21 tables and verifies the config transformation, parity and repeat deployment. Apply only pending forward migrations after reviewed history adoption; never replay baseline SQL on populated tables. Keep the additive column on code rollback. This is local evidence, not representative restore or production adoption. Four Open findings in [the M1 review](M1_REVIEW.md) also block G1 acceptance.
+
 Refreshed **22 October 2026** against M0 application checkpoint **34723cd**. [Current status](CURRENT_STATUS.md) distinguishes migration-fixture evidence from external holds. **ENG-05 is In Progress** with the checked-in baseline, bridge, populated test fixture and successful exact-branch Node 22 CI; the remaining work is restored-copy inspection and backup/restore rehearsal. This plan records no production operation as completed.
 
 ## M0 upgrade and production hold

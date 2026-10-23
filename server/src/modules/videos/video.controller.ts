@@ -1,13 +1,14 @@
 import { Response, NextFunction } from 'express';
 import { VideoService } from './video.service';
 import { AuthRequest } from '../auth/auth.middleware';
-import { BadRequestError, UnauthorizedError, ForbiddenError } from '../../utils/errors';
+import { BadRequestError, UnauthorizedError, ForbiddenError, ConflictError } from '../../utils/errors';
 import { VIDEO_STREAM_SECRET } from '../../utils/env';
 import { getUploadsRoot } from '../../utils/storage';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
 import { boundObjectKey } from '../../utils/media-references';
+import { VideoStatus } from '@prisma/client';
 
 export class VideoController {
   /**
@@ -20,12 +21,18 @@ export class VideoController {
       }
 
       const userId = req.user!.userId;
+      const transferCancellation = new AbortController();
+      req.once('aborted', () => transferCancellation.abort());
+      res.once('close', () => {
+        if (!res.writableEnded) transferCancellation.abort();
+      });
       const video = await VideoService.uploadVideo(
         userId,
-        req.file.buffer,
+        req.file.path,
         req.file.originalname,
         req.file.mimetype,
-        req.file.size
+        req.file.size,
+        transferCancellation.signal
       );
 
       res.status(201).json({
@@ -93,6 +100,7 @@ export class VideoController {
       if (!video || !video.videoUrl || !video.videoUrl.startsWith('/uploads/')) {
         throw new BadRequestError('Local video not found');
       }
+      if (video.status !== VideoStatus.READY) throw new ConflictError('Video is still processing and cannot be played yet.');
       boundObjectKey(video.videoUrl, 'lesson-videos', video.id);
 
       // Resolve the stored '/uploads/<bucket>/<file>' against the server's
@@ -114,7 +122,7 @@ export class VideoController {
       const stat = fs.statSync(realFilePath);
       const fileSize = stat.size;
       const range = req.headers.range;
-      const contentType = ({ '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.mpeg': 'video/mpeg', '.mpg': 'video/mpeg' } as Record<string, string>)[path.extname(realFilePath).toLowerCase()] || 'video/mp4';
+      const contentType = ({ '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.mpeg': 'video/mpeg', '.mpg': 'video/mpeg' } as Record<string, string>)[path.extname(realFilePath).toLowerCase()] || 'application/octet-stream';
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Content-Type', contentType);
 

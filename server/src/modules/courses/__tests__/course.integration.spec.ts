@@ -74,8 +74,8 @@ describe('Course & Subject Integration Tests', () => {
           nameAr: 'مادة اختبارية',
           description: 'Computer Science & Software Development',
           pricing: [
-            { period: 'MONTHLY', priceEgp: 300, priceUsd: 15 },
-            { period: 'YEARLY', priceEgp: 2500, priceUsd: 120 },
+            { period: 'MONTHLY', priceEgp: 300 },
+            { period: 'YEARLY', priceEgp: 2500 },
           ],
         });
 

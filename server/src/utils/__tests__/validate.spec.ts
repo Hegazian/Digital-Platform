@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateBody } from '../validate';
-import { registerSchema, createCourseSchema } from '../schemas';
+import { registerSchema, createCourseSchema, subjectPricingEntrySchema } from '../schemas';
 import { AuthRequest } from '../../modules/auth/auth.middleware';
 
 describe('Zod Validation Middleware', () => {
@@ -82,5 +82,22 @@ describe('Zod Validation Middleware', () => {
     const err = mNext.mock.calls[0][0];
     expect(err.statusCode).toBe(400);
     expect(err.message).toMatch(/titleEn/i);
+  });
+
+  it('rejects USD course pricing inputs because EGP is the only writable charge amount', () => {
+    const result = createCourseSchema.safeParse({
+      titleEn: 'Algebra',
+      titleAr: 'الجبر',
+      description: 'A course description',
+      subjectId: 'subject-1',
+      priceUsd: 25,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects USD subject pricing inputs and accepts EGP-only pricing', () => {
+    expect(subjectPricingEntrySchema.safeParse({ period: 'MONTHLY', priceEgp: 200 }).success).toBe(true);
+    expect(subjectPricingEntrySchema.safeParse({ period: 'MONTHLY', priceEgp: 200, priceUsd: 10 }).success).toBe(false);
   });
 });

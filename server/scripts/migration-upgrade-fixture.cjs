@@ -79,13 +79,14 @@ const id = {
   assessmentAttempt: 'eng05-60000000-0000-4000-8000-000000000004',
   product: 'eng05-70000000-0000-4000-8000-000000000001',
   order: 'eng05-70000000-0000-4000-8000-000000000002',
-  entitlement: 'eng05-70000000-0000-4000-8000-000000000003'
+  entitlement: 'eng05-70000000-0000-4000-8000-000000000003',
+  config: 'eng05-80000000-0000-4000-8000-000000000001'
 };
 const tables = [
   'users', 'educational_stages', 'grades', 'subjects', 'courses', 'sections', 'lessons',
   'lesson_progress', 'quizzes', 'quiz_attempts', 'assignments', 'assignment_submissions',
   'assignment_submission_files', 'question_pools', 'question_items', 'assessments',
-  'assessment_attempts', 'products', 'orders', 'entitlements'
+  'assessment_attempts', 'products', 'orders', 'entitlements', 'app_configs'
 ];
 const stableRows = {
   users: `SELECT id, email, password, name, role::text AS role, "isActive", "teacherStatus"::text AS "teacherStatus", "gradeId", "createdAt", "updatedAt" FROM "users" ORDER BY id`,
@@ -145,6 +146,8 @@ async function seed(prisma) {
     ('${id.order}', '${id.student}', '${id.product}', 'PAID', 125.50, 2.50, 'MANUAL', 'FIXTURE-TRANSFER-001', 'eng05-fixture-order-1', '${now.toISOString()}', '${later.toISOString()}')`);
   await prisma.$executeRawUnsafe(`INSERT INTO "entitlements" (id, "studentId", "orderId", "resourceType", "resourceId", "sourceType", "startsAt", "expiresAt", status, "createdAt", "updatedAt") VALUES
     ('${id.entitlement}', '${id.student}', '${id.order}', 'COURSE', '${id.course}', 'PURCHASE', '${now.toISOString()}', '${later.toISOString()}', 'ACTIVE', '${now.toISOString()}', '${now.toISOString()}')`);
+  await prisma.$executeRawUnsafe(`INSERT INTO "app_configs" (id, currency, "exchangeRateUsdToEgp", "createdAt", "updatedAt") VALUES
+    ('${id.config}', 'USD', 60, '${now.toISOString()}', '${now.toISOString()}')`);
 }
 
 async function snapshot(prisma) {
@@ -223,10 +226,14 @@ async function runFixture() {
       if (before !== after) throw new Error('User/course/lesson/progress/assessment/assignment/payment rows changed during migration.');
       const versions = await upgraded.$queryRawUnsafe(`SELECT "authVersion" FROM "users" ORDER BY id`);
       if (versions.length !== 2 || versions.some(row => row.authVersion !== 1)) throw new Error('M0 auth-version migration did not preserve the expected version-1 session policy.');
+      const config = await upgraded.$queryRawUnsafe(`SELECT version, currency, "exchangeRateUsdToEgp" FROM "app_configs" WHERE id = '${id.config}'`);
+      if (config.length !== 1 || config[0].version !== 1 || config[0].currency !== 'EGP' || Number(config[0].exchangeRateUsdToEgp) !== 60) {
+        throw new Error('ENG-02 config migration did not preserve the saved rate and initialize version/EGP currency.');
+      }
       assertSchemaMatches(populatedSchema, 'prisma/schema.prisma');
       run(['migrate', 'deploy'], populatedSchema);
       if (before !== await snapshot(upgraded)) throw new Error('Repeated migration deploy changed preserved data.');
-      console.log(`Populated upgrade passed. Preserved ${tables.length + 1} rows across ${tables.length} tables and authVersion=1 for both accounts.`);
+      console.log(`Populated upgrade passed. Preserved ${tables.length + 1} rows across ${tables.length} tables, initialized AppConfig version/currency, and set authVersion=1 for both accounts.`);
     } finally { await upgraded.$disconnect(); }
   } finally {
     await admin.$disconnect();

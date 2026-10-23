@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { validateUploadedFile } from '../file-validation';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 function validate(file: Record<string, unknown>) {
   return new Promise<Error | undefined>((resolve) => {
@@ -39,5 +42,17 @@ describe('uploaded file signature validation', () => {
 
   it('rejects an image with a mismatched signature', async () => {
     expect(await validate({ originalname: 'lesson.png', mimetype: 'image/png', buffer: Buffer.from('not a PNG') })).toBeInstanceOf(Error);
+  });
+
+  it('validates a disk-staged video using only a small signature read', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'edu-video-validation-'));
+    const filePath = path.join(directory, 'video.upload');
+    try {
+      fs.writeFileSync(filePath, Buffer.concat([Buffer.from('0000ftypisom'), Buffer.alloc(1024 * 1024)]));
+      const error = await validate({ originalname: 'lesson.mp4', mimetype: 'video/mp4', path: filePath } as any);
+      expect(error).toBeUndefined();
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

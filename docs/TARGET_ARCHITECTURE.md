@@ -1,5 +1,7 @@
 # Target architecture
 
+M1 checkpoint, **23 October 2026**: [the M1 review](M1_REVIEW.md) leaves four P2 findings Open. Private disk staging/streaming and versioned config are partial implementations, with upload-lifetime and config-response races still requiring fixes. ENG-09 owns existing transport and READY-fixture playback; dependent ENH-03 owns the managed processing/READY pipeline. The [next steps](NEXT_STEPS.md) preserve this dependency boundary. The architecture below remains the target; local package passes do not certify G1.
+
 Version **1.1, 22 October 2026**. This is the target architecture. Reviewed M0 controls and architecture-preserving main integration at **34723cd**, exact tests and limits are recorded in [current status](CURRENT_STATUS.md); managed assets, revision workflows and durable workers below remain later milestones. The [M1 handoff](NEXT_STEPS.md) starts with versioned migrations, then shared contracts/data primitives before integrating access and assets. Baseline code evidence remains in [the audit](../audit/PRODUCT_READINESS_REVIEW.md). [API contracts](API_DATA_CONTRACTS.md) distinguish implemented compatibility endpoints from normative future boundaries.
 
 ## Deployment and trust boundaries

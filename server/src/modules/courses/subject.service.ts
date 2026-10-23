@@ -1,9 +1,22 @@
 import { prisma } from '../../prisma';
 import { SubscriptionPeriod } from '@prisma/client';
 import { NotFoundError, BadRequestError } from '../../utils/errors';
-import { egpToUsd } from '../../utils/currency';
+import { egpToUsd, getUsdToEgpRate } from '../../utils/currency';
 
 export class SubjectService {
+  private static async exposeIndicativeUsd<T extends { priceEgp: unknown }>(tiers: T[]) {
+    const rate = await getUsdToEgpRate();
+    return tiers.map((tier) => ({
+      ...tier,
+      priceUsd: Math.round((Number(tier.priceEgp) / rate) * 100) / 100,
+    }));
+  }
+
+  private static async exposeSubject<T extends { pricing?: Array<{ priceEgp: unknown }> } | null>(subject: T) {
+    if (!subject || !subject.pricing) return subject;
+    return { ...subject, pricing: await this.exposeIndicativeUsd(subject.pricing) };
+  }
+
   /**
    * Self-healing utility that ensures default secondary curriculum subjects
    * exist in the database if the table is empty.
@@ -88,11 +101,18 @@ export class SubjectService {
       });
     }
 
-    return subjects;
+    const rate = await getUsdToEgpRate();
+    return subjects.map((subject) => ({
+      ...subject,
+      pricing: subject.pricing.map((tier) => ({
+        ...tier,
+        priceUsd: Math.round((Number(tier.priceEgp) / rate) * 100) / 100,
+      })),
+    }));
   }
 
   static async getSubjectById(id: string) {
-    return await prisma.subject.findUnique({
+    const subject = await prisma.subject.findUnique({
       where: { id },
       include: {
         pricing: true,
@@ -101,12 +121,13 @@ export class SubjectService {
         },
       },
     });
+    return this.exposeSubject(subject);
   }
 
   static async createSubject(data: any) {
     const { nameEn, nameAr, description, thumbnail, pricing } = data;
 
-    return await prisma.subject.create({
+    const created = await prisma.subject.create({
       data: {
         nameEn,
         nameAr,
@@ -114,7 +135,12 @@ export class SubjectService {
         thumbnail,
         ...(pricing && {
           pricing: {
-            create: pricing,
+            create: await Promise.all(pricing.map(async ({ period, priceEgp, isActive }: any) => ({
+              period,
+              priceEgp,
+              priceUsd: await egpToUsd(priceEgp),
+              isActive,
+            }))),
           },
         }),
       },
@@ -122,14 +148,16 @@ export class SubjectService {
         pricing: true,
       },
     });
+    return this.exposeSubject(created);
   }
 
   static async updateSubject(id: string, data: any) {
-    return await prisma.subject.update({
+    const subject = await prisma.subject.update({
       where: { id },
       data,
       include: { pricing: true },
     });
+    return this.exposeSubject(subject);
   }
 
   static async deleteSubject(id: string) {
@@ -184,8 +212,9 @@ export class SubjectService {
       });
     }
 
-    return await prisma.subjectPricing.findMany({
+    const updatedTiers = await prisma.subjectPricing.findMany({
       where: { subjectId },
     });
+    return this.exposeIndicativeUsd(updatedTiers);
   }
 }

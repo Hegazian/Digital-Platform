@@ -60,7 +60,6 @@ describe('CourseService Unit Tests', () => {
         teacherId: 'teacher-1',
         subjectId: 'sub-1',
         priceEgp: 180,
-        priceUsd: 12,
       };
 
       const mockCourse = {
@@ -258,11 +257,12 @@ describe('CourseService Unit Tests', () => {
       (prisma.product.findMany as any).mockResolvedValue([
         { resourceId: 'c1', priceEgp: 180, priceUsd: 12, id: 'p1' },
       ]);
+      (prisma.appConfig.findFirst as any).mockResolvedValueOnce({ exchangeRateUsdToEgp: 60 });
 
       const res = await CourseService.getAllCourses({ page: '1', limit: '10' });
       expect(res.courses).toBeDefined();
       expect(res.courses[0].priceEgp).toBe(180);
-      expect(res.courses[0].priceUsd).toBe(12);
+      expect(res.courses[0].priceUsd).toBe(3);
       expect(res.pagination.total).toBe(1);
       expect(res.pagination.page).toBe(1);
     });

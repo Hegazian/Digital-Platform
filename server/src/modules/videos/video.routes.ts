@@ -1,13 +1,33 @@
-import { validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
+import { cleanupStagedUpload, stagedUploadStorage, validateUploadedFile, scanUploadedFile, requireUploadScanner } from '../../utils/file-validation';
 import { Router } from 'express';
 import { VideoController } from './video.controller';
 import { authenticate, requireApprovedTeacher } from '../auth/auth.middleware';
 import multer from 'multer';
-import { BadRequestError } from '../../utils/errors';
+import { AppError, BadRequestError } from '../../utils/errors';
 
 const router = Router();
+const MAX_CONCURRENT_VIDEO_UPLOADS = 2;
+let activeVideoUploads = 0;
 
-// Configure multer for memory storage (we upload to Supabase or handle local storage inside the service)
+function admitVideoUpload(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) {
+  if (activeVideoUploads >= MAX_CONCURRENT_VIDEO_UPLOADS) {
+    res.setHeader('Retry-After', '30');
+    return next(new AppError(503, 'Video upload capacity is temporarily full. Retry shortly.'));
+  }
+  activeVideoUploads += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeVideoUploads = Math.max(0, activeVideoUploads - 1);
+  };
+  res.once('finish', release);
+  res.once('close', release);
+  req.setTimeout(15 * 60_000, () => req.destroy());
+  next();
+}
+
+// Video bytes are staged on private disk and streamed onward, never retained as a request-sized Buffer.
 const ALLOWED_VIDEO_MIME = new Set([
   'video/mp4',
   'video/webm',
@@ -18,9 +38,13 @@ const ALLOWED_VIDEO_MIME = new Set([
 ]);
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage(stagedUploadStorage()),
   limits: {
     fileSize: 500 * 1024 * 1024, // 500 MB limit
+    files: 1,
+    fields: 4,
+    fieldSize: 8 * 1024,
+    parts: 5,
   },
   fileFilter: (_req, file, cb) => {
     // NFR-001 / TC-TEACHER-063: reject unsupported uploads with a clear error.
@@ -32,7 +56,7 @@ const upload = multer({
 });
 
 // Upload endpoint (Approved Teachers Only)
-router.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, upload.single('file'), validateUploadedFile, scanUploadedFile, VideoController.uploadVideo);
+router.post('/upload', authenticate, requireApprovedTeacher, requireUploadScanner, admitVideoUpload, upload.single('file'), cleanupStagedUpload, validateUploadedFile, scanUploadedFile, VideoController.uploadVideo);
 
 // Playback & Security endpoints (Authenticated Users with Entitlement Check)
 router.get('/:videoId/playback-url', authenticate, VideoController.getPlaybackUrl);

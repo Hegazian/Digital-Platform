@@ -120,7 +120,6 @@ describe('Dynamic Subject Creation & Course Linkage', () => {
         description: 'Same subject name reused',
         subjectName: `quantum PHYSICS ${ts}`, // case differs on purpose
         priceEgp: 99,
-        priceUsd: 5,
       });
     expect(res.status).toBe(201);
     cleanup.courseIds.push(res.body.data.id);

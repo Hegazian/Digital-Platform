@@ -21,6 +21,7 @@ const homeContentSchema = z.record(z.string().max(64), jsonValueSchema)
   .refine((value) => JSON.stringify(value).length <= 100_000, 'homeContent exceeds the 100 KB limit');
 
 const updateAppConfigSchema = z.object({
+  expectedVersion: z.number().int().positive(),
   siteNameEn: z.string().min(1).max(60).optional(),
   siteNameAr: z.string().min(1).max(60).optional(),
   siteDescriptionEn: z.string().max(300).nullable().optional(),
@@ -29,15 +30,15 @@ const updateAppConfigSchema = z.object({
   sloganAr: z.string().max(160).nullable().optional(),
   hostDomain: z.string().max(200).optional(),
   supportEmail: z.string().email().optional(),
-  currency: z.string().min(1).max(8).optional(),
-  exchangeRateUsdToEgp: z.coerce.number().positive().max(1_000_000).optional(),
+  currency: z.literal('EGP').optional(),
+  exchangeRateUsdToEgp: z.number().finite().min(0.01).max(1_000_000).optional(),
   requireCourseApproval: z.boolean().optional(),
   allowTeacherRegistration: z.boolean().optional(),
   enableCodePlaygrounds: z.boolean().optional(),
   enableCollaborativeBoards: z.boolean().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).optional(),
   homeContent: homeContentSchema.optional(),
-});
+}).strict();
 
 const router = Router();
 
