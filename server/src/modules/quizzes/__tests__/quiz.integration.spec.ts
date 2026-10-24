@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 
 describe('Quiz API Integration Tests', () => {
   let teacherToken: string;
+  let unrelatedTeacherToken: string;
   let studentToken: string;
   let studentId: string;
   let quizId: string;
@@ -27,6 +28,8 @@ describe('Quiz API Integration Tests', () => {
       },
     });
     teacherToken = generateAccessToken({ userId: teacher.id, role: 'TEACHER', teacherStatus: 'APPROVED' });
+    const other = await prisma.user.create({ data: { email: `other-quiz-${Date.now()}@test.com`, password: hashedPassword, name: 'Other teacher', role: 'TEACHER', teacherStatus: 'APPROVED' } });
+    unrelatedTeacherToken = generateAccessToken({ userId: other.id, role: 'TEACHER', teacherStatus: 'APPROVED' });
 
     // Create student
     const student = await prisma.user.create({
@@ -103,7 +106,7 @@ describe('Quiz API Integration Tests', () => {
     it('does not expose answer keys to an unrelated teacher', async () => {
       const res = await request(app)
         .get(`/api/v1/quizzes/${quizId}`)
-        .set('Authorization', `Bearer ${teacherToken}`);
+        .set('Authorization', `Bearer ${unrelatedTeacherToken}`);
 
       expect(res.status).toBe(200);
       const question = res.body.data.questions[0];

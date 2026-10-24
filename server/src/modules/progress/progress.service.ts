@@ -94,6 +94,8 @@ export class ProgressService {
     // Fetch all courses accessible via subjects OR direct course access OR grade bundles
     const courses = await prisma.course.findMany({
       where: {
+        retractedAt: null,
+        AND: [{ OR: [{ status: 'PUBLISHED', isPublished: true }, { status: 'ARCHIVED' }] }],
         OR: [
           { subjectId: { in: Array.from(subjectIds) } },
           { id: { in: Array.from(courseIds) } },

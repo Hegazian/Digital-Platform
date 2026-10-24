@@ -8,6 +8,7 @@ describe('Question Bank & Dynamic Assessment Integration Tests', () => {
   let teacherToken: string;
   let studentToken: string;
   let teacherId: string;
+  let otherTeacherToken: string;
   let studentId: string;
   let poolId: string;
   let assessmentId: string;
@@ -26,6 +27,10 @@ describe('Question Bank & Dynamic Assessment Integration Tests', () => {
     });
     teacherId = teacher.id;
     teacherToken = generateAccessToken({ userId: teacher.id, role: 'TEACHER', teacherStatus: 'APPROVED' });
+    const otherTeacher = await prisma.user.create({
+      data: { email: `other-teacher-assess-${Date.now()}@test.com`, password: 'Password123!', name: 'Other Assessment Teacher', role: 'TEACHER', teacherStatus: 'APPROVED' },
+    });
+    otherTeacherToken = generateAccessToken({ userId: otherTeacher.id, role: 'TEACHER', teacherStatus: 'APPROVED' });
 
     // 2. Create Student
     const student = await prisma.user.create({
@@ -68,6 +73,22 @@ describe('Question Bank & Dynamic Assessment Integration Tests', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.titleEn).toBe('Algebra & Calculus Question Bank');
       poolId = res.body.data.id;
+    });
+
+    it('keeps question-bank answers and write access scoped to the creating teacher', async () => {
+      const ownPools = await request(app).get('/api/v1/assessment/pools').auth(teacherToken, { type: 'bearer' });
+      const foreignPools = await request(app).get('/api/v1/assessment/pools').auth(otherTeacherToken, { type: 'bearer' });
+      expect(ownPools.body.data.some((pool: any) => pool.id === poolId)).toBe(true);
+      expect(foreignPools.body.data.some((pool: any) => pool.id === poolId)).toBe(false);
+
+      const addQuestion = await request(app).post(`/api/v1/assessment/pools/${poolId}/questions`)
+        .auth(otherTeacherToken, { type: 'bearer' })
+        .send({ textEn: 'Unauthorized question', textAr: 'سؤال', questionType: 'MCQ', difficulty: 'EASY', optionsJson: ['a', 'b'], correctAnswerJson: 'a' });
+      expect(addQuestion.status).toBe(404);
+      const assessment = await request(app).post('/api/v1/assessment/assessments')
+        .auth(otherTeacherToken, { type: 'bearer' })
+        .send({ poolId, titleEn: 'Unauthorized exam', titleAr: 'اختبار غير مصرح' });
+      expect(assessment.status).toBe(404);
     });
 
     it('should allow teacher to add questions of varying difficulty to the pool', async () => {

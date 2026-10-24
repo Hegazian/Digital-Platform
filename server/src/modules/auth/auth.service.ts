@@ -4,18 +4,22 @@ import { Role, TeacherStatus } from '@prisma/client';
 import { prisma } from '../../prisma';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt';
 import { ConflictError, UnauthorizedError, BadRequestError, ForbiddenError, NotFoundError } from '../../utils/errors';
+import { decryptMfaSecret } from '../../utils/mfa-crypto';
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // keep in sync with JWT_REFRESH_EXPIRES_IN
+const REFRESH_RACE_WINDOW_MS = 5_000;
 
 /** High-entropy random tokens only need a collision-resistant digest. */
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
 async function persistRefreshToken(userId: string, token: string): Promise<void> {
+  const familyId = crypto.randomUUID();
   await prisma.refreshToken.create({
     data: {
       userId,
       tokenHash: hashToken(token),
       expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+      familyId,
     },
   });
 }
@@ -134,7 +138,7 @@ export class AuthService {
     if (user.mfaEnabled && user.mfaSecret) {
       if (data.mfaCode) {
         const { verifyTotpToken } = await import('../../utils/totp');
-        const isCodeValid = await verifyTotpToken(user.id, user.mfaSecret, String(data.mfaCode));
+        const isCodeValid = await verifyTotpToken(user.id, decryptMfaSecret(user.mfaSecret), String(data.mfaCode));
         if (!isCodeValid) {
           throw new UnauthorizedError('Invalid MFA authentication code');
         }
@@ -199,7 +203,15 @@ export class AuthService {
     }
 
     const { verifyTotpToken } = await import('../../utils/totp');
-    const isCodeValid = await verifyTotpToken(user.id, user.mfaSecret, mfaCode);
+    let isCodeValid = await verifyTotpToken(user.id, decryptMfaSecret(user.mfaSecret), mfaCode);
+    if (!isCodeValid) {
+      const codeHash = hashToken(mfaCode.trim().toUpperCase().replace(/-/g, ''));
+      const consumed = await prisma.mfaRecoveryCode.updateMany({
+        where: { userId: user.id, codeHash, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      isCodeValid = consumed.count === 1;
+    }
     if (!isCodeValid) {
       throw new UnauthorizedError('Invalid MFA authentication code');
     }
@@ -227,8 +239,8 @@ export class AuthService {
   /**
    * Refresh with server-side session validation + rotation:
    * - the token must match a stored, unrevoked, unexpired hash
-   * - presenting a REVOKED token suggests theft -> the whole family for that
-   *   user is revoked (all sessions must re-login)
+   * - an immediate consumed-token race returns a recoverable conflict
+   * - delayed replay revokes only the token's device family
    */
   static async refreshToken(token: string) {
     if (!token) {
@@ -247,21 +259,42 @@ export class AuthService {
       where: { tokenHash: hashToken(token) },
     });
 
-    if (!stored || stored.expiresAt < new Date()) {
+    if (!stored || stored.expiresAt <= new Date()) {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
 
-    if (stored.revokedAt) {
-      // Replay of a rotated-out token: assume compromise and kill all sessions.
-      await prisma.refreshToken.updateMany({
-        where: { userId: decoded.userId, revokedAt: null },
-        data: { revokedAt: new Date() },
+    if (stored.userId !== decoded.userId) {
+      throw new UnauthorizedError('Invalid or expired refresh token');
+    }
+
+    const revokeFamilyOnReplay = async () => {
+      const familyId = stored.familyId || stored.id;
+      await prisma.$transaction(async (tx) => {
+        // Serialize family revocation with successor insertion. A single
+        // UPDATE snapshot could otherwise miss an in-flight new successor.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${familyId}, 0))`;
+        await tx.refreshToken.updateMany({ where: { familyId, revokedAt: null }, data: { revokedAt: new Date() } });
       });
-      throw new UnauthorizedError('Session revoked. Please log in again.');
+    };
+
+    if (stored.consumedAt) {
+      if (Date.now() - stored.consumedAt.getTime() <= REFRESH_RACE_WINDOW_MS) {
+        throw new ConflictError('Refresh token was just rotated. Retry with the latest session cookie.', 'REFRESH_ALREADY_ROTATED');
+      }
+      await revokeFamilyOnReplay();
+      throw new UnauthorizedError('Session family revoked. Please log in again.', 'SESSION_REVOKED');
+    }
+
+    if (stored.revokedAt) {
+      throw new UnauthorizedError('Session is revoked. Please log in again.');
     }
 
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    if (!user || !user.isActive) {
+    if (!user) {
+      throw new UnauthorizedError('User account is invalid or deactivated');
+    }
+    if (!user.isActive) {
+      await this.revokeAllForUser(user.id);
       throw new UnauthorizedError('User account is invalid or deactivated');
     }
 
@@ -277,19 +310,44 @@ export class AuthService {
     const newAccessToken = generateAccessToken(payload);
     const newRefreshToken = generateRefreshToken(payload);
 
-    await prisma.$transaction([
-      prisma.refreshToken.update({
-        where: { id: stored.id },
-        data: { revokedAt: new Date() },
-      }),
-      prisma.refreshToken.create({
+    const consumedAt = new Date();
+    const familyId = stored.familyId || stored.id;
+    const rotated = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${familyId}, 0))`;
+      const claim = await tx.refreshToken.updateMany({
+        where: {
+          id: stored.id,
+          userId: user.id,
+          revokedAt: null,
+          consumedAt: null,
+          expiresAt: { gt: consumedAt },
+        },
+        data: { revokedAt: consumedAt, consumedAt },
+      });
+      if (claim.count !== 1) return false;
+
+      await tx.refreshToken.create({
         data: {
           userId: user.id,
           tokenHash: hashToken(newRefreshToken),
-          expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+          expiresAt: new Date(consumedAt.getTime() + REFRESH_TTL_MS),
+          familyId,
+          parentTokenId: stored.id,
         },
-      }),
-    ]);
+      });
+      return true;
+    });
+
+    if (!rotated) {
+      const latest = await prisma.refreshToken.findUnique({ where: { id: stored.id } });
+      if (latest?.consumedAt && Date.now() - latest.consumedAt.getTime() <= REFRESH_RACE_WINDOW_MS) {
+        throw new ConflictError('Refresh token was just rotated. Retry with the latest session cookie.', 'REFRESH_ALREADY_ROTATED');
+      }
+      if (latest?.consumedAt) {
+        await revokeFamilyOnReplay();
+      }
+      throw new UnauthorizedError('Session family revoked. Please log in again.', 'SESSION_REVOKED');
+    }
 
     return {
       accessToken: newAccessToken,

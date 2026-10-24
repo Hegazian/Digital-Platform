@@ -93,7 +93,7 @@ export class QuizService {
   /**
    * Create a new quiz with its questions.
    */
-  static async createQuiz(data: any) {
+  static async createQuiz(data: any, creatorId?: string) {
     const { titleEn, titleAr, timeLimit, passingScore, maxAttempts, dueDate, questions } = data;
 
     if (!titleEn || !titleAr || !questions || !Array.isArray(questions) || questions.length === 0) {
@@ -108,6 +108,7 @@ export class QuizService {
       data: {
         titleEn,
         titleAr,
+        ...(creatorId && { creatorId }),
         timeLimit: timeLimit || null,
         passingScore: typeof passingScore === 'number' ? passingScore : 50,
         maxAttempts: maxAttempts ? Math.max(1, Number(maxAttempts)) : 1,
@@ -151,8 +152,8 @@ export class QuizService {
 
     const canManage =
       userRole === Role.ADMIN ||
-      (userId && ownerTeacherId === undefined) || // standalone quizzes are editable by any approved teacher
-      (userId && ownerTeacherId === userId);
+      (userRole === Role.TEACHER && userId && ownerTeacherId === userId) ||
+      (userRole === Role.TEACHER && userId && !ownerTeacherId && quiz.creatorId === userId);
 
     if (!canManage) {
       throw new ForbiddenError('Only the course owner can edit this quiz');
@@ -234,7 +235,7 @@ export class QuizService {
     });
     if (!quiz) throw new NotFoundError('Quiz not found');
     const courseTeacherId = quiz.lesson?.module?.course.teacherId || quiz.lesson?.section?.course.teacherId;
-    const canReviewKeys = userRole === Role.ADMIN || (userRole === Role.TEACHER && courseTeacherId === userId);
+    const canReviewKeys = userRole === Role.ADMIN || (userRole === Role.TEACHER && (courseTeacherId === userId || (!courseTeacherId && quiz.creatorId === userId)));
     const { lesson: _lesson, ...quizDto } = quiz;
     return {
       ...quizDto,

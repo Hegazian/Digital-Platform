@@ -61,6 +61,11 @@ describe('Assignment and document delivery HTTP regressions', () => {
     expect(update.body.data.titleEn).toBe('Updated homework');
   });
 
+  it('blocks assignment metadata reads and lesson enumeration for an unenrolled student', async () => {
+    expect((await request(app).get(`/api/v1/assignments/${assignmentId}`).auth(outsiderToken, { type: 'bearer' })).status).toBe(403);
+    expect((await request(app).get(`/api/v1/assignments/lesson/${lessonId}`).auth(outsiderToken, { type: 'bearer' })).status).toBe(403);
+  });
+
   it('accepts a real upload through both schema and service validation', async () => {
     const upload = await request(app).post('/api/v1/assignments/uploads').auth(studentToken, { type: 'bearer' }).attach('file', pdf, { filename: 'إجابة.pdf', contentType: 'application/pdf' });
     expect(upload.status).toBe(201);

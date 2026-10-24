@@ -1,10 +1,11 @@
 import { prisma } from '../../prisma';
 import { studentOptions } from './student-options';
-import { NotFoundError, BadRequestError } from '../../utils/errors';
+import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/errors';
 import {
   QuestionType,
   QuestionDifficulty,
   AssessmentAttemptStatus,
+  Role,
 } from '@prisma/client';
 
 export class AssessmentService {
@@ -13,12 +14,13 @@ export class AssessmentService {
     titleEn: string;
     titleAr: string;
     description?: string;
-  }) {
+  }, creatorId: string) {
     return await prisma.questionPool.create({
       data: {
         titleEn: data.titleEn,
         titleAr: data.titleAr,
         description: data.description,
+        creatorId,
       },
     });
   }
@@ -34,7 +36,7 @@ export class AssessmentService {
       correctAnswerJson: string;
       explanation?: string;
       points?: number;
-    }
+    }, userId: string, userRole: Role
   ) {
     const pool = await prisma.questionPool.findUnique({
       where: { id: poolId },
@@ -42,6 +44,7 @@ export class AssessmentService {
     if (!pool) {
       throw new NotFoundError('Question pool not found');
     }
+    if (userRole !== Role.ADMIN && pool.creatorId !== userId) throw new NotFoundError('Question pool not found');
 
     return await prisma.questionItem.create({
       data: {
@@ -60,8 +63,9 @@ export class AssessmentService {
 
   // Assessments
   /** Teacher listing: pools with their items for authoring UIs. */
-  static async listQuestionPools() {
+  static async listQuestionPools(userId: string, userRole: Role) {
     return prisma.questionPool.findMany({
+      where: userRole === Role.ADMIN ? undefined : { creatorId: userId },
       include: {
         questions: {
           orderBy: { createdAt: 'desc' },
@@ -91,13 +95,14 @@ export class AssessmentService {
     passingScore?: number;
     totalQuestions?: number;
     maxAttempts?: number;
-  }) {
+  }, userId: string, userRole: Role) {
     const pool = await prisma.questionPool.findUnique({
       where: { id: data.poolId },
     });
     if (!pool) {
       throw new NotFoundError('Question pool not found');
     }
+    if (userRole !== Role.ADMIN && pool.creatorId !== userId) throw new NotFoundError('Question pool not found');
 
     return await prisma.assessment.create({
       data: {

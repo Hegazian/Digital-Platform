@@ -56,6 +56,7 @@ describe('Curriculum Hierarchy Unification (TDD)', () => {
       subjectId,
     });
     courseId = course.id;
+    await prisma.course.update({ where: { id: courseId }, data: { status: 'PUBLISHED', isPublished: true } });
 
     // 5. Create Chapter/Section with Free Preview
     const section = await prisma.section.create({

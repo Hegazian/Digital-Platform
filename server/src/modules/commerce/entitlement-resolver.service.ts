@@ -1,6 +1,8 @@
 import { prisma } from '../../prisma';
 import { EntitlementType, EntitlementStatus, Role } from '@prisma/client';
 import { ForbiddenError, NotFoundError } from '../../utils/errors';
+import { effectiveEntitlementWhere, effectiveSubscriptionWhere } from './access-time';
+import { AccessPolicy } from './access-policy.service';
 
 export class EntitlementResolver {
   /**
@@ -66,6 +68,7 @@ export class EntitlementResolver {
         },
       },
     });
+    if (!quiz) throw new NotFoundError('Quiz not found');
     const lesson = quiz?.lesson;
     const courseId = lesson?.module?.courseId || lesson?.section?.courseId;
     const teacherId = lesson?.module?.course?.teacherId || lesson?.section?.course?.teacherId;
@@ -100,11 +103,10 @@ export class EntitlementResolver {
       return;
     }
     if (userRole === Role.ADMIN) return;
-    if (content.teacherId && content.teacherId === userId) return;
+    if (userRole === Role.TEACHER && content.teacherId === userId) return;
 
-    const hasAccess = await this.hasCourseAccess(userId, content.courseId);
-
-    if (!hasAccess) {
+    const decision = await AccessPolicy.resolveLearning(userId, userRole, content);
+    if (!decision.allowed) {
       throw new ForbiddenError('You must be enrolled in this course to access its learning activities');
     }
   }
@@ -116,32 +118,7 @@ export class EntitlementResolver {
    * 2. OR the student has an active `Entitlement` for the subject (from Paymob, Fawry, or Voucher).
    */
   static async hasSubjectAccess(studentId: string, subjectId: string): Promise<boolean> {
-    const now = new Date();
-
-    // 1. Check active subscription
-    const activeSub = await prisma.subscription.findFirst({
-      where: {
-        userId: studentId,
-        subjectId,
-        status: 'ACTIVE',
-        endDate: { gte: now },
-      },
-    });
-
-    if (activeSub) return true;
-
-    // 2. Check active entitlement for subject
-    const activeEnt = await prisma.entitlement.findFirst({
-      where: {
-        studentId,
-        resourceType: EntitlementType.SUBJECT,
-        resourceId: subjectId,
-        status: EntitlementStatus.ACTIVE,
-        OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
-      },
-    });
-
-    return Boolean(activeEnt);
+    return (await AccessPolicy.resolveSubject(studentId, subjectId)).allowed;
   }
 
   /**
@@ -152,47 +129,11 @@ export class EntitlementResolver {
    * 3. OR the student holds a GRADE_BUNDLE entitlement covering the course's grade.
    */
   static async hasCourseAccess(studentId: string, courseId: string): Promise<boolean> {
-    const now = new Date();
+    return (await AccessPolicy.resolveCourse(studentId, courseId)).allowed;
+  }
 
-    // 1. Check direct course entitlement
-    const courseEnt = await prisma.entitlement.findFirst({
-      where: {
-        studentId,
-        resourceType: EntitlementType.COURSE,
-        resourceId: courseId,
-        status: EntitlementStatus.ACTIVE,
-        OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
-      },
-    });
-
-    if (courseEnt) return true;
-
-    // 2. Lookup course parent and check subject / grade-bundle access
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { subjectId: true, gradeId: true },
-    });
-
-    if (!course) return false;
-
-    if (course.subjectId && (await this.hasSubjectAccess(studentId, course.subjectId))) {
-      return true;
-    }
-
-    if (course.gradeId) {
-      const bundleEnt = await prisma.entitlement.findFirst({
-        where: {
-          studentId,
-          resourceType: EntitlementType.GRADE_BUNDLE,
-          resourceId: course.gradeId,
-          status: EntitlementStatus.ACTIVE,
-          OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
-        },
-      });
-      if (bundleEnt) return true;
-    }
-
-    return false;
+  static async hasCoursePreviewAccess(courseId: string, userId?: string): Promise<boolean> {
+    return (await AccessPolicy.resolveCoursePreview(courseId, userId)).allowed;
   }
 
   /**
@@ -212,8 +153,7 @@ export class EntitlementResolver {
     const subscriptions = await prisma.subscription.findMany({
       where: {
         userId: studentId,
-        status: 'ACTIVE',
-        endDate: { gte: now },
+        ...effectiveSubscriptionWhere(now),
       },
       select: { subjectId: true },
     });
@@ -223,21 +163,29 @@ export class EntitlementResolver {
     const entitlements = await prisma.entitlement.findMany({
       where: {
         studentId,
-        status: EntitlementStatus.ACTIVE,
-        OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+        ...effectiveEntitlementWhere(now),
       },
       select: { resourceType: true, resourceId: true },
     });
 
+    const directCourseIds: string[] = [];
     entitlements.forEach((e) => {
       if (e.resourceType === EntitlementType.SUBJECT) {
         subjectIds.add(e.resourceId);
       } else if (e.resourceType === EntitlementType.COURSE) {
-        courseIds.add(e.resourceId);
+        directCourseIds.push(e.resourceId);
       } else if (e.resourceType === EntitlementType.GRADE_BUNDLE) {
         gradeBundleIds.add(e.resourceId);
       }
     });
+
+    if (directCourseIds.length) {
+      const availableCourses = await prisma.course.findMany({
+        where: { id: { in: directCourseIds }, retractedAt: null },
+        select: { id: true },
+      });
+      availableCourses.forEach((course) => courseIds.add(course.id));
+    }
 
     return { subjectIds, courseIds, gradeBundleIds };
   }

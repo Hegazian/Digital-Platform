@@ -46,6 +46,13 @@ vi.mock('../../../prisma', () => ({
 describe('Course Governance & Lifecycle Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (prisma as any).$transaction = vi.fn((callback: (tx: any) => Promise<any>) => callback({
+      $executeRaw: vi.fn().mockResolvedValue(1),
+      course: prisma.course,
+      auditLog: prisma.auditLog,
+      product: prisma.product,
+      entitlement: prisma.entitlement,
+    }));
   });
 
   describe('reviewCourseStatus', () => {

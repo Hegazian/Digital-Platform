@@ -5,7 +5,7 @@ import { QuizService } from './quiz.service';
 export class QuizController {
   static async createQuiz(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const quiz = await QuizService.createQuiz(req.body);
+      const quiz = await QuizService.createQuiz(req.body, req.user!.userId);
       res.status(201).json({ success: true, data: quiz });
     } catch (error) {
       next(error);

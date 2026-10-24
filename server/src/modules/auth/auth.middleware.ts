@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
     userId: string;
     role: Role;
     teacherStatus?: TeacherStatus;
+    authVersion?: number;
   };
 }
 
@@ -64,6 +65,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     userId: account.id,
     role: account.role,
     teacherStatus: account.teacherStatus ?? undefined,
+    authVersion: account.authVersion,
   };
   next();
 };
@@ -84,6 +86,7 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
             userId: account.id,
             role: account.role,
             teacherStatus: account.teacherStatus ?? undefined,
+            authVersion: account.authVersion,
           };
         }
       }

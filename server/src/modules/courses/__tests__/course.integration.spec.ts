@@ -11,7 +11,9 @@ describe('Course & Subject Integration Tests', () => {
   let teacherToken: string;
   let studentToken: string;
   let teacherId: string;
+  let studentId: string;
   let subjectId: string;
+  const visibilityCourseIds: string[] = [];
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -54,10 +56,15 @@ describe('Course & Subject Integration Tests', () => {
         role: Role.STUDENT,
       },
     });
+    studentId = student.id;
     studentToken = generateAccessToken({ userId: student.id, role: Role.STUDENT });
   });
 
   afterAll(async () => {
+    if (visibilityCourseIds.length) {
+      await prisma.entitlement.deleteMany({ where: { studentId, resourceId: { in: visibilityCourseIds } } });
+      await prisma.course.deleteMany({ where: { id: { in: visibilityCourseIds } } });
+    }
     await prisma.course.deleteMany({ where: { titleEn: { contains: 'Mastering JavaScript' } } });
     await prisma.subject.deleteMany({ where: { nameEn: { contains: 'CourseTestSubject' } } });
     await prisma.user.deleteMany({ where: { email: { contains: '-crs-test-' } } });
@@ -125,6 +132,53 @@ describe('Course & Subject Integration Tests', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.titleEn).toBe('Mastering JavaScript');
       courseId = res.body.data.id;
+    });
+
+    it('enforces visibility in catalog and course detail', async () => {
+      const privateCourse = await prisma.course.create({ data: {
+        titleEn: 'Visibility test private', titleAr: 'خاص', description: 'visibility fixture', teacherId, subjectId,
+        status: 'PUBLISHED', isPublished: true, visibility: 'PRIVATE',
+      } });
+      const unlistedCourse = await prisma.course.create({ data: {
+        titleEn: 'Visibility test unlisted', titleAr: 'غير مدرج', description: 'visibility fixture', teacherId, subjectId,
+        status: 'PUBLISHED', isPublished: true, visibility: 'UNLISTED',
+      } });
+      visibilityCourseIds.push(privateCourse.id, unlistedCourse.id);
+      const catalog = await request(app).get('/api/v1/courses');
+      expect(catalog.body.data.courses.some((course: any) => course.id === privateCourse.id)).toBe(false);
+      expect(catalog.body.data.courses.some((course: any) => course.id === unlistedCourse.id)).toBe(false);
+      expect((await request(app).get(`/api/v1/courses/${privateCourse.id}`)).status).toBe(404);
+      expect((await request(app).get(`/api/v1/courses/${unlistedCourse.id}`)).status).toBe(200);
+
+      await prisma.entitlement.create({ data: {
+        studentId, resourceId: privateCourse.id, resourceType: 'COURSE', sourceType: 'ADMIN_GRANT', status: 'ACTIVE',
+      } });
+      expect((await request(app).get(`/api/v1/courses/${privateCourse.id}`).auth(studentToken, { type: 'bearer' })).status).toBe(200);
+      expect((await request(app).get(`/api/v1/courses/${unlistedCourse.id}`).auth(studentToken, { type: 'bearer' })).status).toBe(200);
+    });
+
+    it('keeps archived access but lets only admins retract it with an audit reason', async () => {
+      const course = await prisma.course.create({ data: {
+        titleEn: 'Visibility test lifecycle', titleAr: 'دورة سحب المحتوى', description: 'lifecycle fixture', teacherId, subjectId,
+        status: 'PUBLISHED', isPublished: true, visibility: 'PRIVATE',
+      } });
+      visibilityCourseIds.push(course.id);
+      await prisma.entitlement.create({ data: {
+        studentId, resourceId: course.id, resourceType: 'COURSE', sourceType: 'ADMIN_GRANT', status: 'ACTIVE',
+      } });
+      expect((await request(app).get(`/api/v1/courses/${course.id}/learning`).auth(studentToken, { type: 'bearer' })).status).toBe(200);
+      const archived = await request(app).patch(`/api/v1/courses/${course.id}/archive`).auth(teacherToken, { type: 'bearer' });
+      expect(archived.status).toBe(200);
+      expect(archived.body.data.archivedAt).toBeTruthy();
+      expect((await request(app).get(`/api/v1/courses/${course.id}`).auth(studentToken, { type: 'bearer' })).status).toBe(200);
+      expect((await request(app).get(`/api/v1/courses/${course.id}/learning`).auth(studentToken, { type: 'bearer' })).status).toBe(200);
+      expect((await request(app).post(`/api/v1/courses/${course.id}/enroll`).auth(studentToken, { type: 'bearer' })).status).toBe(403);
+      expect((await request(app).patch(`/api/v1/courses/${course.id}/retract`).auth(teacherToken, { type: 'bearer' }).send({ reason: 'Teacher cannot retract' })).status).toBe(403);
+      const response = await request(app).patch(`/api/v1/courses/${course.id}/retract`).auth(adminToken, { type: 'bearer' }).send({ reason: 'Source material was withdrawn by its owner' });
+      expect(response.status).toBe(200);
+      expect(response.body.data.retractedAt).toBeTruthy();
+      expect((await request(app).get(`/api/v1/courses/${course.id}/learning`).auth(studentToken, { type: 'bearer' })).status).toBe(404);
+      expect(await prisma.auditLog.count({ where: { action: 'COURSE_RETRACTED', entityId: course.id } })).toBe(1);
     });
 
     it('POST /api/v1/courses/:courseId/sections - teacher can add section', async () => {

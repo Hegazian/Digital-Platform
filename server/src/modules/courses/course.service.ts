@@ -6,6 +6,8 @@ import { egpToUsd, getUsdToEgpRate } from '../../utils/currency';
 import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
 import { externalMaterialUrl, materialDeliveryUrl } from '../materials/material-reference';
 import { boundObjectKey, externalContentUrl } from '../../utils/media-references';
+import { CourseCatalogItemSchema } from '@eduplatform/contracts';
+import { effectiveEntitlementWhere } from '../commerce/access-time';
 
 export class CourseService {
   private static async suppliedVideo(data: { videoUrl: string; title?: string; duration?: number }, actorId: string, role?: Role) {
@@ -50,7 +52,14 @@ export class CourseService {
   }
 
   static async getLearningCourse(id: string, user: { userId: string; role: Role }) {
-    const catalog = await this.getCourseById(id, user);
+    // Archive removes catalog visibility, but it does not revoke a purchaser's
+    // existing grant. Retraction is checked by the access resolver below.
+    const catalog = await prisma.course.findUnique({
+      where: { id },
+      select: { id: true, teacherId: true, retractedAt: true },
+    });
+    if (!catalog) throw new NotFoundError('Course not found');
+    if (catalog.retractedAt && !this.canManageCourse(catalog, user)) throw new NotFoundError('Course not found');
     await EntitlementResolver.assertLearningAccess(user.userId, user.role, {
       courseId: catalog.id,
       teacherId: catalog.teacherId,
@@ -62,7 +71,7 @@ export class CourseService {
 
   private static canManageCourse(course: { teacherId: string }, user?: { userId: string; role: Role } | null): boolean {
     if (!user) return false;
-    return user.role === Role.ADMIN || course.teacherId === user.userId;
+    return user.role === Role.ADMIN || (user.role === Role.TEACHER && course.teacherId === user.userId);
   }
 
   static async getAllCourses(query: any = {}, user?: { userId: string; role: Role } | null) {
@@ -75,7 +84,7 @@ export class CourseService {
     const limitNum = Number.isFinite(parsedLimit) ? Math.min(Math.max(1, parsedLimit), 100) : 100;
     const skip = (pageNum - 1) * limitNum;
 
-    const PUBLISHED_FILTER = { isPublished: true, status: 'PUBLISHED' as const };
+    const PUBLISHED_FILTER = { isPublished: true, status: 'PUBLISHED' as const, visibility: 'PUBLIC' as const, retractedAt: null };
 
     let where: any = {
       ...(subjectId && { subjectId }),
@@ -149,7 +158,8 @@ export class CourseService {
         priceUsd,
         productId: prod?.id,
       };
-      return this.canManageCourse(c, user) ? enriched : this.sanitizeCourseContent(enriched);
+      if (this.canManageCourse(c, user)) return enriched;
+      return CourseCatalogItemSchema.parse(this.sanitizeCourseContent(enriched));
     });
 
     return {
@@ -166,11 +176,16 @@ export class CourseService {
   static async getCourseById(id: string, user?: { userId: string; role: Role } | null): Promise<any> {
     const visibility = await prisma.course.findUnique({
       where: { id },
-      select: { id: true, teacherId: true, status: true, isPublished: true },
+      select: { id: true, teacherId: true, status: true, isPublished: true, visibility: true, retractedAt: true },
     });
     if (!visibility) throw new NotFoundError('Course not found');
     const canManage = this.canManageCourse(visibility, user);
-    if (!canManage && (visibility.status !== 'PUBLISHED' || !visibility.isPublished)) throw new NotFoundError('Course not found');
+    const retainedArchiveAccess = !canManage && visibility.status === 'ARCHIVED' && user
+      ? await EntitlementResolver.hasCourseAccess(user.userId, id) : false;
+    if (!canManage && (visibility.retractedAt || (!retainedArchiveAccess && (visibility.status !== 'PUBLISHED' || !visibility.isPublished)))) throw new NotFoundError('Course not found');
+    if (!canManage && visibility.visibility === 'PRIVATE' && (!user || !(await EntitlementResolver.hasCourseAccess(user.userId, id)))) {
+      throw new NotFoundError('Course not found');
+    }
 
     const curriculumInclude = {
       teacher: { select: { id: true, name: true, avatar: true, email: true } },
@@ -476,76 +491,105 @@ export class CourseService {
       throw new ForbiddenError('Only the course owner or Admin can archive this course');
     }
 
-    const updated = await prisma.course.update({
-      where: { id },
-      data: {
-        status: 'ARCHIVED',
-        isPublished: false,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.course.update({
+        where: { id },
+        data: { status: 'ARCHIVED', isPublished: false, archivedAt: course.archivedAt ?? new Date() },
+      });
+      await tx.auditLog.create({ data: {
+        userId: teacherId, action: 'COURSE_ARCHIVED', entityId: id, entityType: 'Course',
+        details: { previousStatus: course.status },
+      } });
+      return updated;
     });
+  }
 
-    await logAuditAction(
-      teacherId,
-      'COURSE_ARCHIVED',
-      id,
-      'Course',
-      { previousStatus: course.status }
-    );
+  static async retractCourse(id: string, adminId: string, actorRole: Role, reason: string) {
+    if (actorRole !== Role.ADMIN) throw new ForbiddenError('Only an administrator can retract published course content');
+    const course = await prisma.course.findUnique({ where: { id } });
+    if (!course) throw new NotFoundError('Course not found');
+    if (course.retractedAt) return course;
 
+    const retractedAt = new Date();
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.course.updateMany({
+        where: { id, retractedAt: null },
+        data: { retractedAt, retractionReason: reason, retractedById: adminId, isPublished: false },
+      });
+      if (!result.count) return tx.course.findUniqueOrThrow({ where: { id } });
+      await tx.auditLog.create({ data: {
+        userId: adminId,
+        action: 'COURSE_RETRACTED',
+        entityId: id,
+        entityType: 'Course',
+        details: { reason, previousStatus: course.status },
+      } });
+      return tx.course.findUniqueOrThrow({ where: { id } });
+    });
     return updated;
   }
 
   static async enrollStudentFree(courseId: string, studentId: string) {
-    const course = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!course) {
-      throw new NotFoundError('Course not found');
-    }
+    return prisma.$transaction(async (tx) => {
+      // The same lifecycle row lock as checkout serializes archive/retraction,
+      // enrollment eligibility and grant creation, including duplicate retries.
+      await tx.$executeRaw`SELECT "id" FROM "courses" WHERE "id" = ${courseId} FOR UPDATE`;
+      const course = await tx.course.findUnique({ where: { id: courseId } });
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
 
-    if (!course.isPublished && course.status !== 'PUBLISHED') {
-      throw new ForbiddenError('Cannot enroll in unpublished courses');
-    }
+      if (course.retractedAt || course.status === 'ARCHIVED' || !course.isPublished || course.status !== 'PUBLISHED') {
+        throw new ForbiddenError('Cannot enroll in unpublished courses');
+      }
+      // Private access is assigned; this public join action must never turn
+      // an expiring subject assignment into an unlimited direct free grant.
+      if (course.visibility === 'PRIVATE') {
+        throw new ForbiddenError('Private courses require assigned access');
+      }
 
-    // Free courses are open-enrollment by definition. Everything else must
-    // not have an active priced product - paid courses go through checkout.
-    if (!course.isFree) {
-      const paidProduct = await prisma.product.findFirst({
+      // Free courses are open-enrollment by definition. Everything else must
+      // not have an active priced product - paid courses go through checkout.
+      if (!course.isFree) {
+        const paidProduct = await tx.product.findFirst({
+          where: {
+            productType: 'COURSE',
+            resourceId: courseId,
+            isActive: true,
+            priceEgp: { gt: 0 },
+          },
+        });
+
+        if (paidProduct) {
+          throw new ForbiddenError('This course requires purchase. Please complete checkout to enroll.');
+        }
+      }
+
+      const existingEntitlement = await tx.entitlement.findFirst({
         where: {
-          productType: 'COURSE',
+          studentId,
+          resourceType: 'COURSE',
           resourceId: courseId,
-          isActive: true,
-          priceEgp: { gt: 0 },
+          ...effectiveEntitlementWhere(new Date()),
         },
       });
 
-      if (paidProduct) {
-        throw new ForbiddenError('This course requires purchase. Please complete checkout to enroll.');
+      if (existingEntitlement) {
+        return { success: true, message: 'Already enrolled in this course', entitlement: existingEntitlement };
       }
-    }
 
-    const existingEntitlement = await prisma.entitlement.findFirst({
-      where: {
-        studentId,
-        resourceType: 'COURSE',
-        resourceId: courseId,
-        status: 'ACTIVE',
-      },
+      const entitlement = await tx.entitlement.create({
+        data: {
+          studentId,
+          resourceType: 'COURSE',
+          resourceId: courseId,
+          sourceType: 'FREE_ENROLLMENT',
+          status: 'ACTIVE',
+        },
+      });
+
+      return { success: true, message: 'Enrolled successfully', entitlement };
     });
-
-    if (existingEntitlement) {
-      return { success: true, message: 'Already enrolled in this course', entitlement: existingEntitlement };
-    }
-
-    const entitlement = await prisma.entitlement.create({
-      data: {
-        studentId,
-        resourceType: 'COURSE',
-        resourceId: courseId,
-        sourceType: 'PURCHASE',
-        status: 'ACTIVE',
-      },
-    });
-
-    return { success: true, message: 'Enrolled successfully', entitlement };
   }
 
   /**
@@ -891,7 +935,7 @@ export class CourseService {
         timeLimit: data.quiz.timeLimit,
         maxAttempts: (data.quiz as any).maxAttempts,
         questions: data.quiz.questions || [],
-      });
+      }, ownerTeacherId);
       quizId = quiz.id;
     }
 
@@ -1022,7 +1066,7 @@ export class CourseService {
         timeLimit: data.timeLimit,
         maxAttempts: data.maxAttempts,
         questions: data.questions || [],
-      });
+      }, courseTeacherId);
     })();
 
     await prisma.lesson.update({

@@ -4,9 +4,9 @@ import { AssessmentService } from './assessment.service';
 
 export class AssessmentController {
   // Question Pools
-  static async listQuestionPools(_req: AuthRequest, res: Response, next: NextFunction) {
+  static async listQuestionPools(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const pools = await AssessmentService.listQuestionPools();
+      const pools = await AssessmentService.listQuestionPools(req.user!.userId, req.user!.role);
       res.status(200).json({ success: true, data: pools });
     } catch (err) {
       next(err);
@@ -15,7 +15,7 @@ export class AssessmentController {
 
   static async createQuestionPool(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const pool = await AssessmentService.createQuestionPool(req.body);
+      const pool = await AssessmentService.createQuestionPool(req.body, req.user!.userId);
       res.status(201).json({ success: true, data: pool });
     } catch (err) {
       next(err);
@@ -25,7 +25,7 @@ export class AssessmentController {
   static async addQuestionItem(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { poolId } = req.params;
-      const question = await AssessmentService.addQuestionItem(poolId as string, req.body);
+      const question = await AssessmentService.addQuestionItem(poolId as string, req.body, req.user!.userId, req.user!.role);
       res.status(201).json({ success: true, data: question });
     } catch (err) {
       next(err);
@@ -44,7 +44,7 @@ export class AssessmentController {
 
   static async createAssessment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const assessment = await AssessmentService.createAssessment(req.body);
+      const assessment = await AssessmentService.createAssessment(req.body, req.user!.userId, req.user!.role);
       res.status(201).json({ success: true, data: assessment });
     } catch (err) {
       next(err);

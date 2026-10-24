@@ -2,6 +2,7 @@ import { prisma } from '../../prisma';
 import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors';
 import { logAuditAction } from '../audit/audit.service';
 import { egpToUsd, getUsdToEgpRate } from '../../utils/currency';
+import { AccessPolicy } from './access-policy.service';
 import {
   ProductType,
   OrderStatus,
@@ -9,6 +10,7 @@ import {
   EntitlementType,
   EntitlementSource,
   EntitlementStatus,
+  Prisma,
 } from '@prisma/client';
 
 export class CommerceService {
@@ -43,11 +45,16 @@ export class CommerceService {
       }),
       getUsdToEgpRate(),
     ]);
+    const publicCourses = await prisma.course.findMany({ where: {
+      id: { in: products.filter(p => p.productType === ProductType.COURSE).flatMap(p => p.resourceId ? [p.resourceId] : []) },
+      isPublished: true, status: 'PUBLISHED', visibility: 'PUBLIC', retractedAt: null,
+    }, select: { id: true } });
+    const publicIds = new Set(publicCourses.map(course => course.id));
 
     // Product priceUsd is retained as a legacy persisted display field. EGP
     // is the charge source of truth, so catalog reads derive indicative USD
     // from the current rate instead of showing the stale rate from creation.
-    return products.map((product) => ({
+    return products.filter(product => product.productType !== ProductType.COURSE || (product.resourceId && publicIds.has(product.resourceId))).map((product) => ({
       ...product,
       priceUsd: Math.round((Number(product.priceEgp) / exchangeRate) * 100) / 100,
     }));
@@ -64,11 +71,15 @@ export class CommerceService {
     }
   ) {
     // Check existing order with idempotencyKey
-    const existingOrder = await prisma.order.findUnique({
-      where: { idempotencyKey: data.idempotencyKey },
-    });
+    const existingForKey = () => prisma.order.findUnique({ where: { idempotencyKey: data.idempotencyKey }, include: { product: true } });
+    const verifyReplay = (order: NonNullable<Awaited<ReturnType<typeof existingForKey>>>) => {
+      if (order.studentId !== studentId) throw new ConflictError('Idempotency key is already used by another account');
+      if (order.productId !== data.productId || order.paymentMethod !== data.paymentMethod) throw new ConflictError('Idempotency key was used for a different checkout');
+      return order;
+    };
+    const existingOrder = await existingForKey();
     if (existingOrder) {
-      return existingOrder;
+      return verifyReplay(existingOrder);
     }
 
     const product = await prisma.product.findUnique({
@@ -83,23 +94,46 @@ export class CommerceService {
     if (Number(product.priceEgp) <= 0) {
       throw new BadRequestError('This product is free or unavailable for purchase');
     }
+    // Resolve indicative FX before taking a transaction connection. A global
+    // Prisma read inside the transaction can deadlock a saturated pool.
+    const displayRate = await getUsdToEgpRate();
 
-    return await prisma.order.create({
-      data: {
-        student: { connect: { id: studentId } },
-        product: { connect: { id: data.productId } },
-        status: OrderStatus.PENDING,
-        totalAmountEgp: product.priceEgp,
-        // USD snapshot derived from EGP at order time (single source of truth).
-        totalAmountUsd: await egpToUsd(Number(product.priceEgp)),
-        paymentMethod: data.paymentMethod,
-        idempotencyKey: data.idempotencyKey,
-        ...(data.transactionRef && { transactionRef: data.transactionRef }),
-      },
-      include: {
-        product: true,
-      },
-    });
+    try { return await prisma.$transaction(async (tx) => {
+      // Serialize checkout against archive/retraction updates. The row lock
+      // means whichever lifecycle transition commits first determines sale eligibility.
+      if (product.productType === ProductType.COURSE && product.resourceId) {
+        const locked = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "courses" WHERE "id" = ${product.resourceId} FOR UPDATE`;
+        const course = locked.length ? await tx.course.findUnique({
+          where: { id: product.resourceId! },
+          select: { status: true, isPublished: true, retractedAt: true, visibility: true },
+        }) : null;
+        if (!course || course.retractedAt || course.status !== 'PUBLISHED' || !course.isPublished) {
+          throw new NotFoundError('Course is not available for purchase');
+        }
+        if (course.visibility === 'PRIVATE' && !(await AccessPolicy.resolveCourse(studentId, product.resourceId, tx)).allowed) {
+          throw new NotFoundError('Course is not available for purchase');
+        }
+      }
+      return tx.order.create({
+        data: {
+          student: { connect: { id: studentId } },
+          product: { connect: { id: data.productId } },
+          status: OrderStatus.PENDING,
+          totalAmountEgp: product.priceEgp,
+          totalAmountUsd: Math.round((Number(product.priceEgp) / displayRate) * 100) / 100,
+          paymentMethod: data.paymentMethod,
+          idempotencyKey: data.idempotencyKey,
+          ...(data.transactionRef && { transactionRef: data.transactionRef }),
+        },
+        include: { product: true },
+      });
+    }); } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const winner = await existingForKey();
+        if (winner) return verifyReplay(winner);
+      }
+      throw error;
+    }
   }
 
   /** Student's own order history (purchase tracking / status polling). */
@@ -411,63 +445,13 @@ export class CommerceService {
     resourceType: EntitlementType,
     resourceId: string
   ) {
-    const entitlement = await prisma.entitlement.findFirst({
-      where: {
-        studentId,
-        resourceType,
-        resourceId,
-        status: EntitlementStatus.ACTIVE,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gte: new Date() } },
-        ],
-      },
-    });
-
-    return { hasAccess: Boolean(entitlement), entitlement };
+    const access = await AccessPolicy.resolveResource(studentId, resourceType, resourceId);
+    return { hasAccess: access.allowed, entitlement: null, access };
   }
 
   static async checkCourseAccess(studentId: string, courseId: string) {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { id: true, subjectId: true, gradeId: true },
-    });
-    if (!course) {
-      throw new NotFoundError('Course not found');
-    }
-
-    const now = new Date();
-    const entitlement = await prisma.entitlement.findFirst({
-      where: {
-        studentId,
-        status: EntitlementStatus.ACTIVE,
-        OR: [
-          {
-            resourceType: EntitlementType.COURSE,
-            resourceId: course.id,
-          },
-          {
-            resourceType: EntitlementType.SUBJECT,
-            resourceId: course.subjectId,
-          },
-          ...(course.gradeId
-            ? [
-                {
-                  resourceType: EntitlementType.GRADE_BUNDLE,
-                  resourceId: course.gradeId,
-                },
-              ]
-            : []),
-        ],
-        AND: [
-          {
-            OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
-          },
-        ],
-      },
-    });
-
-    return { hasAccess: Boolean(entitlement), entitlement };
+    const access = await AccessPolicy.resolveCourse(studentId, courseId);
+    return { hasAccess: access.allowed, entitlement: null, access };
   }
 
   // Vouchers

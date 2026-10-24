@@ -139,6 +139,8 @@ describe('AuthService Unit Tests', () => {
         Promise.resolve({
           id: 'rt-1',
           userId: 'user-1',
+          familyId: 'family-1',
+          consumedAt: null,
           tokenHash: crypto
             .createHash('sha256')
             .update(sampleRefreshToken)
@@ -155,13 +157,18 @@ describe('AuthService Unit Tests', () => {
         isActive: true,
         authVersion: 1,
       });
+      (prisma.$transaction as any).mockImplementation(async (callback: any) => callback({
+        $executeRaw: vi.fn().mockResolvedValue(1),
+        refreshToken: {
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+          create: vi.fn().mockResolvedValue({ id: 'rt-2' }),
+        },
+      }));
 
       const res = await AuthService.refreshToken(sampleRefreshToken);
       expect(res.accessToken).toBeDefined();
       expect(res.refreshToken).toBeDefined();
-      // Rotation must revoke the old row and register the new one:
-      expect(prisma.refreshToken.update).toHaveBeenCalled();
-      expect(prisma.refreshToken.create).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalledOnce();
     });
 
     it('should throw UnauthorizedError for invalid token', async () => {

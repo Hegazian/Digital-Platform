@@ -91,18 +91,39 @@ describe('VideoService', () => {
   });
 
   describe('verifyPlaybackAccess', () => {
-    it('should grant access if section is free preview', async () => {
+    it('allows the approved course owner to inspect a video supplied by another uploader', async () => {
+      (prisma.video.findUnique as any).mockResolvedValue({ id: 'v-admin', teacherId: 'admin-uploader',
+        lesson: { section: { courseId: 'course-1', isFreePreview: false, course: { teacherId: 'course-owner', subjectId: 's1' } } } });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'course-owner', role: 'TEACHER', teacherStatus: 'APPROVED', isActive: true });
+      await expect(VideoService.verifyPlaybackAccess('v-admin', 'course-owner')).resolves.toBe(true);
+      expect(prisma.entitlement.findFirst).not.toHaveBeenCalled();
+    });
+    it('should grant access if section is a preview in a published course', async () => {
       const mockVideo = {
         id: 'video-123',
         teacherId: 'teacher-1',
-        lesson: { section: { isFreePreview: true, course: { subjectId: 'subject-1' } } },
+        lesson: { section: { isFreePreview: true, courseId: 'course-1', course: { subjectId: 'subject-1' } } },
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
       (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT', isActive: true });
+      (prisma.course.findUnique as any).mockResolvedValue({ retractedAt: null, isPublished: true, status: 'PUBLISHED' });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'student-1');
       expect(hasAccess).toBe(true);
+    });
+
+    it('denies a free preview after its course is retracted', async () => {
+      const mockVideo = {
+        id: 'video-123',
+        teacherId: 'teacher-1',
+        lesson: { section: { isFreePreview: true, courseId: 'course-1', course: { subjectId: 'subject-1' } } },
+      };
+      (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'student-1', role: 'STUDENT', isActive: true });
+      (prisma.course.findUnique as any).mockResolvedValue({ retractedAt: new Date(), isPublished: true, status: 'PUBLISHED' });
+
+      await expect(VideoService.verifyPlaybackAccess('video-123', 'student-1')).resolves.toBe(false);
     });
 
     it('should deny access if section is paid and student has no active subscription', async () => {
@@ -143,7 +164,7 @@ describe('VideoService', () => {
       };
 
       (prisma.video.findUnique as any).mockResolvedValue(mockVideo);
-      (prisma.user.findUnique as any).mockResolvedValue({ id: 'teacher-1', role: 'TEACHER', isActive: true });
+      (prisma.user.findUnique as any).mockResolvedValue({ id: 'teacher-1', role: 'TEACHER', teacherStatus: 'APPROVED', isActive: true });
 
       const hasAccess = await VideoService.verifyPlaybackAccess('video-123', 'teacher-1');
       expect(hasAccess).toBe(true);

@@ -1,5 +1,8 @@
 import { devices, test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+const { generateSync } = createRequire(path.resolve(__dirname, '../../../server/package.json'))('otplib') as { generateSync: (options: { secret: string }) => string };
 
 const fixture = JSON.parse(fs.readFileSync(process.env.M0_FIXTURE_PATH!, 'utf8'));
 test.beforeEach(async ({ page }) => {
@@ -290,6 +293,24 @@ test('profile recovers an expired access token, persists edits and reloads', asy
   await expect(page.locator('#profile-name')).toHaveValue(`Reviewed ${info.project.name}`);
 });
 
+test('two browser tabs recover one shared expired session', async ({ page, context }, info) => {
+  await login(page, info.project.name, 'student');
+  await page.goto('/profile');
+  const second = await context.newPage();
+  try {
+    await second.goto('/profile');
+    await expect(second.locator('#profile-email')).toHaveValue(fixture.users[info.project.name].email);
+    let rotations = 0;
+    context.on('request', request => { if (request.url().endsWith('/auth/refresh')) rotations += 1; });
+    await page.evaluate(() => localStorage.setItem('accessToken', 'expired-shared-tab-token'));
+    await Promise.all([page.reload(), second.reload()]);
+    await expect(page.locator('#profile-email')).toHaveValue(fixture.users[info.project.name].email);
+    await expect(second.locator('#profile-email')).toHaveValue(fixture.users[info.project.name].email);
+    expect(await page.evaluate(() => localStorage.getItem('accessToken'))).not.toBe('expired-shared-tab-token');
+    expect(rotations).toBe(1);
+  } finally { await second.close(); }
+});
+
 test('malformed and expired refresh-cookie hints reach login without a redirect loop', async ({ page, context }) => {
   for (const value of ['invalid-cookie', `e30.${Buffer.from(JSON.stringify({ role: 'STUDENT', exp: 1 })).toString('base64url')}.signature`]) {
     await context.addCookies([{ name: 'eduplat_rt', value, url: 'http://127.0.0.1:3100' }]);
@@ -364,3 +385,42 @@ test('changing a document cancels the old request without warnings or stale cont
   await observed.settle();
   expect(observed.errors).toEqual([]);
 });
+
+for (const locale of ['en', 'ar']) {
+  test(`MFA enrollment preserves recovery codes and cancellation preserves the active factor (${locale})`, async ({ page }) => {
+    await login(page, 'admin', 'admin');
+    await page.goto('/profile');
+    if (locale === 'ar') await page.locator('#lang-toggle-btn').click();
+    const accessToken = await page.evaluate(() => localStorage.getItem('accessToken'));
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    let enabled = false;
+    try {
+      const setup = page.waitForResponse(response => response.url().endsWith('/mfa/setup') && response.ok());
+      await page.getByRole('button', { name: locale === 'ar' ? 'تفعيل 2FA' : 'Configure 2FA', exact: true }).click();
+      const secret = (await (await setup).json()).data.secret;
+      const dialog = page.getByRole('dialog');
+      await dialog.getByLabel(locale === 'ar' ? 'رمز المصادقة' : 'Authenticator code', { exact: true }).fill(generateSync({ secret }));
+      await dialog.getByRole('button', { name: locale === 'ar' ? 'تحقّق' : 'Verify', exact: true }).click();
+      await expect(dialog.locator('code')).toHaveCount(10);
+      enabled = true;
+      const firstRecovery = await dialog.locator('code').first().innerText();
+      await dialog.getByRole('button', { name: locale === 'ar' ? 'تم الحفظ' : 'Done', exact: true }).click();
+      await expect(dialog).not.toBeVisible();
+      await page.getByRole('button', { name: locale === 'ar' ? 'استبدال تطبيق المصادقة' : 'Replace authenticator', exact: true }).click();
+      await expect(dialog.getByLabel(locale === 'ar' ? 'كلمة المرور الحالية' : 'Current Password', { exact: true })).toBeVisible();
+      await dialog.getByRole('button', { name: locale === 'ar' ? 'إغلاق' : 'Close', exact: true }).click();
+      const profile = await page.request.get('/api/v1/auth/profile', { headers });
+      expect((await profile.json()).data.mfaEnabled).toBe(true);
+      const challenge = await page.request.post('/api/v1/auth/login', { data: { email: fixture.users.admin.email, password: fixture.password } });
+      const mfaSessionToken = (await challenge.json()).data.mfaSessionToken;
+      const loginData = { mfaSessionToken, mfaCode: firstRecovery };
+      expect((await page.request.post('/api/v1/auth/mfa-login', { data: loginData })).status()).toBe(200);
+      expect((await page.request.post('/api/v1/auth/mfa-login', { data: loginData })).status()).toBe(401);
+    } finally {
+      if (enabled) {
+        const reset = await page.request.post(`/api/v1/mfa/admin-reset/${fixture.users.admin.id}`, { headers, data: { reason: 'Disposable browser fixture security cleanup' } });
+        expect(reset.status()).toBe(200);
+      }
+    }
+  });
+}

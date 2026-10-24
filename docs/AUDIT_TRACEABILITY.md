@@ -1,6 +1,6 @@
 # Audit and acceptance traceability
 
-Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed **23 October**; historical M0 application checkpoint **34723cd**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed **24 October**; historical M0 application checkpoint **34723cd**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
 
 ## M1 review supplement
 
@@ -17,17 +17,17 @@ Every finding keeps its original ID in exactly one file, has a release milestone
 | SEC-03 | [SEC-03](archive/completed/M0/SEC-03.md) — Reject disguised active content and quarantine uploads | M0 | Complete | [A03](#a03); required before assigned milestone exit. Tests SEC-03-T01 onward and T90–T92. |
 | SEC-04 | [SEC-04](archive/completed/M0/SEC-04.md) — Separate public catalog DTOs from protected learning DTOs | M0 | Complete | [A04](#a04); required before assigned milestone exit. Tests SEC-04-T01 onward and T90–T92. |
 | SEC-05 | [SEC-05](archive/completed/M0/SEC-05.md) — Eliminate answer-key leaks through explicit question DTOs | M0 | Complete | [A05](#a05); required before assigned milestone exit. Tests SEC-05-T01 onward and T90–T92. |
-| SEC-06 | [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | M1 | Planned | [A04](#a04), [A12](#a12); required before assigned milestone exit. Tests SEC-06-T01 onward and T90–T92. |
-| SEC-07 | [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | M1 | Planned | [A05](#a05); required before assigned milestone exit. Tests SEC-07-T01 onward and T90–T92. |
+| SEC-06 | [SEC-06](tasks/SEC-06.md) — Enforce public, unlisted and private visibility consistently | M1 | In Progress | [A04](#a04), [A12](#a12); required before assigned milestone exit. Tests SEC-06-T01 onward and T90–T92. |
+| SEC-07 | [SEC-07](tasks/SEC-07.md) — Scope quiz and question-bank privileges to owners and assignments | M1 | In Progress | [A05](#a05); required before assigned milestone exit. Tests SEC-07-T01 onward and T90–T92. |
 | SEC-08 | [SEC-08](archive/completed/M0/SEC-08.md) — Use safe assessment result and expiry responses | M0 | Complete | [A05](#a05); required before assigned milestone exit. Tests SEC-08-T01 onward and T90–T92. |
 | SEC-09 | [SEC-09](archive/completed/M0/SEC-09.md) — Bind teacher actions to the authenticated actor | M0 | Complete | [A07](#a07); required before assigned milestone exit. Tests SEC-09-T01 onward and T90–T92. |
 | SEC-10 | [SEC-10](archive/completed/M0/SEC-10.md) — Revoke authorization on every security-sensitive account change | M0 | Complete | [A08](#a08); required before assigned milestone exit. Tests SEC-10-T01 onward and T90–T92. |
 | SEC-11 | [SEC-11](archive/completed/M0/SEC-11.md) — Apply a consistent pending and rejected teacher policy | M0 | Complete | [A09](#a09); required before assigned milestone exit. Tests SEC-11-T01 onward and T90–T92. |
-| SEC-12 | [SEC-12](tasks/SEC-12.md) — Apply learning access to discussions, assignments and banks | M1 | Planned | [A11](#a11), [A27](#a27); required before assigned milestone exit. Tests SEC-12-T01 onward and T90–T92. |
-| SEC-13 | [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | M1 | Planned | [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests SEC-13-T01 onward and T90–T92. |
-| SEC-14 | [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | M1 | Planned | [A10](#a10); required before assigned milestone exit. Tests SEC-14-T01 onward and T90–T92. |
+| SEC-12 | [SEC-12](tasks/SEC-12.md) — Apply learning access to discussions, assignments and banks | M1 | In Progress | [A11](#a11), [A27](#a27); required before assigned milestone exit. Tests SEC-12-T01 onward and T90–T92. |
+| SEC-13 | [SEC-13](tasks/SEC-13.md) — Consume refresh tokens atomically and define tab-race handling | M1 | In Progress | [A10](#a10), [A33](#a33); required before assigned milestone exit. Tests SEC-13-T01 onward and T90–T92. |
+| SEC-14 | [SEC-14](tasks/SEC-14.md) — Complete secure MFA enrollment and recovery | M1 | In Progress | [A10](#a10); required before assigned milestone exit. Tests SEC-14-T01 onward and T90–T92. |
 | SEC-15 | [SEC-15](archive/completed/M0/SEC-15.md) — Keep unisolated code execution unavailable at launch | M0 | Complete | [A40](#a40); launch containment; separate M4 owner. Tests SEC-15-T01 onward and T90–T92. |
-| COM-01 | [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | M1 | Planned | [A11](#a11); required before assigned milestone exit. Tests COM-01-T01 onward and T90–T92. |
+| COM-01 | [COM-01](tasks/COM-01.md) — Unify access decisions across all learning surfaces | M1 | In Progress | [A11](#a11); required before assigned milestone exit. Tests COM-01-T01 onward and T90–T92. |
 | COM-02 | [COM-02](tasks/COM-02.md) — Allow renewal after effective subscription expiry | M1 | Planned | [A12](#a12); required before assigned milestone exit. Tests COM-02-T01 onward and T90–T92. |
 | COM-03 | [COM-03](tasks/COM-03.md) — Define calendar durations and atomic subscription review | M1 | Planned | [A13](#a13); required before assigned milestone exit. Tests COM-03-T01 onward and T90–T92. |
 | COM-04 | [COM-04](tasks/COM-04.md) — Disable simulated gateways and implement official adapters later | M3 | Planned | [A14](#a14), [A15](#a15); launch disabled; providers M4. Tests COM-04-T01 onward and T90–T92. |
@@ -35,7 +35,7 @@ Every finding keeps its original ID in exactly one file, has a release milestone
 | COM-06 | [COM-06](tasks/COM-06.md) — Make payment transitions auditable and fulfillment recoverable | M1 | Planned | [A15](#a15), [A18](#a18); required before assigned milestone exit. Tests COM-06-T01 onward and T90–T92. |
 | COM-07 | [COM-07](tasks/COM-07.md) — Validate products and snapshot explicit access durations | M1 | Planned | [A13](#a13), [A18](#a18); required before assigned milestone exit. Tests COM-07-T01 onward and T90–T92. |
 | COM-08 | [COM-08](tasks/COM-08.md) — Make voucher redemption unique per student | M3 | Planned | [A17](#a17); required before assigned milestone exit. Tests COM-08-T01 onward and T90–T92. |
-| COM-09 | [COM-09](tasks/COM-09.md) — Define effective dates, archival and retraction semantics | M1 | Planned | [A12](#a12); required before assigned milestone exit. Tests COM-09-T01 onward and T90–T92. |
+| COM-09 | [COM-09](tasks/COM-09.md) — Define effective dates, archival and retraction semantics | M1 | In Progress | [A12](#a12); required before assigned milestone exit. Tests COM-09-T01 onward and T90–T92. |
 | COM-10 | [COM-10](tasks/COM-10.md) — Use effective audiences and real ledger metrics | M2 | Planned | [A11](#a11), [A30](#a30); required before assigned milestone exit. Tests COM-10-T01 onward and T90–T92. |
 | COM-11 | [COM-11](tasks/COM-11.md) — Make course pricing atomic and preserve purchase history | M1 | Planned | [A15](#a15); required before assigned milestone exit. Tests COM-11-T01 onward and T90–T92. |
 | COM-12 | [COM-12](tasks/COM-12.md) — Complete resumable manual checkout and receipt review | M3 | Planned | [A16](#a16), [A18](#a18); required before assigned milestone exit. Tests COM-12-T01 onward and T90–T92. |

@@ -15,6 +15,7 @@ import {
   updateModuleSchema,
   updateLessonSchema,
 } from '../../utils/schemas';
+import { CourseRetractionSchema } from '@eduplatform/contracts';
 
 export const subjectRouter = Router();
 export const courseRouter = Router();
@@ -47,6 +48,7 @@ courseRouter.patch('/:id', authenticate, requireApprovedTeacher, validateBody(up
 courseRouter.delete('/:id', authenticate, requireApprovedTeacher, CourseController.deleteCourse);
 courseRouter.patch('/:id/publish', authenticate, requireRole([Role.ADMIN]), CourseController.publishCourse);
 courseRouter.patch('/:id/archive', authenticate, requireApprovedTeacher, CourseController.archiveCourse);
+courseRouter.patch('/:id/retract', authenticate, requireRole([Role.ADMIN]), validateBody(CourseRetractionSchema), CourseController.retractCourse);
 courseRouter.post('/:id/enroll', authenticate, CourseController.enrollCourse);
 courseRouter.post('/:id/submit', authenticate, requireApprovedTeacher, CourseController.submitCourseForReview);
 courseRouter.post('/:id/review', authenticate, requireRole([Role.ADMIN]), CourseController.reviewCourseStatus);

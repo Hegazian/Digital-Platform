@@ -35,6 +35,7 @@ describe('QuizService Unit Tests', () => {
     it('should create a quiz with questions', async () => {
       const mockQuiz = {
         id: 'q1',
+        creatorId: 'teacher-id',
         titleEn: 'Test Quiz',
         titleAr: 'اختبار تجريبي',
         passingScore: 50,
@@ -89,6 +90,7 @@ describe('QuizService Unit Tests', () => {
     it('should strip correct answers for students', async () => {
       const mockQuiz = {
         id: 'q1',
+        creatorId: 'teacher-id',
         lesson: { module: { course: { teacherId: 'teacher-id' } }, section: null },
         questions: [
           {
@@ -131,6 +133,24 @@ describe('QuizService Unit Tests', () => {
 
       expect(result.questions[0].explanation).toBe('Exp');
       expect((result.questions[0].options as any[])[0].isCorrect).toBe(true);
+    });
+
+    it('does not expose answer keys to a different teacher', async () => {
+      const mockQuiz = {
+        id: 'q1',
+        creatorId: 'owner-teacher',
+        lesson: null,
+        questions: [{
+          id: 'qu1',
+          options: [{ id: 'o1', text: 'Opt1', isCorrect: true }],
+          explanation: 'Private rationale',
+        }],
+      };
+      (prisma.quiz.findUnique as any).mockResolvedValue(mockQuiz);
+
+      const result = await QuizService.getQuizById('q1', 'other-teacher', Role.TEACHER);
+      expect(result.questions[0]).not.toHaveProperty('explanation');
+      expect(result.questions[0].options[0]).not.toHaveProperty('isCorrect');
     });
   });
 

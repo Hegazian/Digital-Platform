@@ -1,5 +1,5 @@
 export class AppError extends Error {
-  constructor(public statusCode: number, public message: string) {
+  constructor(public statusCode: number, public message: string, public code?: string) {
     super(message);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
@@ -13,8 +13,8 @@ export class BadRequestError extends AppError {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Unauthorized') {
-    super(401, message);
+  constructor(message: string = 'Unauthorized', code?: string) {
+    super(401, message, code);
   }
 }
 
@@ -31,7 +31,7 @@ export class NotFoundError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string = 'Conflict') {
-    super(409, message);
+  constructor(message: string = 'Conflict', code?: string) {
+    super(409, message, code);
   }
 }

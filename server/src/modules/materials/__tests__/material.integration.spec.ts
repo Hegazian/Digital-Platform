@@ -66,6 +66,7 @@ describe('Material API Integration Tests', () => {
         teacherId: teacher.id,
         subjectId: subject.id,
         isPublished: true,
+        status: 'PUBLISHED',
       },
     });
     courseId = course.id;

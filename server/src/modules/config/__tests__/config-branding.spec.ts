@@ -264,7 +264,7 @@ describe('Config-driven branding & settings round-trip', () => {
         .send({
           nameEn: productName,
           nameAr: 'منتج اختبار سجل السعر',
-          productType: 'COURSE',
+          productType: 'SUBJECT',
           resourceId: randomUUID(),
           priceEgp: 900,
         });

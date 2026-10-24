@@ -54,7 +54,7 @@ function writeShared(ctx) {
  for(const m of Object.keys(milestoneNames)) for(const t of tasks.filter(t=>t.milestone===m))visit(t);
  write('docs/README.md', `# Implementation documentation — start here
 
-Refreshed: **23 October 2026**. [Current status](CURRENT_STATUS.md) records test evidence and release holds. The active backlog contains ${tasks.filter(t=>t.status!=='Complete').length} unfinished tasks; ${tasks.filter(t=>t.status==='Complete').length} completed specifications are [archived](archive/completed/README.md). The [M1 release closure](M1_RELEASE_READINESS.md) lists every unfinished foundation task, review finding and external evidence requirement. Read [the M1 review](M1_REVIEW.md), [manual checks](M1_MANUAL_TESTING.md) and [implementation order](NEXT_STEPS.md) together. G1–G3 remain open; current work uses local fixtures only. [The final M0 review](M0_FINAL_REVIEW.md) remains historical checkpoint evidence.
+Refreshed: **24 October 2026**. [Current status](CURRENT_STATUS.md) records test evidence and release holds. The active backlog contains ${tasks.filter(t=>t.status!=='Complete').length} unfinished tasks; ${tasks.filter(t=>t.status==='Complete').length} completed specifications are [archived](archive/completed/README.md). The [M1 release closure](M1_RELEASE_READINESS.md) lists every unfinished foundation task, review finding and external evidence requirement. Read the task-specific evidence, [manual checks](M1_MANUAL_TESTING.md) and [implementation order](NEXT_STEPS.md) together. G1–G3 remain open; current work uses local fixtures only. [The final M0 review](M0_FINAL_REVIEW.md) remains historical checkpoint evidence.
 
 > A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide educational content through uploads, imports, and manual editors. The platform organizes, reviews, publishes, protects, and presents that content, manages assessments and student progress, and controls enrollment and paid access.
 
@@ -64,7 +64,7 @@ Refreshed: **23 October 2026**. [Current status](CURRENT_STATUS.md) records test
 2. Read [current verification](CURRENT_STATUS.md) and [baseline evidence and limits](TESTING_RELEASE_GATES.md#baseline-evidence); G0 is complete for internal work, while external onboarding remains gated by G1–G3 and operator evidence.
 3. Keep [M1-R01–R04](M1_REVIEW.md) regressions passing under ENG-09/ENG-02: upload lifetime, atomic config responses, pricing draft retention and compatible READY browser fixtures. Complete the remaining task evidence, follow [manual checks](M1_MANUAL_TESTING.md), keep ENG-05/06 rehearsals open and use the [M1 dependency waves](NEXT_STEPS.md#m1-implementation-waves). ENG-13 retains full-product verification ownership.
 4. Before real traffic, complete G1–G3 and the storage/scanner/credential/restore holds in [operations](MIGRATION_OPERATIONS.md#m0-upgrade-and-production-hold).
-5. Implement migrations/contracts/taxonomy/access/assets under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
+5. Continue the shared [typed contract package](../packages/contracts/src/index.ts), lifecycle/access policy and visibility/authz tasks under their owning tasks; read [target architecture](TARGET_ARCHITECTURE.md) and [contracts](API_DATA_CONTRACTS.md) before adding endpoints.
 6. Deliver manual authoring/import -> exact admin review -> private lesson -> assessment/assignment -> progress in Arabic and English, then verified manual payment/voucher journeys.
 7. Rehearse [operations, migration and recovery](MIGRATION_OPERATIONS.md), resolve minor-consent/retention and license decisions, and collect [release gate evidence](TESTING_RELEASE_GATES.md) for a limited pilot.
 8. Keep every M4 capability disabled at API boundaries; enable each only after its own gate. Automated payment adapters have independent provider sign-offs.
@@ -74,6 +74,8 @@ Refreshed: **23 October 2026**. [Current status](CURRENT_STATUS.md) records test
 | Document | Purpose |
 |---|---|
 | [Current implementation status](CURRENT_STATUS.md) | Latest verified commit, exact tests/coverage, completed work and remaining holds |
+| [M1 work-in-progress review](M1_PROGRESS_REVIEW.md) | Findings, repairs and acceptance disposition for all 13 reviewed tasks |
+| [SEC implementation verification](../audit/sec-implementation/verification.json) | Fresh local security/prerequisite test, build and migration-fixture evidence; not remote CI |
 | [M1 release closure](M1_RELEASE_READINESS.md) | Complete M1 task disposition, current review findings and remaining release evidence |
 | [Next implementation steps](NEXT_STEPS.md) | Verified baseline prerequisite, next local M1 implementations, dependency waves and external release evidence |
 | [M1 review](M1_REVIEW.md) | Four resolved code findings, owners, regressions and remaining acceptance limits |
@@ -82,6 +84,7 @@ Refreshed: **23 October 2026**. [Current status](CURRENT_STATUS.md) records test
 | [ENG-05 implementation evidence](ENG05_IMPLEMENTATION.md) | Baseline rationale, local and remote migration checks, and outstanding adoption gates |
 | [ENG-06 implementation evidence](ENG06_IMPLEMENTATION.md) | Liveness/readiness, storage selection, graceful drain, local tests and remaining outage checks |
 | [ENG-09 implementation evidence](ENG09_IMPLEMENTATION.md) | Bounded video upload staging/streaming, accurate processing state, range tests and remaining M1 acceptance |
+| [Shared runtime contracts](../packages/contracts/src/index.ts) | Zod schemas and inferred types currently shared by server and client; ENH-02 still owns full C01–C10 coverage and OpenAPI compatibility gates |
 | [Product goal and scope](PRODUCT_SCOPE.md) | Audiences, permissions, all-school curriculum, launch scope and exclusions |
 | [Target architecture](TARGET_ARCHITECTURE.md) | Module/data ownership, workers, deployment and safety boundaries |
 | [API and data contracts](API_DATA_CONTRACTS.md) | Normative DTOs, schemas, actions, errors, validation and compatibility |
@@ -104,7 +107,7 @@ Task source is maintained in [documentation authoring scripts](scripts/build-doc
 
 Tasks begin **Planned**. Priorities P0=immediate blocker, P1=required correctness/security, P2=important completeness/quality. Milestones are dependency gates, not calendar estimates. Status changes require exact implementation/test evidence; the documentation delivery does not complete engineering tasks.
 
-Updated **23 October 2026**: **${tasks.filter(t=>t.status==='Complete').length} archived Complete / ${tasks.filter(t=>t.status==='In Progress').length} In Progress / ${tasks.filter(t=>t.status==='Planned').length} Planned**. See [current evidence](CURRENT_STATUS.md), [the historical M0 review](M0_FINAL_REVIEW.md), [the M1 review](M1_REVIEW.md), and [the next-steps handoff](NEXT_STEPS.md). Completed task specifications are [archived](archive/completed/README.md) and excluded from this execution queue.
+Updated **24 October 2026**: **${tasks.filter(t=>t.status==='Complete').length} archived Complete / ${tasks.filter(t=>t.status==='In Progress').length} In Progress / ${tasks.filter(t=>t.status==='Planned').length} Planned**. See [current evidence](CURRENT_STATUS.md), [the historical M0 review](M0_FINAL_REVIEW.md), [the M1 review](M1_REVIEW.md), and [the next-steps handoff](NEXT_STEPS.md). Completed task specifications are [archived](archive/completed/README.md) and excluded from this execution queue.
 
 ## Milestones and release assignment
 
@@ -148,7 +151,7 @@ ${Object.keys(milestoneNames).map(m=>`### ${m} — ${milestoneNames[m]}\n\n${ord
 `);
  write('docs/AUDIT_TRACEABILITY.md', `# Audit and acceptance traceability
 
-Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed **23 October**; historical M0 application checkpoint **${implementationCommit}**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
+Audit baseline **2fbdc8e**, 21 October 2026. Current task disposition refreshed **24 October**; historical M0 application checkpoint **${implementationCommit}**; see [current status](CURRENT_STATUS.md) and [next steps](NEXT_STEPS.md). The [original review](../audit/PRODUCT_READINESS_REVIEW.md) and [test gap matrix](../audit/TEST_GAP_MATRIX.md) remain historical evidence. Their AI-production recommendations and AI-dependent release gates are **withdrawn**, not open defects under the revised mission. No production exploit or unrun integration success is inferred.
 
 ## M1 review supplement
 
@@ -192,7 +195,7 @@ The [archive manifest](manifest.json) records original path and SHA-256. The gen
 
 ${JSON.parse(read('docs/archive/manifest.json')).map(x=>`- [${x.path}](${x.path}) — superseded; exact pre-update copy.`).join('\n')}
 `);
-const entry = (title, body, archive) => { const prefix = archive.includes('/server/') || archive.includes('/client/') ? '../docs/' : 'docs/'; return `# ${title}\n\n**Updated: 23 October 2026**, historical M0 application checkpoint **${implementationCommit}**. M0 engineering is finalized for internal synthetic data. M1/G1 is not release ready: [release closure](${prefix}M1_RELEASE_READINESS.md) lists all unfinished M1 tasks, current review findings and external acceptance holds. [Current results](${prefix}CURRENT_STATUS.md), [the M1 review](${prefix}M1_REVIEW.md) and [implementation order](${prefix}NEXT_STEPS.md) identify the verified work and remaining requirements. Current execution uses local fixtures only; G1–G3 and production onboarding remain gated. Previous content is [superseded and preserved](${archive}).\n\n${body}\n`; };
+const entry = (title, body, archive) => { const prefix = archive.includes('/server/') || archive.includes('/client/') ? '../docs/' : 'docs/'; return `# ${title}\n\n**Updated: 23 October 2026**, historical M0 application checkpoint **${implementationCommit}**. M0 engineering is finalized for internal synthetic data. M1/G1 is not release ready: [release closure](${prefix}M1_RELEASE_READINESS.md) lists all unfinished M1 tasks, current review findings and external acceptance holds. [Current results](${prefix}CURRENT_STATUS.md), [the latest task review](${prefix}M1_PROGRESS_REVIEW.md) and [implementation order](${prefix}NEXT_STEPS.md) identify the verified work and remaining requirements. Current execution uses local fixtures only; G1–G3 and production onboarding remain gated. Previous content is [superseded and preserved](${archive}).\n\n${body}\n`; };
  write('README.md', entry('Educational platform for Egyptian students', `A bilingual educational platform for Egyptian students across all school stages. Admins and approved teachers provide content through uploads, structured imports and manual editors. The platform reviews, publishes, protects and presents that content, manages assessments and progress, and controls enrollment and paid access.
 
 Educational content creation belongs to uploaders. AI tutoring, generation and provider integrations are outside the revised product scope; the tutor interface, route, provider dependency and key configuration have been removed. Technical validation/scanning/transcoding/thumbnail processing of supplied files is permitted. Arabic/English interface support is required; uploader-supplied courses may be Arabic, English or bilingual.

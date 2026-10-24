@@ -20,6 +20,7 @@ export class CollectionsService {
       where: opts.includeUnpublished ? {} : { isPublished: true },
       include: {
         courses: {
+          where: opts.includeUnpublished ? undefined : { course: { isPublished: true, status: 'PUBLISHED', visibility: 'PUBLIC', retractedAt: null } },
           orderBy: { sortOrder: 'asc' },
           include: { course: { select: COURSE_SELECT } },
         },
@@ -33,6 +34,7 @@ export class CollectionsService {
       where: { id },
       include: {
         courses: {
+          where: opts.includeUnpublished ? undefined : { course: { isPublished: true, status: 'PUBLISHED', visibility: 'PUBLIC', retractedAt: null } },
           orderBy: { sortOrder: 'asc' },
           include: { course: { select: COURSE_SELECT } },
         },

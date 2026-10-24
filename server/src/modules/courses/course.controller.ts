@@ -219,6 +219,13 @@ export class CourseController {
     }
   }
 
+  static async retractCourse(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const course = await CourseService.retractCourse(req.params.id as string, req.user!.userId, req.user!.role, req.body.reason);
+      res.status(200).json({ success: true, data: course });
+    } catch (error) { next(error); }
+  }
+
   static async enrollCourse(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const studentId = req.user!.userId;

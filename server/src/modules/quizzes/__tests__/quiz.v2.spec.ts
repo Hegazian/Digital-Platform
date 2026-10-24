@@ -71,6 +71,8 @@ describe('Quiz Engine v2', () => {
         titleEn: `QUIZ2-COURSE-${ts}`,
         titleAr: 'دورة',
         description: 'Anchor course for quiz v2 tests',
+        status: 'PUBLISHED',
+        isPublished: true,
         teacherId: teacherAId,
         subjectId,
       },

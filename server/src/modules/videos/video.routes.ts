@@ -54,7 +54,9 @@ const ALLOWED_VIDEO_MIME = new Set([
 const upload = multer({
   storage: multer.diskStorage(stagedUploadStorage()),
   limits: {
-    fileSize: 500 * 1024 * 1024, // 500 MB limit
+    // Multer 2.5 compensates for Busboy's equality boundary internally.
+    // Keep the application cap exact; the load check tests both boundaries.
+    fileSize: 500 * 1024 * 1024,
     files: 1,
     fields: 4,
     fieldSize: 8 * 1024,

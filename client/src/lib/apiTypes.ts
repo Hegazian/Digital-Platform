@@ -1,3 +1,5 @@
+import type { ApiError } from '@eduplatform/contracts';
+
 /**
  * Shared API payload types used across components. Keep these structural
  * (server responses are validated at the API boundary; the UI treats them
@@ -10,10 +12,7 @@ export interface ApiEnvelope<T> {
   data: T;
 }
 
-export interface ApiErrorBody {
-  code?: string;
-  message?: string;
-}
+export type ApiErrorBody = Partial<ApiError> & { message?: string };
 
 /** Parses a fetch response body defensively without resorting to `any`. */
 export function parseJsonBody(text: string, status: number, statusText: string): unknown {

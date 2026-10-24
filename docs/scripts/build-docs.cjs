@@ -40,7 +40,10 @@ const statusOverrides = {
   'SEC-04': 'Complete', 'SEC-05': 'Complete', 'SEC-08': 'Complete',
   'SEC-09': 'Complete', 'SEC-10': 'Complete', 'SEC-11': 'Complete',
   'SEC-15': 'Complete', 'ENG-03': 'Complete', 'ENG-02': 'In Progress', 'ENG-05': 'In Progress', 'ENG-06': 'In Progress', 'ENG-09': 'In Progress', 'ENG-13': 'In Progress',
-  'ENG-15': 'Complete'
+  'ENG-15': 'Complete',
+  'COM-09': 'In Progress', 'COM-01': 'In Progress', 'ENH-02': 'In Progress',
+  'SEC-06': 'In Progress', 'SEC-07': 'In Progress', 'SEC-12': 'In Progress',
+  'SEC-13': 'In Progress', 'SEC-14': 'In Progress'
 };
 
 task('SCOPE-01', 'Establish the uploader-driven product specification', 'P0', 'M0', '',
@@ -249,7 +252,7 @@ ${t.milestone === 'M0' ? '**M0 checkpoint evidence:** See [current verification]
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **${implementationCommit}**. ${taskUpdate(t)} The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **${t.status === 'Complete' ? '23' : '24'} October 2026** against reviewed M0 application commit **${implementationCommit}**. ${taskUpdate(t)} The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

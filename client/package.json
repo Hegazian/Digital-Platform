@@ -25,6 +25,7 @@
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
     "@uiw/react-codemirror": "^4.23.0",
+    "@eduplatform/contracts": "file:../packages/contracts",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.31.0",

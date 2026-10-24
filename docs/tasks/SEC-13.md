@@ -5,7 +5,7 @@
 | Stable ID | SEC-13 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Identity concurrency |
 | Dependencies | [SEC-10](../archive/completed/M0/SEC-10.md), [ENG-05](ENG-05.md) |
 | Original finding / request | [SEC-13 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **34723cd**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **24 October 2026** against reviewed M0 application commit **34723cd**. Reviewed in [the 24 October task review](../M1_PROGRESS_REVIEW.md), with [fresh verification](../../audit/m1-closure/verification.json). Single-successor family rotation, bounded tab-race recovery, serialized delayed replay revocation and browser-lock failure settlement. Real database races and native desktop/mobile browser cross-tab recovery pass. Remaining before task completion: Matching-commit Linux CI and deployed cross-tab/session acceptance. The task remains In Progress while that evidence or implementation is open. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

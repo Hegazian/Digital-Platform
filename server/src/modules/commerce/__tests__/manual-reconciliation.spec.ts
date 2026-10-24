@@ -54,7 +54,7 @@ describe('Admin Manual Order Reconciliation', () => {
       data: {
         nameEn: 'Paid Course Product',
         nameAr: 'منتج مدفوع',
-        productType: ProductType.COURSE,
+        productType: ProductType.SUBJECT,
         resourceId: subject.id,
         priceEgp: 250,
         priceUsd: 12,

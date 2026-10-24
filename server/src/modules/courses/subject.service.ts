@@ -117,7 +117,7 @@ export class SubjectService {
       include: {
         pricing: true,
         courses: {
-          where: { isPublished: true },
+          where: { isPublished: true, status: 'PUBLISHED', visibility: 'PUBLIC', retractedAt: null },
         },
       },
     });

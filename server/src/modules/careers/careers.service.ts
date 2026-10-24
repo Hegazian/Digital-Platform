@@ -179,6 +179,8 @@ export class CareersService {
               subjectId: { in: subjectIds },
               status: 'PUBLISHED',
               isPublished: true,
+              visibility: 'PUBLIC',
+              retractedAt: null,
             },
             select: {
               id: true,

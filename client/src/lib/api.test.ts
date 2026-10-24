@@ -130,6 +130,46 @@ describe('session renewal', () => {
     expect(transport).toHaveBeenCalledTimes(5);
   });
 
+  it('uses the Web Lock winner token instead of rotating again in a second tab', async () => {
+    const originalLocks = Object.getOwnPropertyDescriptor(navigator, 'locks');
+    const request = vi.fn(async (_name: string, _options: unknown, callback: () => Promise<unknown>) => {
+      // Simulate another tab finishing its rotation while this tab waits.
+      localStorage.setItem('accessToken', 'tab-winner-token');
+      return callback();
+    });
+    try {
+      Object.defineProperty(navigator, 'locks', { configurable: true, value: { request } });
+      transport.mockResolvedValueOnce(json({ message: 'Expired' }, 401))
+        .mockResolvedValueOnce(json({ success: true }));
+
+      expect((await fetchApi('/auth/profile')).success).toBe(true);
+      expect(request).toHaveBeenCalledWith('eduplatform-auth-refresh', { mode: 'exclusive' }, expect.any(Function));
+      expect(transport.mock.calls.some(([url]) => url.endsWith('/auth/refresh'))).toBe(false);
+      expect(transport.mock.calls[1][1].headers.get('Authorization')).toBe('Bearer tab-winner-token');
+    } finally {
+      if (originalLocks) Object.defineProperty(navigator, 'locks', originalLocks);
+      else Reflect.deleteProperty(navigator, 'locks');
+    }
+  });
+
+  it('settles waiting callers when a Web Lock is denied and permits the next refresh', async () => {
+    const originalLocks = Object.getOwnPropertyDescriptor(navigator, 'locks');
+    try {
+      Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: vi.fn().mockRejectedValue(new Error('Lock denied')) } });
+      transport.mockResolvedValue(json({ message: 'Expired' }, 401));
+      const outcomes = await Promise.allSettled([fetchApi('/auth/profile'), fetchApi('/courses/private/learning')]);
+      expect(outcomes.every(outcome => outcome.status === 'rejected')).toBe(true);
+      expect(localStorage.getItem('accessToken')).toBe('old-token');
+      Reflect.deleteProperty(navigator, 'locks');
+      transport.mockReset().mockResolvedValueOnce(json({ message: 'Expired' }, 401))
+        .mockResolvedValueOnce(json({ data: { accessToken: 'renewed-token' } })).mockResolvedValueOnce(json({ success: true }));
+      expect((await fetchApi('/auth/profile')).success).toBe(true);
+    } finally {
+      if (originalLocks) Object.defineProperty(navigator, 'locks', originalLocks);
+      else Reflect.deleteProperty(navigator, 'locks');
+    }
+  });
+
   it.each([undefined, 'blob'] as const)('retries a delayed old-token 401 with the already renewed token (%s)', async (responseType) => {
     let finishLate!: (response: Response) => void;
     let refreshes = 0;

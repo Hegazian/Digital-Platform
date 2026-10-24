@@ -8,6 +8,7 @@ describe('Unified Entitlement Resolver (TDD)', () => {
   let entStudentId: string;
   let courseStudentId: string;
   let expiredStudentId: string;
+  let futureStudentId: string;
   let subjectId: string;
   let courseId: string;
   let teacherId: string;
@@ -42,6 +43,7 @@ describe('Unified Entitlement Resolver (TDD)', () => {
         teacherId,
         subjectId,
         isPublished: true,
+        status: 'PUBLISHED',
       },
     });
     courseId = course.id;
@@ -136,13 +138,23 @@ describe('Unified Entitlement Resolver (TDD)', () => {
         status: EntitlementStatus.ACTIVE,
       },
     });
+
+    const futureStudent = await prisma.user.create({
+      data: { email: `student-future-${Date.now()}@test.com`, password: 'Password123!', name: 'Future Student', role: 'STUDENT' },
+    });
+    futureStudentId = futureStudent.id;
+    await prisma.entitlement.create({ data: {
+      studentId: futureStudentId, resourceType: EntitlementType.COURSE, resourceId: courseId,
+      sourceType: EntitlementSource.VOUCHER, startsAt: new Date(Date.now() + 60_000),
+      expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), status: EntitlementStatus.ACTIVE,
+    } });
   });
 
   afterAll(async () => {
     try {
       await prisma.entitlement.deleteMany({
         where: {
-          studentId: { in: [subStudentId, entStudentId, courseStudentId, expiredStudentId] },
+          studentId: { in: [subStudentId, entStudentId, courseStudentId, expiredStudentId, futureStudentId] },
         },
       });
       await prisma.subscription.deleteMany({ where: { userId: subStudentId } });
@@ -150,7 +162,7 @@ describe('Unified Entitlement Resolver (TDD)', () => {
       await prisma.subject.deleteMany({ where: { id: subjectId } });
       await prisma.user.deleteMany({
         where: {
-          id: { in: [teacherId, subStudentId, entStudentId, courseStudentId, expiredStudentId] },
+          id: { in: [teacherId, subStudentId, entStudentId, courseStudentId, expiredStudentId, futureStudentId] },
         },
       });
     } catch (e) {}
@@ -183,5 +195,23 @@ describe('Unified Entitlement Resolver (TDD)', () => {
 
     const hasCourseAccess = await EntitlementResolver.hasCourseAccess(expiredStudentId, courseId);
     expect(hasCourseAccess).toBe(false);
+  });
+
+  it('does not grant a future-dated access entitlement early', async () => {
+    expect(await EntitlementResolver.hasCourseAccess(futureStudentId, courseId)).toBe(false);
+  });
+
+  it('retains an existing grant after archive and denies it after retraction', async () => {
+    await prisma.course.update({ where: { id: courseId }, data: { status: 'ARCHIVED', isPublished: false } });
+    expect(await EntitlementResolver.hasCourseAccess(courseStudentId, courseId)).toBe(true);
+    await prisma.course.update({ where: { id: courseId }, data: { status: 'PUBLISHED', isPublished: true, retractedAt: new Date(), retractionReason: 'fixture withdrawal' } });
+    expect(await EntitlementResolver.hasCourseAccess(courseStudentId, courseId)).toBe(false);
+  });
+
+  it('allows a published preview but denies it after course retraction', async () => {
+    await prisma.course.update({ where: { id: courseId }, data: { status: 'PUBLISHED', isPublished: true, retractedAt: null, retractionReason: null } });
+    expect(await EntitlementResolver.hasCoursePreviewAccess(courseId)).toBe(true);
+    await prisma.course.update({ where: { id: courseId }, data: { retractedAt: new Date(), retractionReason: 'preview withdrawn' } });
+    expect(await EntitlementResolver.hasCoursePreviewAccess(courseId)).toBe(false);
   });
 });

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-24",
+  "branch": "codex/milestone-1",
+  "scope": "Local SEC implementation continuation and required COM-09, COM-01, and ENH-02 prerequisites. This is fresh local evidence, not remote CI or external release acceptance.",
+  "tasks": {
+    "SEC-06": "In Progress: public/unlisted/private catalog and direct-detail rules are implemented; full role/discovery matrix remains open.",
+    "SEC-07": "In Progress: standalone quiz/question-bank ownership and answer-key filtering are implemented; remaining attempt and UI paths need acceptance.",
+    "SEC-12": "In Progress: assignment, discussion, quiz, material, video, board, and progress access consumers were audited; shared guards and free-preview retraction checks are implemented, with remaining route/file delivery acceptance open.",
+    "SEC-13": "In Progress: refresh token family rotation, atomic successor creation, bounded concurrent-tab conflict handling, and family-scoped replay revocation are implemented.",
+    "SEC-14": "In Progress: encrypted MFA secrets, non-disruptive replacement, atomic TOTP/recovery use, and audited session-revoking admin reset are implemented; production key provisioning/rotation and operational acceptance remain open.",
+    "COM-09": "In Progress: archive/retraction lifecycle, effective-date rules, order serialization, and retention of existing access after archive are implemented.",
+    "COM-01": "In Progress: server-owned access decisions and explicit free-enrollment provenance are implemented; full consumer audit and shared contract coverage remain open.",
+    "ENH-02": "In Progress: shared contract workspace package and first server/client schemas are integrated; full C01-C10/OpenAPI/compatibility coverage remains open."
+  },
+  "verification": {
+    "serverFocusedTests": { "files": 17, "passed": 110, "skipped": 0 },
+    "clientFocusedTests": { "files": 2, "passed": 27, "skipped": 0 },
+    "serverTypecheck": "passed",
+    "serverBuild": "passed",
+    "clientTypecheck": "passed",
+    "clientProductionBuild": "passed",
+    "clientLint": { "errors": 0, "warnings": 27 },
+    "migrationFixture": {
+      "migrations": 8,
+      "emptyInstallAndRepeatDeploy": "passed",
+      "driftRejectedBeforeHistoryWrite": "passed",
+      "populatedUpgrade": "passed",
+      "rowsPreserved": 22,
+      "tablesPreserved": 21
+    }
+  },
+  "limitations": [
+    "Exact-head remote CI has not run for this local working tree.",
+    "Representative production restore, rollback, operator review, Supabase/ClamAV canary, and real-device checks remain open by the local-only execution decision.",
+    "Production MFA key provisioning, rotation, and backup/restore rehearsal remain open.",
+    "The existing M1 audit verification and coverage-gap files remain immutable evidence for their earlier checkpoint; their source hashes are not asserted as current code hashes."
+  ]
+}

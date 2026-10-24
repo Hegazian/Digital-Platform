@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..');
 const testFile = path.join(root, '.env.test');
 const fixtureEnv = fs.existsSync(testFile) ? require('dotenv').parse(fs.readFileSync(testFile)) : {};
 const env = { ...process.env, ...fixtureEnv, NODE_ENV: 'test' };
+env.MFA_ENCRYPTION_KEY ||= '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
 if (process.argv.includes('--release-coverage')) env.COVERAGE_RELEASE = 'true';
 for (const name of ['DATABASE_URL', 'DIRECT_URL']) {
   let url;

@@ -1,0 +1,412 @@
+{
+  "date": "2026-10-24",
+  "checkedAt": "2026-10-24T10:03:25.737Z",
+  "branch": "codex/milestone-1",
+  "environment": {
+    "node": "v26.7.0",
+    "platform": "win32",
+    "arch": "x64",
+    "database": "guarded loopback eduplatform_test; disposable fixture schemas",
+    "execution": "local only"
+  },
+  "review": {
+    "mergeBase": "322d070ff77cd6679afb8a3567963a295b7bb632",
+    "worktreeBase": "89acbc32b1c1c35514c5b1dd56fff50e5423a82d",
+    "reviewer": "current local agent; plugin has no local review tool",
+    "repairedFindings": [
+      "M1-R06",
+      "M1-R07",
+      "M1-R08",
+      "M1-R09",
+      "M1-R10",
+      "M1-R11",
+      "M1-R12",
+      "M1-R13",
+      "M1-R14",
+      "M1-R15",
+      "M1-R16",
+      "M1-R17",
+      "M1-R18",
+      "M1-R19",
+      "M1-R20",
+      "M1-R21",
+      "M1-R22",
+      "M1-R23",
+      "M1-R24"
+    ]
+  },
+  "sourceNormalization": "LF",
+  "sourceFiles": {
+    ".github/workflows/ci.yml": "a41c895fca2f4e36085193d2ebf79e337e9c12ef53e7b846fe374d65390160ca",
+    ".gitignore": "091e3ad5c2e4c8e2c8723181e7cae501effaa630748058024f5877114116d946",
+    "client/e2e/m0/review.spec.ts": "d4dc55532d7f00e682a50739fbe276afd1e8fbabcc69bbf3b571e6805a10a66c",
+    "client/e2e/m0/safety.spec.ts": "69213be4256acb31e15e3b40fdf80503237186b0cfa3a7489b661da69d551ca8",
+    "client/package-lock.json": "21c84ff5fb2da3ce28c148e2d8d9a51bb68be7964cc526267af8d7990c129bee",
+    "client/package.json": "870f28894dd9c64ee7d7ccec49b5476fc2abd5c72e05c318ce608bb849279d3c",
+    "client/playwright.m0.config.ts": "567abdceb7e59333a9f2b7a163dcc9158945ccd0c047039b069730768268eb5a",
+    "client/src/app/profile/page.tsx": "0b0d5b594b50ada55831435cce4407a315863ea46a56fb9e4f6b849b9ef13427",
+    "client/src/components/VideoUploader.test.tsx": "06d44ba73300bd3970631509f95987b6631c63d9548317245915db88ddbf6423",
+    "client/src/components/VideoUploader.tsx": "402e6fd1cb7d7df399f5b487d02a994dfd0f2474ea7eff17c29fcc551c247f4a",
+    "client/src/components/__tests__/CheckoutModal.spec.tsx": "ee9e7d6a42f6770a68e3d9161ec82f09d375debe82038628233122d9d5be24b3",
+    "client/src/components/admin/CourseApprovalQueue.tsx": "d958f55d15c18705a55ee00d605e644fc42aac911b7536325780f080e2aa9513",
+    "client/src/components/admin/CoursePricingManager.test.tsx": "f98cc5662a2776ac825ee64d97592c41a16d39bb21a6a9602366ffd6f3c0ef8e",
+    "client/src/components/admin/CoursePricingManager.tsx": "5fb7db650b7904dd5ef5df624f04ede72447d20aa76db6a79d6d686e597ccea5",
+    "client/src/components/admin/PlatformSettings.test.tsx": "69931164ca6388b36c8f8b152c3d78330856c9906df4b19279aff280c952812b",
+    "client/src/components/admin/PlatformSettings.tsx": "81e00983712de149f09950b9af2b07ec6eb26b3df3588b9851cb160b90ab6fdf",
+    "client/src/components/settings/MfaSetupModal.test.tsx": "5c3ad568eac94b8ec710538600d602f168ec1617934b6a01ff6b69f60462897a",
+    "client/src/components/settings/MfaSetupModal.tsx": "9687316ac21a81197a4b26cdaffb31e4055181400990fef8e719778454bc71f9",
+    "client/src/components/teacher/CourseManager.tsx": "8284771b5a88363b2954b4c8ff7ba265f7273912c29b4f1a536bafbd0b653ff5",
+    "client/src/components/teacher/modals/CourseCreateModal.tsx": "957dafa134095d84189771a17002ba143baf0b47e3ebfc1c539a7a27c064bd07",
+    "client/src/components/teacher/modals/CourseEditModal.tsx": "2868d0a1f896e710be4a9cdb828d086d614e81d966d2f59243b00ca73a2d9e70",
+    "client/src/lib/api.test.ts": "04c5aac8015afae908274388c7d6db784f9399d56d805b95ee6a951dca6294c0",
+    "client/src/lib/api.ts": "838a3f93e48719232356b24b2e4e7f6f191556d78f14caf34404d05678783994",
+    "client/src/lib/apiTypes.ts": "c07b1b776caeaa794e3c9c2d76c8ce07d7a5e8a8439ec896e81b25ded427d87b",
+    "docs/scripts/audit-dependencies.cjs": "33cd5c546540bcb039032d47514abec4c8601eec63384334fdc15fee162a3517",
+    "docs/scripts/build-docs.cjs": "6f3f020a3f620e7f20431006d4ea0ed2cdde36d0a1546f1c1e7688efac859062",
+    "docs/scripts/current-state.cjs": "ada3f933704bfebc8e833fa0a61d10d086da4373d6a6b2ae5341bf121c165936",
+    "docs/scripts/doc-layout.cjs": "b375ac26b39c1934718e2cecde4a04b1e9bf5c914a956c01a180a2166e19cfa6",
+    "docs/scripts/shared-docs.cjs": "97946c6d954dfeaac1a9f979836b4c6033397f6f3a9be83abbbab8c33ffd70c4",
+    "docs/scripts/tasks-engineering.cjs": "8dd38ba66460152b3ebb5eb08f845d1168a72ebb324c9fc1ed3098cf586e6781",
+    "docs/scripts/validate-docs.cjs": "a8cc455cea97a13f0fd161fd535906cf26b2b6e1bd99c2373cd3ff9fd0d72499",
+    "packages/contracts/dist/index.d.ts": "ebb6ac080c3b680568f00cc1295436993bb9e2911c28f4a57b6ad717dd6c1065",
+    "packages/contracts/dist/index.js": "7823c7a591ef1a8e0f720dfe52a135fffe8d8f0c44d1f3d57358e57b23b3b022",
+    "packages/contracts/openapi.json": "b34ed139893a40a30cf5e2af2ce0579f37dd22c30c57c2c3d98db0168f7269bd",
+    "packages/contracts/package-lock.json": "9e9c37ddc37dc4a4803e429096739be09364d0270b7eb85d05b6ccb93ec1d741",
+    "packages/contracts/package.json": "bb15f0814a304f5eb84cdf7e8b086c22b6404e8fadaaa5fa61cdc7c9d0c85b7d",
+    "packages/contracts/scripts/openapi.cjs": "85f9ee364d8d23daffe87135d9872aba44ed3bd49ec4d683fa918036cadd844c",
+    "packages/contracts/src/index.ts": "0e2d92577bfcb93f32a957b3393d8f51f63f170eee15110c864f3d40cfd8794a",
+    "packages/contracts/test/contracts.test.cjs": "917feb9b75bbf78ccdd893dee6bb0cfd62689db59553454b6a5c5128a978dce1",
+    "packages/contracts/tsconfig.json": "f8e92608b6a013c31d5bd9275f91374557d0bc3fbcd4132768dea71be023ad6f",
+    "server/benchmarks/video-upload-load.ts": "8dc940a0e3a3eb313281bc028b800e4d54a4fd30ac40ac3df3dedd0bb9398a07",
+    "server/package-lock.json": "dd3042d3ffbd9c32a73979cec2f3682a8dd61e4529b47ea8811afbf6fdd332c8",
+    "server/package.json": "65e9a3bd1a53b67fb2f01adbcea4e1727dae94ef046ee273759a2ed469681cfb",
+    "server/prisma/migrations/20261023000000_eng02_config_version/migration.sql": "331dbc33e024a84df8d643b435483e9e2a6df81943088d644c5f8d8c23f81c4f",
+    "server/prisma/migrations/20261024000000_sec13_refresh_token_families/migration.sql": "fb571b8f034f8a022c22f16fbf805a989f114c85e41bfaaa5da0dbe93bfa4034",
+    "server/prisma/migrations/20261024000100_sec14_secure_mfa/migration.sql": "6db024e035e20dcb81fe184e6c5a71c254e1cc53f16a52bd59e1ebf0479b814b",
+    "server/prisma/migrations/20261024000200_com09_course_lifecycle/migration.sql": "f38290599118df18d5600ac19f4deb36a21f41a85c59353ac0ce0339f0a5351d",
+    "server/prisma/migrations/20261024000300_sec07_quiz_ownership/migration.sql": "02c25042ffe7239626e59435e656f5bd150500204c87a73a0496f1c189e9f28e",
+    "server/prisma/migrations/20261024000400_com01_access_policy/migration.sql": "ea6db38a71c1a3a8f52009aee93cf59ededc41c57f1646b70995f9da5dd57d40",
+    "server/prisma/schema.prisma": "4bef5a497089527ba1f9a1fc095eac38c51f1c4545b7af5e0f3e9745d080929d",
+    "server/scripts/encrypt-mfa-secrets.cjs": "cd1048ca93b27c73297906e8f367d070d8c25c9e9cf463659d9ca3fd4efd30da",
+    "server/scripts/m0-browser.cjs": "71c91ca47d04c928ae20f18d235207476a32cf8d4daa1f2c4039111774d68ec4",
+    "server/scripts/migration-upgrade-fixture.cjs": "ebe84293cb6b87ecde13bbacb7483a6bdf82146b3fd40be7dfffd6004d3eaee3",
+    "server/scripts/test-env.cjs": "18f0f640a3aa767d2bb0d6863cbe4d8a530ee583c5492985bc44c3fcc3e49b4a",
+    "server/src/app.ts": "c154b34acd7b4bfbb05781eef25c3c7cc59db68785e2f81282c58dd3788b0dba",
+    "server/src/modules/assessment/__tests__/assessment.integration.spec.ts": "95e146082c6eb58cc8c4a70a0e60f51d320a461bb8e042b6578c86d7981a978b",
+    "server/src/modules/assessment/assessment.controller.ts": "dbdfb823c24693dc46969e091d942e28fa431ad20276b5cafeb41f6f48b8c562",
+    "server/src/modules/assessment/assessment.service.ts": "a8ff13340016d34180e572957fb3946ef209b4826cc5ae4b036e73934306f82c",
+    "server/src/modules/assignments/__tests__/assignment.http.spec.ts": "879da3dc3f50560d58ce4cba704e4406748b69e50225b861802797a3766806e8",
+    "server/src/modules/assignments/assignment.routes.ts": "1eacfa09702e75868f8b8c5109daee9112520a1255e5a067d3269f89f3856e67",
+    "server/src/modules/auth/__tests__/auth.middleware.spec.ts": "aaef7c0017d75ddfb7a9bd90afadb0fa4b994ce2a7a0ebecd743771786c1ae16",
+    "server/src/modules/auth/__tests__/auth.service.spec.ts": "2525ba2d58f8aa1a05d51b16954d879e37341f0ea53d0405828face9448eb28d",
+    "server/src/modules/auth/__tests__/mfa-review.spec.ts": "fa90786e7e6527c3f8144620453de1c0b51371f2ef594e19373eadad8f106da9",
+    "server/src/modules/auth/__tests__/mfa.integration.spec.ts": "aacd647108f3a74b5e8dd016c148953d18c75d6ed3f766340b495a95d455327b",
+    "server/src/modules/auth/__tests__/session-management.spec.ts": "e90cdf72a0f24b8dd749cc5b802d1dec10bcb353ed79f6e24d9e1c4d5318a657",
+    "server/src/modules/auth/auth.middleware.ts": "193484e66d20772a090ba5c37700e3afb588435e4e24e2dd28dedd8694582a82",
+    "server/src/modules/auth/auth.service.ts": "500a92a3ca3f13d3528f28796de0a78b249c7da9895ee183e3e5a7a8b98339b7",
+    "server/src/modules/auth/mfa.controller.ts": "5f545eab1b461629f2814f562f5d2c92c62546e0ebdc953c3153fc71e916141a",
+    "server/src/modules/auth/mfa.routes.ts": "5a9233ac9166da12e4b304a12505f842cfb2a088405435dfca1ecfa976173ae9",
+    "server/src/modules/careers/careers.service.ts": "2592c777689010597d02f550c64caebf65df41f0441d3f60fa6ecb0f7d0c0010",
+    "server/src/modules/collections/collection.service.ts": "33db9c3a46b2433af398c81fe56ee35c21c4d005c10d8032c7aab847be2c1eaa",
+    "server/src/modules/commerce/__tests__/access-time.spec.ts": "580a73b4b002fc0da4f54f6908fb57c38a283b990a69434b3da6fd6e4e39b717",
+    "server/src/modules/commerce/__tests__/commerce.integration.spec.ts": "bec30f3d4e879b39ae496ba4a2b99645b1901cb4696c923b0204d571108fb679",
+    "server/src/modules/commerce/__tests__/entitlement-resolver.spec.ts": "c329ced7f166b85f0aa0d9997e8802572d16a3b033e6d66ddd9d5ad0972bfc23",
+    "server/src/modules/commerce/__tests__/m1-policy-review.spec.ts": "ad33f40e62a974abbde9b4f70bcc35bb2a632d8e164b3e8d94f08a9388f3c024",
+    "server/src/modules/commerce/__tests__/manual-reconciliation.spec.ts": "01ae00c07cd02359ce274cfe548b3b9925db3fb7c746c7de23d8542c8af1bfe6",
+    "server/src/modules/commerce/access-policy.service.ts": "de91968d0196b58dd086d2571843bb0b0c08c28f02428fb2ccec333139c6176a",
+    "server/src/modules/commerce/access-time.ts": "04cdc8dec4a123e6e850d507df10ae3ff4b373e7ca55ff748855edf1e25ac2ab",
+    "server/src/modules/commerce/commerce.routes.ts": "fd416ac764b93e5c1588c5fcd2e7049fde733648fcee6b92c25425ac8728e1d5",
+    "server/src/modules/commerce/commerce.service.ts": "7e8b60dc7f36ce77bd27470695c94dc21aef3fe5f2f08379fd76d5445304fc7f",
+    "server/src/modules/commerce/course-learning-access.middleware.ts": "5963700278257f7fafceef5b19e052f995147cb1c6601fe9edf25a33326ca657",
+    "server/src/modules/commerce/entitlement-resolver.service.ts": "71828768da4bd90f2e9353394f6ba02b689a0c9ba7d87f77f2f0662644511bed",
+    "server/src/modules/config/__tests__/config-branding.spec.ts": "932940835a098d6f671923821a8e5bf40e78ba54c34aa22d5836cad7024ffbfb",
+    "server/src/modules/config/config.controller.ts": "1371dfabd210f309f56fc30a41a04bfb5d647de421f9ff7a816755d781621d4f",
+    "server/src/modules/config/config.routes.ts": "65afb08f89902896dcb05c8bef796351ed752a5a8f40ad7832df92ebf71f91d5",
+    "server/src/modules/config/config.test.ts": "cd3365308e545dffe02181ee57c3e402a29a309ba399f3f05e5b30270c710c99",
+    "server/src/modules/courses/__tests__/course.dynamic-subject.spec.ts": "e19c800fc4c470d97fed9dda23a567898d7bc418de32fb763b607c4b2ecbfcc5",
+    "server/src/modules/courses/__tests__/course.governance.spec.ts": "4fea9777d673ea18ede2d0e3655996952c214686c64e992122d5fbfadb25e7e8",
+    "server/src/modules/courses/__tests__/course.integration.spec.ts": "7768394c4e0cdaa38637973bf4a309c1ff0884fd6094fca067d3c126ad67b755",
+    "server/src/modules/courses/__tests__/course.service.spec.ts": "13157413556dd250f539596cfa62a912551625ca9289a0c146422b1ae1c333d7",
+    "server/src/modules/courses/__tests__/curriculum-unification.spec.ts": "a6562e773f59417f8f89f757dff47a445b04dfeba69f90f9120356b81b8faa43",
+    "server/src/modules/courses/__tests__/subject.service.spec.ts": "530b1124e6a6a672d03cc11c099352e206261800e32ae448948d43d21123f612",
+    "server/src/modules/courses/board.controller.ts": "080c8c9bd5ca84c061312c75af797daa142f9755a4035db512155a2efae11ece",
+    "server/src/modules/courses/course.controller.ts": "0ff0872e2875fa23bacbe2b3ccf2b2950e2336fdbd0f552e5001125ddfa6b1e4",
+    "server/src/modules/courses/course.routes.ts": "247139d55a9f07b9994fe3a1e5408ec692dc4ec0b0a8fe8207f3302569467433",
+    "server/src/modules/courses/course.service.ts": "bd21c71b443fcb66cd6b6698461b67908cbd52af8b3d710ae4890694220c469f",
+    "server/src/modules/courses/e2e-demo.test.ts": "7d463d5a0130db856a85cc2464168f7666c82ad96d4220ec9774ef036ce69f80",
+    "server/src/modules/courses/subject.service.ts": "57b0ad44a580414ed755d37ed3a4cc88ed10c2654d8c8741c33b0a9ee33d25a9",
+    "server/src/modules/discussions/__tests__/discussion.integration.spec.ts": "6f3a147e12a374d75ffbb1cab5d998728dbcb9e50643921c06348047c0203d1b",
+    "server/src/modules/discussions/discussion.routes.ts": "972c60b8599410b3f207a4b90d6f6e2dba720a9bcde8d9cb34fb493d6ac3d870",
+    "server/src/modules/materials/__tests__/material.integration.spec.ts": "a137942e94cf5d13f166943b5d7dfddf62fa65e8399e61453c93bfdc4c9946a2",
+    "server/src/modules/materials/__tests__/material.service.spec.ts": "0975ed043e3dfa01a84261bd04667bca91561a2a4e4c52f23e3d4bb00ecdcc0c",
+    "server/src/modules/materials/material.service.ts": "5f737067d789f71b3ef88925061b96a054f9988f0c23ebc74433ead760e66035",
+    "server/src/modules/progress/progress.service.ts": "ad8439d3742aa6db1da6454a49aa253b6f9d1bca8451e5ce4b2181d033fc2fc2",
+    "server/src/modules/quizzes/__tests__/quiz.integration.spec.ts": "c8f5ffc7795520cb6f72a2be053452bb7c86ff86f61d27d8d9a87a6e30ab5e11",
+    "server/src/modules/quizzes/__tests__/quiz.service.spec.ts": "03b61fb418f9050260754b31f1e39e593ea3774bb52bfd58a7a00622a0941320",
+    "server/src/modules/quizzes/__tests__/quiz.v2.spec.ts": "231f9f2cae5ba75efca3cadde54aabd388b47fb5b1ddd40d3594c53aac58d0e4",
+    "server/src/modules/quizzes/quiz.controller.ts": "107457e09ffc39d4f4a2de74f6ddf632f9e7d2294962aacf7bd6fb65f39d87dc",
+    "server/src/modules/quizzes/quiz.service.ts": "02bb3e2c2cc99dcdbaa9cfeb673ebbb33af6b3c0a5d2bf48abe11c877ace7f8c",
+    "server/src/modules/videos/__tests__/video.integration.spec.ts": "600448728c035c2c17c06c145d8398102d26f692a369fd4d6d9b08190d387ee7",
+    "server/src/modules/videos/__tests__/video.service.spec.ts": "6c3bc2ce5919f1cd84eb0ee6b5c75e45e59187905d4c58d27a36d07565e9a81e",
+    "server/src/modules/videos/video.controller.ts": "b74fa8e44da9f61b18830dd25bd213816881cd36e713a33b6ce8817c2d578cdd",
+    "server/src/modules/videos/video.routes.ts": "336bf7724c9b4f97f71777f6d0078dc7edbd399ddd5ed05374225dc913dcea5d",
+    "server/src/modules/videos/video.service.ts": "991ad07b6705c8aabc56360cbd3655ea451356efcb79199dcc34473114c28427",
+    "server/src/server.ts": "41e0ee8b422dd52d5e9a3786c49e22f56989104982e8cc2868eb49b08887759f",
+    "server/src/utils/__tests__/contracts.spec.ts": "ecb204419776e132d3cff8e221df2e944a7477c2e70a159134f2fb41e2654bdd",
+    "server/src/utils/__tests__/file-validation.spec.ts": "8baffdd26a4f61cb286886b2bb60210bc3dc45508a363a77c92b82178c8a5e93",
+    "server/src/utils/__tests__/graceful-shutdown.spec.ts": "7f6bcdc437b8f5ce89a607168d6ebc3b90f63203a33e1c4c1435c4712ffc1072",
+    "server/src/utils/__tests__/mfa-crypto.spec.ts": "2445a366ee4f8e6f1032b1d6b53ba4a08d5b5dbf0a20c75f84c0c0a9fd86b11a",
+    "server/src/utils/__tests__/process-shutdown.spec.ts": "adb9b4d5e1822dd0da66dcf28406c9ce2375f004588ec838e73e1814b0c41bed",
+    "server/src/utils/__tests__/scanner.spec.ts": "eb5d5e24d51987f842a54c2e3f1f402d515b67cc52676db62031ce8830695f1b",
+    "server/src/utils/__tests__/storage-readiness.spec.ts": "5a368e4d4866dc1bb5ff463341da865835a9ede4f47832c169578081f5f89a2b",
+    "server/src/utils/__tests__/validate.spec.ts": "3469e5d001eec083961c3df651585562eda7ca04c832f3d480989f3f85442119",
+    "server/src/utils/currency.ts": "5fdebc88751694ad4286403d4deffd05c01c9af3e1091b6bdbd8b3e7548ca575",
+    "server/src/utils/errors.ts": "547b498482e4b7a5badc08fbf5b92b6ab3ebcedb778c147ab99ea66ae41972aa",
+    "server/src/utils/file-validation.ts": "a81a8d0f258c4cff31d9ca12e97ac92785a10bf3d108237b9d1f54d225cb257d",
+    "server/src/utils/graceful-shutdown.ts": "1dd495821b0c47ab7dad223f80483a389dca26f0d782d1155c5525fad1f2d443",
+    "server/src/utils/mfa-crypto.ts": "211184f7d58a11723d437c9009754456624d0e8e3b5b23a462014017cbcfc3ac",
+    "server/src/utils/schemas.ts": "34c91868b9b1166eb425be202d65a6f7d3d1d6566a06bf48b8887801a1596ce7",
+    "server/src/utils/storage.ts": "1a2ed36e0a426f942502c2ad2b44a0d2f4f53cca299339a8e26a36d7239de54d",
+    "server/src/utils/totp.ts": "3fff9041419241573c23d8b8db44f358301d0370a6793d711aebbb0c9ade50ec"
+  },
+  "sourceFingerprint": "08f97a1192ec0b2d4325d5663579a9c5ceec7cf92a5a45d1684d779cdef89825",
+  "server": {
+    "files": 86,
+    "tests": 479,
+    "skipped": 0,
+    "coverageExitCode": 0,
+    "coverage": [
+      "75.09%",
+      "67.95%",
+      "90.46%",
+      "76.58%"
+    ]
+  },
+  "client": {
+    "files": 17,
+    "tests": 93,
+    "skipped": 0,
+    "coverageExitCode": 0,
+    "coverage": [
+      "19.76%",
+      "19.38%",
+      "13.68%",
+      "19.26%"
+    ],
+    "lint": {
+      "errors": 0,
+      "warnings": 27
+    }
+  },
+  "contracts": {
+    "tests": 2,
+    "build": "passed",
+    "dependencyInstall": "independent lockfile and npm ci; patched Zod 4.6.6"
+  },
+  "builds": {
+    "server": "passed",
+    "client": "passed",
+    "typechecks": "passed for both apps"
+  },
+  "browser": {
+    "production": 38,
+    "development": 38,
+    "failed": 0,
+    "skipped": 0,
+    "environment": "local Chromium desktop and Pixel emulation; English/Arabic MFA and shared-session cross-tab recovery added",
+    "serverFollowUp": "After both browser modes, the server-only course-owner versus uploader inspection case and the one-connection private-checkout regression were added and verified by the complete API suite and final server build. Browser client sources were unchanged; matching-commit remote CI remains required."
+  },
+  "migrations": {
+    "count": 8,
+    "rows": 22,
+    "tables": 21,
+    "checks": [
+      "empty install",
+      "read-only drift rejection",
+      "reviewed populated adoption",
+      "schema parity",
+      "repeat deploy",
+      "owned schema cleanup"
+    ]
+  },
+  "load": {
+    "date": "2026-10-24T09:24:53.561Z",
+    "environment": "Windows/local loopback fixture scanner and filesystem; simulated clean verdict, not malware detection",
+    "concurrentUploads": 2,
+    "bytesPerUpload": 524288000,
+    "totalUploadedBytes": 1048576000,
+    "baselineRss": 137097216,
+    "peakRss": 211103744,
+    "rssIncreaseBytes": 74006528,
+    "peakStagedBytes": 1048576000,
+    "thirdRequestStatus": 503,
+    "overLimitRequestStatus": 413,
+    "uploadStatuses": [
+      201,
+      201
+    ],
+    "stagedFilesAfter": 0
+  },
+  "dependencies": {
+    "runtimeAdvisoryPackages": 0,
+    "developmentExceptions": 3,
+    "patched": {
+      "body-parser": "2.4.0",
+      "multer": "2.5.0",
+      "zod": "4.6.6"
+    },
+    "report": "dependencies/dependency-verification.json"
+  },
+  "tasks": {
+    "SEC-06": {
+      "implemented": "Reviewed catalog/private-link rules and subject/collection/product/career discovery, private previews and assigned access for private joins.",
+      "remaining": "Final role/discovery and deployed acceptance plus matching-commit CI; complete inherited COM-01/ENH-02 interface adoption."
+    },
+    "SEC-07": {
+      "implemented": "Creator ownership for standalone quizzes/question pools; owner/admin-only answer-key authoring and null-owner legacy quarantine. Cross-account API cases now use separate actual teachers.",
+      "remaining": "Approved real legacy-owner inventory and final consuming UI/CI acceptance."
+    },
+    "SEC-12": {
+      "implemented": "Learning guards cover assignment/discussion/quiz reads and writes; media cannot bypass retraction, and owner privileges require current teacher role. Board/progress paths were reviewed.",
+      "remaining": "Complete deployed route/private-file consumer acceptance and inherited COM-01/SEC-07 holds."
+    },
+    "SEC-13": {
+      "implemented": "Single-successor family rotation, bounded tab-race recovery, serialized delayed replay revocation and browser-lock failure settlement. Real database races and native desktop/mobile browser cross-tab recovery pass.",
+      "remaining": "Matching-commit Linux CI and deployed cross-tab/session acceptance."
+    },
+    "SEC-14": {
+      "implemented": "Encrypted pending/active factors, repeatable initial setup, recovery-code hashes, atomic TOTP, reset/version compare-and-set, and bilingual desktop/mobile enrollment/recovery checks.",
+      "remaining": "Approved production key/recovery/rotation and plaintext transition rehearsal; remove plaintext compatibility after verified zero-plaintext inventory."
+    },
+    "COM-01": {
+      "implemented": "AccessPolicy now owns date/source/course-state decisions; checkout checks use it too. Public previews grant only VIEW/DOWNLOAD, and private self-enrollment cannot create assignment.",
+      "remaining": "Full endpoint and consumer/interface adoption under ENH-02, plus the complete deployed grant-source matrix."
+    },
+    "COM-09": {
+      "implemented": "Archive/retraction/date semantics, auditable lifecycle, serialized new orders/free enrollment, effective/idempotent free grants, retained archived detail/learning and manager inspection of retracted content.",
+      "remaining": "Representative-data lifecycle inventory and deployment/rollback acceptance."
+    },
+    "ENG-02": {
+      "implemented": "Durable EGP config/version writes, conflict-safe bilingual pricing, indicative USD and immutable existing order charges; full package/browser regressions pass.",
+      "remaining": "Matching-commit Linux CI and operator acceptance of saved deployment configuration."
+    },
+    "ENG-05": {
+      "implemented": "Reviewed immutable baseline and eight-migration chain; empty install, drift rejection, populated preservation and idempotent deploy pass with 22 rows across 21 tables preserved.",
+      "remaining": "Authorized representative restore, baseline-history adoption and rollback/forward-repair rehearsal with operator sign-off."
+    },
+    "ENG-06": {
+      "implemented": "Liveness/readiness, safe explicit storage, bounded shutdown/Prisma cleanup, private staging janitor, and real local process regressions pass.",
+      "remaining": "Native Linux signal CI and real storage outage/upload drain/operator rehearsal."
+    },
+    "ENG-09": {
+      "implemented": "Bounded disk/scan/storage transport, exact 500 MiB acceptance, two-upload admission, cancellation/ranges/cleanup and PROCESSING state. Maximum-size local load and bilingual desktop/mobile journeys pass.",
+      "remaining": "Real private Supabase/ClamAV and physical-device transport acceptance. ENH-03 owns codecs/renditions/new-upload READY."
+    },
+    "ENG-13": {
+      "implemented": "Safe full suites/coverage, normalized fresh source evidence, standalone contracts CI, browser journeys and patched runtime dependencies with a fresh passing advisory policy.",
+      "remaining": "Matching-commit Linux CI, full-product G3 coverage and remaining domain/device acceptance; continuing ownership spans milestones."
+    },
+    "ENH-02": {
+      "implemented": "Independent locked shared package, declared runtime dependencies, generated types/OpenAPI component register, current catalog/retraction/checkout/voucher consumers and CI drift/security checks.",
+      "remaining": "Full shared success/error envelope, endpoint/type adoption and richer domain/breaking-change compatibility coverage; staged component representatives do not implement APIs."
+    }
+  },
+  "commandResults": [
+    {
+      "cwd": "server",
+      "command": "npm run test:coverage",
+      "exitCode": 0
+    },
+    {
+      "cwd": "client",
+      "command": "npm run test:coverage",
+      "exitCode": 0
+    },
+    {
+      "cwd": "server and client",
+      "command": "npm run typecheck; npm run build (commands run separately)",
+      "exitCode": 0
+    },
+    {
+      "cwd": "client",
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    {
+      "cwd": "packages/contracts",
+      "command": "npm ci --offline --ignore-scripts --no-audit --no-fund; npm run check (run separately)",
+      "exitCode": 0
+    },
+    {
+      "cwd": "server",
+      "command": "npm run db:migrate:fixture",
+      "exitCode": 0
+    },
+    {
+      "cwd": "server",
+      "command": "node --env-file=.env.test --import tsx benchmarks/video-upload-load.ts",
+      "exitCode": 0
+    },
+    {
+      "cwd": "client",
+      "command": "npm run test:m0:browser",
+      "env": {
+        "M0_WEB_MODE": "production"
+      },
+      "exitCode": 0
+    },
+    {
+      "cwd": "client",
+      "command": "npm run test:m0:browser",
+      "env": {
+        "M0_WEB_MODE": "dev"
+      },
+      "exitCode": 0
+    },
+    {
+      "cwd": ".",
+      "command": "node docs/scripts/audit-dependencies.cjs",
+      "exitCode": 0
+    }
+  ],
+  "earlierAttempts": [
+    {
+      "check": "First full API review run",
+      "result": "12 failed / 462 passed",
+      "reason": "Incoherent publication/product fixtures, inaccurate other-teacher test, updated auth context and incomplete DTO fixture; corrected without weakening assertions."
+    },
+    {
+      "check": "First new browser run",
+      "result": "Failed before cases",
+      "reason": "import.meta in the CommonJS Playwright test loader; corrected the test-only module lookup."
+    },
+    {
+      "check": "First maximum-plus-one-byte probe",
+      "result": "Failed boundary assertion",
+      "reason": "The initial extra-byte adjustment conflicted with patched Multer compensation. Restored the exact cap and reran positive/negative maximum-size probes."
+    },
+    {
+      "check": "Initial dependency scan",
+      "result": "3 runtime advisory packages",
+      "report": "dependencies-before/dependency-verification.json"
+    },
+    {
+      "check": "Concurrent resource-heavy API coverage run",
+      "result": "1 startup timeout / 476 passed",
+      "reason": "Child startup missed its existing 10s deadline during concurrent client coverage/migration work; isolated complete rerun passed without relaxing deadlines."
+    },
+    {
+      "check": "Isolated API check before final enrollment fix",
+      "result": "477 passed; coverage ratchet passed"
+    }
+  ],
+  "remainingHolds": [
+    "Matching-commit remote Linux CI (commit not pushed by this task)",
+    "Representative restore/history adoption/rollback and operator review",
+    "Real private Supabase and ClamAV canaries",
+    "Production MFA key/legacy transition/rotation and recovery",
+    "Physical devices",
+    "Incomplete ENH-02/COM-01 consumer work and remaining M1 foundation tasks",
+    "G3 full-product coverage"
+  ]
+}

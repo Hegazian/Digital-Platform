@@ -252,7 +252,7 @@ describe('CourseService Unit Tests', () => {
 
   describe('getAllCourses', () => {
     it('should return paginated course list with enriched single course prices', async () => {
-      (prisma.course.findMany as any).mockResolvedValue([{ id: 'c1', titleEn: 'C1' }]);
+      (prisma.course.findMany as any).mockResolvedValue([{ id: 'c1', titleEn: 'C1', titleAr: 'مقرر', description: '', teacherId: 't1', subjectId: 's1', status: 'PUBLISHED', isPublished: true, isFree: false }]);
       (prisma.course.count as any).mockResolvedValue(1);
       (prisma.product.findMany as any).mockResolvedValue([
         { resourceId: 'c1', priceEgp: 180, priceUsd: 12, id: 'p1' },
@@ -260,6 +260,9 @@ describe('CourseService Unit Tests', () => {
       (prisma.appConfig.findFirst as any).mockResolvedValueOnce({ exchangeRateUsdToEgp: 60 });
 
       const res = await CourseService.getAllCourses({ page: '1', limit: '10' });
+      expect(prisma.course.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ visibility: 'PUBLIC', status: 'PUBLISHED', retractedAt: null }),
+      }));
       expect(res.courses).toBeDefined();
       expect(res.courses[0].priceEgp).toBe(180);
       expect(res.courses[0].priceUsd).toBe(3);

@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **34723cd**. The M0 integration validates optional checkout expectedCourseId against voucher scope before consuming the code, and the checkout UI confirms actual course access before success. Wrong-course attempts retain usage and grants unchanged. COM-08 retains ownership of durable per-student voucher idempotency and global capacity races; COM-06 owns payment transitions, fulfillment and reconciliation. The context guard alone does not complete either task. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **24 October 2026** against reviewed M0 application commit **34723cd**. The M0 integration validates optional checkout expectedCourseId against voucher scope before consuming the code, and the checkout UI confirms actual course access before success. Wrong-course attempts retain usage and grants unchanged. COM-08 retains ownership of durable per-student voucher idempotency and global capacity races; COM-06 owns payment transitions, fulfillment and reconciliation. The context guard alone does not complete either task. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

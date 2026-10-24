@@ -1,0 +1,90 @@
+{
+  "checkedAt": "2026-10-24T08:44:49.097Z",
+  "packages": [
+    {
+      "name": "server",
+      "lockSha256": "0a59110847f1dabae4f25edeb62a498902114b6a906aabd1d47e629ba00c1e63",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 3,
+        "critical": 0,
+        "total": 3
+      },
+      "runtimeAdvisoryPackages": 3,
+      "issues": [
+        {
+          "name": "body-parser",
+          "severity": "high",
+          "developmentOnly": false,
+          "accepted": false,
+          "paths": [
+            "node_modules/body-parser"
+          ]
+        },
+        {
+          "name": "multer",
+          "severity": "high",
+          "developmentOnly": false,
+          "accepted": false,
+          "paths": [
+            "node_modules/multer"
+          ]
+        },
+        {
+          "name": "zod",
+          "severity": "high",
+          "developmentOnly": false,
+          "accepted": false,
+          "paths": [
+            "node_modules/zod"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "client",
+      "lockSha256": "89dd16c88e00a7988fa2dc022a8baf67b7e0c203be7530b2a7c301ee1bed0c05",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 3,
+        "high": 0,
+        "critical": 0,
+        "total": 3
+      },
+      "runtimeAdvisoryPackages": 0,
+      "exceptionExpiry": "2027-01-19T00:00:00Z",
+      "issues": [
+        {
+          "name": "postcss-nested",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-nested"
+          ]
+        },
+        {
+          "name": "postcss-selector-parser",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-selector-parser"
+          ]
+        },
+        {
+          "name": "tailwindcss",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/tailwindcss"
+          ]
+        }
+      ]
+    }
+  ]
+}

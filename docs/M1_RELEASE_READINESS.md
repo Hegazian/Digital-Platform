@@ -1,8 +1,26 @@
 # Milestone 1 release closure
 
-Status: **NOT RELEASE READY**. Local review and verification do not complete G1. The approved M1 scope contains **25 tasks: 0 Complete, 4 In Progress, 21 Planned**. ENG-13 additionally continues across milestones for CI, test safety and coverage. The full scope remains in [G1](TESTING_RELEASE_GATES.md#gate-g1--durable-foundation-m1); unfinished functionality is not removed to make the release appear complete.
+Status: **NOT RELEASE READY**. Local review and verification do not complete G1. The approved M1 scope contains **25 tasks: 0 Complete, 12 In Progress, 13 Planned**. ENG-13 additionally continues across milestones for CI, test safety and coverage. The full scope remains in [G1](TESTING_RELEASE_GATES.md#gate-g1--durable-foundation-m1); unfinished functionality is not removed to make the release appear complete.
 
-## Review and verification
+## Latest task review and verification
+
+The [13-task review](M1_PROGRESS_REVIEW.md) records findings M1-R06–R24 and their repairs. [Fresh verification](../audit/m1-closure/verification.json) binds the checks to normalized source hashes.
+
+| Current local check | Result |
+|---|---|
+| API full suite / coverage ratchet | 86 files / 479 tests passed; command exit 0 |
+| Web full suite | 17 files / 93 tests passed |
+| Whole-source coverage, statements / branches / functions / lines | API 75.09% / 67.95% / 90.46% / 76.58%; web 19.76% / 19.38% / 13.68% / 19.26% |
+| Typechecks / builds | Both apps pass; independent contracts build and 2 package checks pass |
+| Client lint | 0 errors / 27 existing warnings |
+| Production / development browser journeys | 38 / 38 passed, desktop and Pixel emulation, including English/Arabic MFA and one-use recovery |
+| Migration install / populated upgrade | 8 migrations; 22 rows / 21 tables preserved; drift rejection and repeat deployment pass |
+| Maximum-size local uploads | Two 500 MiB uploads; about 71 MiB RSS increase; third request 503; staging cleaned |
+| Advisory policy | No runtime advisory packages; 3 development-only client advisories covered by the existing expiring policy |
+
+The local load measurement uses a protocol fixture scanner and filesystem; actual Supabase/ClamAV and physical devices remain unverified. Matching-commit Linux CI, representative restore/rollback, MFA deployment key/legacy transition and the unfinished contract/consumer work remain release holds. Tasks with open acceptance are kept In Progress.
+
+## Historical M1 review checkpoint — 23 October
 
 The [M1 review](M1_REVIEW.md) and [machine-readable evidence](../audit/m1-review/verification.json) distinguish introduced defects, their fixes, planned work and unexecuted acceptance. Current release-review disposition: **Introduced CI-test defect resolved; M1 implementation and external release gates remain open**.
 
@@ -11,7 +29,7 @@ The [M1 review](M1_REVIEW.md) and [machine-readable evidence](../audit/m1-review
 - Current whole-source coverage (statements / branches / functions / lines): server 73.87% / 66.64% / 89.82% / 75.11%; client 19.34% / 18.94% / 13.39% / 18.86%. [Uncovered/partial files](../audit/m1-review/coverage-gaps.json) remain assigned to their domain tasks; G3 targets are unmet.
 - Coverage run: all 446 server tests passed, but the command exits 1 because functions are 89.82% against the 90% threshold.
 - Browser: production 32 passed and development 32 passed after the runtime follow-up; these modes cover desktop/Pixel emulation, not physical-device acceptance.
-- Migration fixture: 3 migrations, 22 synthetic rows / 21 tables preserved. This does not establish a representative backup/restore rehearsal.
+- Migration fixture: the fresh local run passed 8 migrations, preserving 22 synthetic rows across 21 tables after baseline adoption; empty install, drift rejection, repeated deployment and schema parity passed. Neither result establishes a representative backup/restore rehearsal.
 - Remote CI: No current M1 PR or commit status checks verified for the follow-up implementation; Linux CI remains required. A prior commit's result cannot validate later changes.
 
 | Review finding | Owning task | Disposition | Required regression |
@@ -24,18 +42,18 @@ Each task below retains its implementation steps, migration/compatibility requir
 
 | Task | Status | Required outcome | Dependencies |
 |---|---|---|---|
-| [SEC-06](tasks/SEC-06.md) | Planned | PUBLIC is discoverable; UNLISTED is link-discoverable metadata only; PRIVATE metadata requires owner/admin or active assigned membership. Learning always requires its own access decision. | [SEC-04](archive/completed/M0/SEC-04.md), [COM-01](tasks/COM-01.md) |
-| [SEC-07](tasks/SEC-07.md) | Planned | Approved teachers may read keys or edit only owned/explicitly assigned assessments and banks; sharing is an explicit grant. | [SEC-05](archive/completed/M0/SEC-05.md), [ENG-05](tasks/ENG-05.md) |
-| [SEC-12](tasks/SEC-12.md) | Planned | Read and write authorization follows current course access and parent relationships for discussions, assignments and private banks. | [COM-01](tasks/COM-01.md), [SEC-07](tasks/SEC-07.md) |
-| [SEC-13](tasks/SEC-13.md) | Planned | One refresh token creates at most one successor; ordinary tab races are recoverable without revoking unrelated sessions. | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
-| [SEC-14](tasks/SEC-14.md) | Planned | New factor enrollment cannot disable an existing factor; secrets are encrypted and recovery/replay handling is atomic. | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
-| [COM-01](tasks/COM-01.md) | Planned | AccessPolicy is the sole owner of effective learning decisions and audience membership across subscriptions, grants, purchases, bundles, vouchers and free enrollment. | [SEC-04](archive/completed/M0/SEC-04.md), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md) |
+| [SEC-06](tasks/SEC-06.md) | In Progress | PUBLIC is discoverable; UNLISTED is link-discoverable metadata only; PRIVATE metadata requires owner/admin or active assigned membership. Learning always requires its own access decision. | [SEC-04](archive/completed/M0/SEC-04.md), [COM-01](tasks/COM-01.md) |
+| [SEC-07](tasks/SEC-07.md) | In Progress | Approved teachers may read keys or edit only owned/explicitly assigned assessments and banks; sharing is an explicit grant. | [SEC-05](archive/completed/M0/SEC-05.md), [ENG-05](tasks/ENG-05.md) |
+| [SEC-12](tasks/SEC-12.md) | In Progress | Read and write authorization follows current course access and parent relationships for discussions, assignments and private banks. | [COM-01](tasks/COM-01.md), [SEC-07](tasks/SEC-07.md) |
+| [SEC-13](tasks/SEC-13.md) | In Progress | One refresh token creates at most one successor; ordinary tab races are recoverable without revoking unrelated sessions. | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
+| [SEC-14](tasks/SEC-14.md) | In Progress | New factor enrollment cannot disable an existing factor; secrets are encrypted and recovery/replay handling is atomic. | [SEC-10](archive/completed/M0/SEC-10.md), [ENG-05](tasks/ENG-05.md) |
+| [COM-01](tasks/COM-01.md) | In Progress | AccessPolicy is the sole owner of effective learning decisions and audience membership across subscriptions, grants, purchases, bundles, vouchers and free enrollment. | [SEC-04](archive/completed/M0/SEC-04.md), [COM-09](tasks/COM-09.md), [ENH-02](tasks/ENH-02.md) |
 | [COM-02](tasks/COM-02.md) | Planned | Renewal uses effective dates, even when a historic row still says ACTIVE; reconciliation cannot be required for a student to renew. | [COM-03](tasks/COM-03.md), [COM-09](tasks/COM-09.md) |
 | [COM-03](tasks/COM-03.md) | Planned | Calendar products clamp month ends in Africa/Cairo and approve/reject is a conditional one-way decision. | [ENG-05](tasks/ENG-05.md) |
 | [COM-05](tasks/COM-05.md) | Planned | A retry returns the original caller’s identical order; no key can reveal another account’s order or silently change the purchase. | [ENG-05](tasks/ENG-05.md) |
 | [COM-06](tasks/COM-06.md) | Planned | Verified manual decisions and later provider events follow one state machine with an immutable ledger, exact-once access effects and reversible grants on refund. | [COM-05](tasks/COM-05.md), [ENG-05](tasks/ENG-05.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md) |
 | [COM-07](tasks/COM-07.md) | Planned | Every sellable product identifies a valid resource, integer EGP amount and explicit duration; paid orders grant the exact purchased snapshot. | [COM-06](tasks/COM-06.md), [COM-03](tasks/COM-03.md) |
-| [COM-09](tasks/COM-09.md) | Planned | Effective grants require startsAt <= now < expiresAt and no revocation. Archive stops discovery/new sales while retaining existing purchased access; explicit retraction denies student learning. | [ENG-05](tasks/ENG-05.md) |
+| [COM-09](tasks/COM-09.md) | In Progress | Effective grants require startsAt <= now < expiresAt and no revocation. Archive stops discovery/new sales while retaining existing purchased access; explicit retraction denies student learning. | [ENG-05](tasks/ENG-05.md) |
 | [COM-11](tasks/COM-11.md) | Planned | Course/product/pricing changes are transactional; deletion becomes archival when historical orders or student work reference a resource. | [COM-07](tasks/COM-07.md) |
 | [LRN-07](tasks/LRN-07.md) | Planned | Course -> CourseModule (displayed as module/unit) -> Lesson is canonical; legacy sections become modules without losing IDs/progress/previews/order. | [ENG-05](tasks/ENG-05.md), [ENH-02](tasks/ENH-02.md) |
 | [ENG-02](tasks/ENG-02.md) | In Progress | Supported exchange-rate configuration round-trips honestly; EGP is the only writable charge currency and optional USD conversions are indicative display values. | [ENG-01](archive/completed/M0/ENG-01.md) |
@@ -47,7 +65,7 @@ Each task below retains its implementation steps, migration/compatibility requir
 | [ENG-09](tasks/ENG-09.md) | In Progress | Existing video uploads use bounded private disk staging and streams to storage without retaining a request-sized buffer. Range responses are strict; new uploads remain PROCESSING until ENH-03 verifies codecs and media metadata. | [SEC-03](archive/completed/M0/SEC-03.md) |
 | [ENG-14](tasks/ENG-14.md) | Planned | Protected auth/profile calls can refresh; retryable refresh failure preserves session intent and identity-specific local state is scoped/reset. | [SEC-13](tasks/SEC-13.md) |
 | [ENH-01](tasks/ENH-01.md) | Planned | Admin-configured stages, grades, tracks, academic years, terms, subjects, curriculum editions and learning outcomes cover all Egyptian school stages without hardcoded commercial tracks. | [ENG-05](tasks/ENG-05.md) |
-| [ENH-02](tasks/ENH-02.md) | Planned | One versioned workspace package defines safe DTOs, command inputs, enums, validation and OpenAPI for existing Express and Next applications. | [ENG-05](tasks/ENG-05.md) |
+| [ENH-02](tasks/ENH-02.md) | In Progress | One versioned workspace package defines safe DTOs, command inputs, enums, validation and OpenAPI for existing Express and Next applications. | [ENG-05](tasks/ENG-05.md) |
 | [ENH-03](tasks/ENH-03.md) | Planned | Asset IDs own private originals/renditions, quotas and processing lifecycle; production Supabase resumable uploads and local protected streaming use existing app identity. | [SEC-02](archive/completed/M0/SEC-02.md), [SEC-03](archive/completed/M0/SEC-03.md), [ENG-05](tasks/ENG-05.md), [ENG-06](tasks/ENG-06.md), [ENG-07](tasks/ENG-07.md), [ENH-02](tasks/ENH-02.md), [ENG-09](tasks/ENG-09.md) |
 
 Follow the dependency waves in [NEXT_STEPS.md](NEXT_STEPS.md#m1-implementation-waves). Every schema change adds a reviewed migration and a populated preservation fixture; existing tables never receive baseline create SQL blindly. Shared contracts, access, assets, assessments and commerce each keep one owning task. Manual authoring, imports and educational translations remain uploader responsibilities.

@@ -25,7 +25,7 @@ describe('Auth Middleware Suite', () => {
 
       await authenticate(mReq, mRes, mNext);
 
-      expect(mReq.user).toEqual({ userId: 'u1', role: Role.STUDENT, teacherStatus: undefined });
+      expect(mReq.user).toEqual({ userId: 'u1', role: Role.STUDENT, teacherStatus: undefined, authVersion: 0 });
       expect(mNext).toHaveBeenCalledWith();
     });
 

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-24T09:24:53.561Z",
+  "environment": "Windows/local loopback fixture scanner and filesystem; simulated clean verdict, not malware detection",
+  "concurrentUploads": 2,
+  "bytesPerUpload": 524288000,
+  "totalUploadedBytes": 1048576000,
+  "baselineRss": 137097216,
+  "peakRss": 211103744,
+  "rssIncreaseBytes": 74006528,
+  "peakStagedBytes": 1048576000,
+  "thirdRequestStatus": 503,
+  "overLimitRequestStatus": 413,
+  "uploadStatuses": [
+    201,
+    201
+  ],
+  "stagedFilesAfter": 0
+}

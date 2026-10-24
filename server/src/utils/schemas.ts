@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SUBMISSION_UPLOAD_PATH } from '../modules/assignments/submission-upload';
+import { CourseRetractionSchema, CreateOrderRequestSchema } from '@eduplatform/contracts';
 
 // Auth Schemas
 export const registerSchema = z
@@ -61,8 +62,18 @@ export const refreshTokenSchema = z.object({
 
 export const mfaLoginSchema = z.object({
   mfaSessionToken: z.string().min(1, 'MFA session token is required'),
-  mfaCode: z.string().length(6, 'MFA code must be 6 digits'),
-});
+  mfaCode: z.string().min(6).max(32),
+}).strict();
+
+export const mfaSetupSchema = z.object({
+  currentPassword: z.string().min(1).max(256).optional(),
+  currentToken: z.string().length(6).optional(),
+}).strict();
+
+export const mfaVerifySchema = z.object({ token: z.string().length(6) }).strict();
+
+export const mfaAdminResetSchema = z.object({ reason: z.string().trim().min(10).max(500) }).strict();
+export const courseRetractionSchema = CourseRetractionSchema;
 
 // Course Schemas
 export const createCourseSchema = z
@@ -106,14 +117,7 @@ export const createManualSubscriptionSchema = z.object({
 });
 
 // Commerce Order Schema (student checkout)
-export const createOrderSchema = z.object({
-  productId: z.string().uuid('Valid productId is required'),
-  // Automated gateways stay staged; only verified manual payment is offered.
-  paymentMethod: z.literal('MANUAL'),
-  // Client-generated UUID; replaying the same key returns the same order.
-  idempotencyKey: z.string().min(8, 'Idempotency key is required'),
-  transactionRef: z.string().max(120).optional(),
-});
+export const createOrderSchema = CreateOrderRequestSchema;
 
 // ── Assessment (exam) engine schemas ────────────────────────────────
 export const createQuestionPoolSchema = z.object({

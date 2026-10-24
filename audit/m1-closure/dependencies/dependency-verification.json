@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-24T08:53:12.665Z",
+  "packages": [
+    {
+      "name": "server",
+      "lockSha256": "8c6d5480b27a50167a550b0419c5982c498d571f414329d7e9c72e0d3b78edf2",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "runtimeAdvisoryPackages": 0,
+      "issues": []
+    },
+    {
+      "name": "client",
+      "lockSha256": "957837d5a7b84a4caae64b8621731dc4ba1be2337ac96a255656bb806adb2d3a",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 3,
+        "high": 0,
+        "critical": 0,
+        "total": 3
+      },
+      "runtimeAdvisoryPackages": 0,
+      "exceptionExpiry": "2027-01-19T00:00:00Z",
+      "issues": [
+        {
+          "name": "postcss-nested",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-nested"
+          ]
+        },
+        {
+          "name": "postcss-selector-parser",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/postcss-selector-parser"
+          ]
+        },
+        {
+          "name": "tailwindcss",
+          "severity": "moderate",
+          "developmentOnly": true,
+          "accepted": true,
+          "paths": [
+            "node_modules/tailwindcss"
+          ]
+        }
+      ]
+    }
+  ]
+}

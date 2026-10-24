@@ -95,7 +95,7 @@ if(fs.existsSync(path.join(root,integrationManifest))) {
  for(const entry of integration.files)check(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,entry.archive))).digest('hex')===entry.sha256,'Archived integration input changed: '+entry.archive);
  check(!fs.existsSync(path.join(root,'server/prisma/migrations/0001_init/migration.sql')),'Competing initial baseline must remain outside executable migrations');
 }
-const shared=['README.md','CURRENT_STATUS.md','NEXT_STEPS.md','M1_REVIEW.md','M1_RELEASE_READINESS.md','M1_MANUAL_TESTING.md','ENG02_IMPLEMENTATION.md','ENG05_IMPLEMENTATION.md','ENG06_IMPLEMENTATION.md','ENG09_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
+const shared=['README.md','M1_PROGRESS_REVIEW.md','CURRENT_STATUS.md','NEXT_STEPS.md','M1_REVIEW.md','M1_RELEASE_READINESS.md','M1_MANUAL_TESTING.md','ENG02_IMPLEMENTATION.md','ENG05_IMPLEMENTATION.md','ENG06_IMPLEMENTATION.md','ENG09_IMPLEMENTATION.md','PRODUCT_SCOPE.md','TARGET_ARCHITECTURE.md','API_DATA_CONTRACTS.md','ROADMAP_BACKLOG.md','AUDIT_TRACEABILITY.md','TESTING_RELEASE_GATES.md','MIGRATION_OPERATIONS.md','TASK_TEMPLATE.md','M0_IMPLEMENTATION_STATUS.md','M0_MANUAL_TESTING.md','M0_REVIEW_RESOLUTION.md','M0_DEPENDENCY_REVIEW.md','M0_REVIEW_ROUND_2.md'];
 for(const p of shared)check(fs.existsSync(path.join(root,historicalDocMoves['docs/'+p] || 'docs/'+p)),'Missing shared document '+p);
 const activePaths=[...shared.map(p=>historicalDocMoves['docs/'+p] || 'docs/'+p),...tasks.map(t=>t.documentPath),'README.md','server/README.md','client/README.md','docs/archive/INDEX.md','docs/archive/completed/README.md','docs/archive/reviews/README.md','docs/M0_FINAL_REVIEW.md'];
 let links=0,anchors=0;
@@ -199,7 +199,31 @@ for(const mode of ['production','development']) {
 }
 check(handoff.includes('ENG-09 / ENH-03 acceptance boundary') && handoff.includes('M1-R04'),'M1 handoff omits transport/processing or browser-fixture follow-through');
 check(gates.includes('- [x] M1-R01–R04 regression fixes pass') && gates.includes('- [ ] Exact M1 revision CI'),'M1 regression resolution or remaining release gate is missing');
-for(const [file,hash] of Object.entries(m1Evidence.sourceFiles))check(fs.existsSync(path.join(root,file)) && crypto.createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')===hash,'M1 source changed since recorded verification: '+file);
+// M1 evidence hashes are an immutable historical checkpoint. Later task work
+// is expected to change these files; verify the checkpoint manifest shape and
+// paths without mislabeling current implementation as that older test run.
+for(const [file,hash] of Object.entries(m1Evidence.sourceFiles))check(fs.existsSync(path.join(root,file)) && /^[a-f0-9]{64}$/.test(hash),'Invalid historical M1 source manifest entry: '+file);
+// Bind current verification to current code while preserving the older review.
+const freshVerification = path.join(root, 'audit/m1-closure/verification.json');
+check(fs.existsSync(freshVerification), 'Missing current task-review evidence');
+if (fs.existsSync(freshVerification)) {
+ const fresh = JSON.parse(fs.readFileSync(freshVerification, 'utf8'));
+ check(fresh.sourceNormalization === 'LF' && Object.keys(fresh.sourceFiles || {}).length > 0, 'Missing normalized current source manifest');
+ for (const [file, hash] of Object.entries(fresh.sourceFiles || {})) {
+  const target = path.resolve(root, file);
+  const safe = target.startsWith(root + path.sep) && fs.existsSync(target);
+  check(safe && crypto.createHash('sha256').update(fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n')).digest('hex') === hash, 'Current source differs from recorded review verification: ' + file);
+ }
+ const inProgress = tasks.filter(task => task.status === 'In Progress').map(task => task.id);
+ check(inProgress.length === Object.keys(fresh.tasks || {}).length && inProgress.every(id => fresh.tasks[id]), 'Every In Progress task needs a reviewed disposition');
+ check(fresh.server.coverageExitCode === 0 && fresh.client.coverageExitCode === 0, 'Current required coverage command did not pass');
+ check(fresh.browser.production > 0 && fresh.browser.development > 0, 'Current browser evidence is incomplete');
+ const dependencyRecord = JSON.parse(read('audit/m1-closure/dependencies/dependency-verification.json'));
+ for (const app of dependencyRecord.packages) {
+  const rawLock = fs.readFileSync(path.join(root, app.name, 'package-lock.json'));
+  check(crypto.createHash('sha256').update(rawLock).digest('hex') === app.lockSha256, 'Current lockfile differs from fresh advisory evidence: ' + app.name);
+ }
+}
 check(current.includes(`**${implementationCommit}**`),'Current status omits the verified application commit');
 for(const app of ['server','client']) {
  const label=app==='server'?'Server':'Client';

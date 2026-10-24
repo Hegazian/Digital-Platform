@@ -5,7 +5,7 @@
 | Stable ID | ENH-02 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Shared contract package owner |
 | Dependencies | [ENG-05](ENG-05.md) |
 | Original finding / request | [Revised enhancement scope](../PRODUCT_SCOPE.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **34723cd**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **24 October 2026** against reviewed M0 application commit **34723cd**. Reviewed in [the 24 October task review](../M1_PROGRESS_REVIEW.md), with [fresh verification](../../audit/m1-closure/verification.json). Independent locked shared package, declared runtime dependencies, generated types/OpenAPI component register, current catalog/retraction/checkout/voucher consumers and CI drift/security checks. Remaining before task completion: Full shared success/error envelope, endpoint/type adoption and richer domain/breaking-change compatibility coverage; staged component representatives do not implement APIs. The task remains In Progress while that evidence or implementation is open. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

@@ -91,6 +91,17 @@ describe('MaterialService Unit Tests', () => {
   });
 
   describe('getMaterialsByLesson', () => {
+    it('denies free-preview materials after the course is retracted', async () => {
+      (prisma.lesson.findUnique as any).mockResolvedValue({
+        id: 'l-preview',
+        section: { isFreePreview: true, courseId: 'course-1', course: { teacherId: 'teacher-1', subjectId: 'subject-1' } },
+      });
+      (prisma.course.findUnique as any).mockResolvedValue({ retractedAt: new Date(), isPublished: true, status: 'PUBLISHED' });
+
+      await expect(MaterialService.getMaterialsByLesson('l-preview', 'student1', Role.STUDENT)).rejects.toThrow(ForbiddenError);
+      expect(prisma.material.findMany).not.toHaveBeenCalled();
+    });
+
     it('should allow student with active subscription to view materials', async () => {
       const mockLesson = {
         id: 'l1',

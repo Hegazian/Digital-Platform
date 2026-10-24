@@ -1,5 +1,21 @@
 import { verifySync } from 'otplib';
 import { prisma } from '../prisma';
+import { decryptMfaSecret } from './mfa-crypto';
+
+export function verifiedTotpTimeStep(secret: string, token: string, afterTimeStep?: number | null): number | null {
+  if (!secret || !token) return null;
+  try {
+    const verification = verifySync({
+      token: String(token).trim(),
+      secret,
+      ...(afterTimeStep != null ? { afterTimeStep } : {}),
+    });
+    const step = (verification as { timeStep?: number } | null)?.timeStep;
+    return verification?.valid && step != null && Number.isFinite(step) ? step : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Verifies a TOTP code with replay protection: a successfully consumed
@@ -17,30 +33,15 @@ export async function verifyTotpToken(
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { mfaLastTimeStep: true },
+    select: { mfaLastTimeStep: true, mfaSecret: true, mfaEnabled: true, authVersion: true },
   });
+  if (!user?.mfaEnabled || !user.mfaSecret || decryptMfaSecret(user.mfaSecret) !== secret) return false;
 
-  try {
-    const verification = verifySync({
-      token: String(token).trim(),
-      secret,
-      ...(user?.mfaLastTimeStep != null ? { afterTimeStep: user.mfaLastTimeStep } : {}),
-    });
-
-    if (!verification || !verification.valid) {
-      return false;
-    }
-
-    const timeStep = (verification as { timeStep?: number }).timeStep;
-    if (timeStep != null && Number.isFinite(timeStep)) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { mfaLastTimeStep: timeStep },
-      });
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
+  const timeStep = verifiedTotpTimeStep(secret, token, user?.mfaLastTimeStep);
+  if (timeStep == null) return false;
+  const consumed = await prisma.user.updateMany({
+    where: { id: userId, mfaEnabled: true, mfaSecret: user.mfaSecret, authVersion: user.authVersion, mfaLastTimeStep: user.mfaLastTimeStep ?? null },
+    data: { mfaLastTimeStep: timeStep },
+  });
+  return consumed.count === 1;
 }

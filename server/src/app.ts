@@ -207,6 +207,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(statusCode).json({
     success: false,
     message: statusCode >= 500 ? 'Internal Server Error' : err.message,
+    ...(typeof err.code === 'string' && { code: err.code }),
     ...(process.env.NODE_ENV === 'development' && statusCode < 500 && { detail: err.message }),
   });
 });

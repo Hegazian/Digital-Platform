@@ -5,7 +5,7 @@
 | Stable ID | SEC-14 |
 | Priority | P2 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Platform engineering |
 | Dependencies | [SEC-10](../archive/completed/M0/SEC-10.md), [ENG-05](ENG-05.md) |
 | Original finding / request | [SEC-14 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **34723cd**. The M0 integration exposes initial MFA enrollment in the profile but refuses replacement of an already enabled factor with HTTP 409. Opening or cancelling setup cannot disable an existing authenticator. Initial setup uses a conditional write against disabled MFA. Pending-factor replacement, secret encryption, replay/verification races, recovery and full session atomicity remain owned by this task; the availability guard is not a completed factor-replacement workflow. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **24 October 2026** against reviewed M0 application commit **34723cd**. Reviewed in [the 24 October task review](../M1_PROGRESS_REVIEW.md), with [fresh verification](../../audit/m1-closure/verification.json). Encrypted pending/active factors, repeatable initial setup, recovery-code hashes, atomic TOTP, reset/version compare-and-set, and bilingual desktop/mobile enrollment/recovery checks. Remaining before task completion: Approved production key/recovery/rotation and plaintext transition rehearsal; remove plaintext compatibility after verified zero-plaintext inventory. The task remains In Progress while that evidence or implementation is open. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

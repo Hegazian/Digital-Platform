@@ -88,12 +88,17 @@ export class MaterialService {
       return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
     }
 
-    // Allow free preview lessons
-    if (isFreePreview) {
+    const courseId = lesson.module?.courseId || lesson.section?.courseId;
+
+    // Free previews follow the same lifecycle gate; retracted or unpublished
+    // courses must not remain reachable through a known lesson/material ID.
+    if (isFreePreview && courseId) {
+      const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+      if (!(await EntitlementResolver.hasCoursePreviewAccess(courseId, userId))) {
+        throw new ForbiddenError('This course preview is not available');
+      }
       return this.withProtectedUrls(await prisma.material.findMany({ where: { lessonId }, orderBy: { createdAt: 'asc' } }));
     }
-
-    const courseId = lesson.module?.courseId || lesson.section?.courseId;
 
     // Check student entitlement / subscription via EntitlementResolver
     const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
@@ -101,7 +106,7 @@ export class MaterialService {
 
     if (courseId && (await EntitlementResolver.hasCourseAccess(userId, courseId))) {
       hasAccess = true;
-    } else if (subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
+    } else if (!courseId && subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
       hasAccess = true;
     }
 
@@ -124,11 +129,15 @@ export class MaterialService {
     if (!material) throw new NotFoundError('Material not found');
     const course = material.lesson.module?.course || material.lesson.section?.course;
     if (!course) throw new NotFoundError('Course not found');
-    const owner = course.teacherId === userId;
+    const owner = userRole === Role.TEACHER && course.teacherId === userId;
     const preview = !!material.lesson.section?.isFreePreview;
-    if (userRole !== Role.ADMIN && !owner && !preview) {
+    if (userRole !== Role.ADMIN && !owner) {
       const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
-      await EntitlementResolver.assertLearningAccess(userId, userRole, { courseId: course.id, teacherId: course.teacherId });
+      if (preview) {
+        if (!(await EntitlementResolver.hasCoursePreviewAccess(course.id, userId))) throw new ForbiddenError('This course preview is not available');
+      } else {
+        await EntitlementResolver.assertLearningAccess(userId, userRole, { courseId: course.id, teacherId: course.teacherId });
+      }
     }
     return material;
   }

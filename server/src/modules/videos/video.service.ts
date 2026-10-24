@@ -69,27 +69,34 @@ export class VideoService {
     }
 
     // Owner or admin bypass
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, isActive: true } });
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, isActive: true, teacherStatus: true } });
     if (!user?.isActive) return false;
-    if (user.role === 'ADMIN' || video.teacherId === userId) {
+    if (user.role === 'TEACHER' && user.teacherStatus !== 'APPROVED') return false;
+    if (user.role === 'ADMIN' || (user.role === 'TEACHER' && video.teacherId === userId)) {
       return true;
     }
+    // The acting uploader can be an admin. Content ownership follows the
+    // attached course, so its approved teacher can still inspect the video.
+    const attachedCourse = video.lesson?.module?.course || video.lesson?.section?.course;
+    if (user.role === 'TEACHER' && attachedCourse?.teacherId === userId) return true;
 
-    // If attached to a free preview section
-    if (video.lesson?.section?.isFreePreview) {
-      return true;
+    const courseId = video.lesson?.module?.courseId || video.lesson?.section?.courseId;
+    const subjectId = video.lesson?.module?.course?.subjectId || video.lesson?.section?.course?.subjectId;
+
+    // Preview access must still respect course publication and retraction.
+    if (video.lesson?.section?.isFreePreview && courseId) {
+      const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
+      return EntitlementResolver.hasCoursePreviewAccess(courseId, userId);
     }
 
     // Check active entitlement or subscription via EntitlementResolver
-    const courseId = video.lesson?.module?.courseId || video.lesson?.section?.courseId;
-    const subjectId = video.lesson?.module?.course?.subjectId || video.lesson?.section?.course?.subjectId;
 
     if (courseId || subjectId) {
       const { EntitlementResolver } = await import('../commerce/entitlement-resolver.service');
       if (courseId && (await EntitlementResolver.hasCourseAccess(userId, courseId))) {
         return true;
       }
-      if (subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
+      if (!courseId && subjectId && (await EntitlementResolver.hasSubjectAccess(userId, subjectId))) {
         return true;
       }
     }

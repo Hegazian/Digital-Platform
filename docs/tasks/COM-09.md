@@ -5,7 +5,7 @@
 | Stable ID | COM-09 |
 | Priority | P1 |
 | Release milestone | M1 — Foundation and content delivery |
-| Status | **Planned** |
+| Status | **In Progress** |
 | Implementation owner | Access lifecycle primitives |
 | Dependencies | [ENG-05](ENG-05.md) |
 | Original finding / request | [COM-09 original finding](../../audit/PRODUCT_READINESS_REVIEW.md) |
@@ -17,7 +17,7 @@
 
 ## Current delivery and next action
 
-Updated **23 October 2026** against reviewed M0 application commit **34723cd**. This task remains **Planned**. Its original finding below describes the audit baseline, not a fresh claim that every branch remains defective. Before implementation, verify the current code against the named acceptance cases, preserve M0 repairs, and implement the remaining task scope under its registered owner. Status changes require new task-specific evidence; the documentation refresh alone does not complete implementation. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
+Updated **24 October 2026** against reviewed M0 application commit **34723cd**. Reviewed in [the 24 October task review](../M1_PROGRESS_REVIEW.md), with [fresh verification](../../audit/m1-closure/verification.json). Archive/retraction/date semantics, auditable lifecycle, serialized new orders/free enrollment, effective/idempotent free grants, retained archived detail/learning and manager inspection of retracted content. Remaining before task completion: Representative-data lifecycle inventory and deployment/rollback acceptance. The task remains In Progress while that evidence or implementation is open. The [remaining execution plan](../NEXT_STEPS.md) orders future work; this document's intended contracts and unchecked scenarios are implementation requirements, not claims of deployed behavior.
 
 ## Current behavior and evidence
 

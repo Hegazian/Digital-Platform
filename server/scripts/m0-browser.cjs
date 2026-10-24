@@ -13,6 +13,7 @@ const runId = crypto.randomUUID();
 const runRoot = path.join(root, '.cache', 'm0', runId);
 const env = { ...process.env, ...fixtureEnv, NODE_ENV: 'test',
   JWT_SECRET: crypto.randomBytes(48).toString('hex'), JWT_REFRESH_SECRET: crypto.randomBytes(48).toString('hex'),
+  MFA_ENCRYPTION_KEY: crypto.randomBytes(32).toString('hex'),
   SUPABASE_URL: '', SUPABASE_SERVICE_ROLE_KEY: '', CLAMAV_HOST: '', RESEND_API_KEY: '',
   UPLOADS_DIR: path.join(runRoot, 'uploads'), M0_FIXTURE_PATH: path.join(runRoot, 'fixture.json'),
   API_PROXY_TARGET: 'http://127.0.0.1:5100', CLIENT_URL: 'http://127.0.0.1:3100', PORT: '5100',

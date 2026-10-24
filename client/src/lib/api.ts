@@ -64,12 +64,20 @@ const NETWORK_ERROR = undefined;
 
 async function refreshSession(): Promise<string | null | undefined> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
+    let res: Response;
+    for (let attempt = 0; ; attempt += 1) {
+      res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      // Browsers without Web Locks can still race across tabs. The winner's
+      // Set-Cookie may arrive just after the loser's 409, so retry briefly
+      // using the browser's now-current shared cookie jar.
+      if (res.status !== 409 || attempt >= 2) break;
+      await new Promise((resolve) => setTimeout(resolve, 75 * (attempt + 1)));
+    }
     // Only an authentication denial proves the session is gone. Rate limits,
     // rotation conflicts and server outages must preserve the local session.
     if (!res.ok) return res.status === 401 || res.status === 403 ? SESSION_DEAD : NETWORK_ERROR;
@@ -92,6 +100,24 @@ async function refreshSession(): Promise<string | null | undefined> {
     // Network error (fetch TypeError): do NOT treat as a dead session.
     return NETWORK_ERROR;
   }
+}
+
+async function refreshSessionCoordinated(tokenThatFailed: string | null): Promise<string | null | undefined> {
+  if (typeof window === 'undefined') return refreshSession();
+  const refresh = async () => {
+    const latestToken = localStorage.getItem('accessToken');
+    if (latestToken && tokenThatFailed && latestToken !== tokenThatFailed) return latestToken;
+    return refreshSession();
+  };
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    try {
+      return await navigator.locks.request('eduplatform-auth-refresh', { mode: 'exclusive' }, refresh);
+    } catch {
+      // A denied/aborted lock must settle queued callers and permit another retry.
+      return NETWORK_ERROR;
+    }
+  }
+  return refresh();
 }
 
 export async function fetchApi(endpoint: string, options: RequestInit & { responseType?: 'blob' } = {}) {
@@ -128,7 +154,7 @@ export async function fetchApi(endpoint: string, options: RequestInit & { respon
         });
       } else if (!isRefreshing) {
         isRefreshing = true;
-        const newToken = await refreshSession();
+        const newToken = await refreshSessionCoordinated(token);
         isRefreshing = false;
 
         if (newToken) {

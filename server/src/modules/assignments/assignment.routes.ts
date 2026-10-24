@@ -11,6 +11,7 @@ import {
   gradeSubmissionSchema,
 } from '../../utils/schemas';
 import { EntitlementResolver } from '../commerce/entitlement-resolver.service';
+import { requireCourseLearningAccess } from '../commerce/course-learning-access.middleware';
 import { Role } from '@prisma/client';
 
 const ALLOWED_SUBMISSION_MIME = new Set([
@@ -40,18 +41,15 @@ const router = Router();
  * NFR-001 / TC-STUDENT-032: submitting to a course-attached assignment
  * requires an active entitlement (or ownership/admin).
  */
-const assertAssignmentLearningAccess = async (req: AuthRequest, _res: Response, next: NextFunction) => {
-  try {
-    const content = await EntitlementResolver.resolveAssignmentCourse(req.params.id as string);
-    await EntitlementResolver.assertLearningAccess(req.user!.userId, req.user?.role, {
-      courseId: content?.courseId ?? null,
-      teacherId: content?.teacherId ?? null,
-    });
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
+const assertAssignmentLearningAccess = requireCourseLearningAccess(async (req) =>
+  (await EntitlementResolver.resolveAssignmentCourse(req.params.id as string))?.courseId ?? null
+);
+const assertLessonLearningAccess = requireCourseLearningAccess(async (req) =>
+  (await EntitlementResolver.resolveLessonCourse(req.params.lessonId as string))?.courseId ?? null
+);
+const assertAssignmentReadAccess = requireCourseLearningAccess(async (req) =>
+  (await EntitlementResolver.resolveAssignmentCourse(req.params.id as string))?.courseId ?? null
+);
 
 // Student endpoints
 router.get('/my-submissions', authenticate, AssignmentController.getStudentSubmissions);
@@ -68,7 +66,7 @@ router.post(
 );
 // NOTE: literal-path routes MUST be declared before parameterized '/:id'
 // routes, otherwise 'lesson' is consumed as an :id and the endpoint is dead.
-router.get('/lesson/:lessonId', authenticate, AssignmentController.getAssignmentsByLesson);
+router.get('/lesson/:lessonId', authenticate, assertLessonLearningAccess, AssignmentController.getAssignmentsByLesson);
 router.post(
   '/:id/submit',
   authenticate,
@@ -76,7 +74,7 @@ router.post(
   validateBody(submitAssignmentSchema),
   AssignmentController.submitAssignment
 );
-router.get('/:id', authenticate, AssignmentController.getAssignmentById);
+router.get('/:id', authenticate, assertAssignmentReadAccess, AssignmentController.getAssignmentById);
 
 // Teacher / Admin endpoints
 router.post(

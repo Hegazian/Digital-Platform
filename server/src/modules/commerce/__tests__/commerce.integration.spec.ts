@@ -3,15 +3,24 @@ import request from 'supertest';
 import app from '../../../app';
 import { prisma } from '../../../prisma';
 import { generateAccessToken } from '../../../utils/jwt';
+import { randomUUID } from 'crypto';
+import { CommerceService } from '../commerce.service';
+import { CourseService } from '../../courses/course.service';
+import { Role } from '@prisma/client';
 
 describe('Commerce & Entitlement Integration Tests', () => {
   let adminToken: string;
   let studentToken: string;
   let studentId: string;
+  let adminId: string;
   let subjectId: string;
   let productId: string;
   let voucherCode: string;
   let checkoutCourseId: string;
+  let lifecycleStudentId: string;
+  let lifecycleCourseId: string;
+  let lifecycleProductId: string;
+  let lifecycleOrderId: string;
 
   beforeAll(async () => {
     // 1. Create Admin
@@ -23,6 +32,7 @@ describe('Commerce & Entitlement Integration Tests', () => {
         role: 'ADMIN',
       },
     });
+    adminId = admin.id;
     adminToken = generateAccessToken({ userId: admin.id, role: 'ADMIN' });
 
     // 2. Create Student
@@ -35,6 +45,10 @@ describe('Commerce & Entitlement Integration Tests', () => {
       },
     });
     studentId = student.id;
+    const secondStudent = await prisma.user.create({ data: {
+      email: `second-student-comm-${Date.now()}@test.com`, password: 'Password123!', name: 'Second Student', role: 'STUDENT',
+    } });
+    lifecycleStudentId = secondStudent.id;
     studentToken = generateAccessToken({ userId: student.id, role: 'STUDENT' });
 
     // 3. Create Subject
@@ -58,9 +72,16 @@ describe('Commerce & Entitlement Integration Tests', () => {
       await prisma.entitlement.deleteMany({ where: { studentId } });
       await prisma.order.deleteMany({ where: { studentId } });
     }
+    if (lifecycleStudentId) {
+      await prisma.entitlement.deleteMany({ where: { studentId: lifecycleStudentId } });
+      await prisma.order.deleteMany({ where: { studentId: lifecycleStudentId } });
+    }
     if (productId) {
       await prisma.product.deleteMany({ where: { id: productId } });
     }
+    if (lifecycleOrderId) await prisma.order.deleteMany({ where: { id: lifecycleOrderId } });
+    if (lifecycleProductId) await prisma.product.deleteMany({ where: { id: lifecycleProductId } });
+    if (lifecycleCourseId) await prisma.course.deleteMany({ where: { id: lifecycleCourseId } });
     if (subjectId) {
       await prisma.subject.deleteMany({ where: { id: subjectId } });
     }
@@ -111,6 +132,26 @@ describe('Commerce & Entitlement Integration Tests', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.status).toBe('PENDING');
       expect(res.body.data.paymentMethod).toBe('MANUAL');
+    });
+
+    it('closes new checkout on archive and scopes idempotency keys to the buyer', async () => {
+      const course = await prisma.course.create({ data: {
+        teacherId: adminId, subjectId, titleEn: 'Lifecycle sale fixture', titleAr: 'اختبار البيع', description: 'Archive checkout regression',
+        status: 'PUBLISHED', isPublished: true,
+      } });
+      lifecycleCourseId = course.id;
+      const product = await prisma.product.create({ data: {
+        nameEn: 'Lifecycle course', nameAr: 'مقرر دورة الحياة', productType: 'COURSE', resourceId: course.id, priceEgp: 240, priceUsd: 4,
+      } });
+      lifecycleProductId = product.id;
+      const idempotencyKey = `lifecycle-${randomUUID()}`;
+      const order = await CommerceService.createOrder(studentId, { productId: product.id, paymentMethod: 'MANUAL', idempotencyKey });
+      lifecycleOrderId = order.id;
+      await expect(CommerceService.createOrder(lifecycleStudentId, { productId: product.id, paymentMethod: 'MANUAL', idempotencyKey })).rejects.toThrow(/another account/i);
+
+      await CourseService.archiveCourse(course.id, adminId, Role.ADMIN);
+      await expect(CommerceService.createOrder(studentId, { productId: product.id, paymentMethod: 'MANUAL', idempotencyKey: `after-archive-${randomUUID()}` })).rejects.toThrow(/not available for purchase/i);
+      expect(await prisma.order.findUnique({ where: { id: order.id } })).toMatchObject({ status: 'PENDING', studentId });
     });
 
     it('rejects automated gateway checkout and keeps gateway callbacks disabled', async () => {

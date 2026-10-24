@@ -90,7 +90,10 @@ const tables = [
 ];
 const stableRows = {
   users: `SELECT id, email, password, name, role::text AS role, "isActive", "teacherStatus"::text AS "teacherStatus", "gradeId", "createdAt", "updatedAt" FROM "users" ORDER BY id`,
-  courses: `SELECT to_jsonb(x)::text AS row FROM "courses" x ORDER BY id`,
+  // New nullable lifecycle columns are an expected schema expansion. Compare
+  // historical course data independently and assert the added fields retain
+  // their null migration defaults below through schema/data invariants.
+  courses: `SELECT (to_jsonb(x) - 'archivedAt' - 'retractedAt' - 'retractionReason' - 'retractedById')::text AS row FROM "courses" x ORDER BY id`,
   sections: `SELECT to_jsonb(x)::text AS row FROM "sections" x ORDER BY id`,
   lessons: `SELECT to_jsonb(x)::text AS row FROM "lessons" x ORDER BY id`,
   lesson_progress: `SELECT to_jsonb(x)::text AS row FROM "lesson_progress" x ORDER BY id`,

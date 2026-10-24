@@ -1,5 +1,7 @@
 # Testing strategy and release gates
 
+The [24 October review of all In Progress tasks](M1_PROGRESS_REVIEW.md) and [fresh verification](../audit/m1-closure/verification.json) supersede prior local counts without changing release thresholds. Current source hashes, complete package coverage, shared-contract build checks, both browser modes, the eight-migration fixture, maximum-size local upload measurement and fresh dependency policy are recorded separately from the immutable checkpoints. Passing those checks does not complete the remaining G1–G3 functionality or operator/device acceptance.
+
 ## M1 review verification (23 October 2026)
 
 The [M1 review](M1_REVIEW.md) covers all branch changes against merge base `322d070`. M1-R05, the introduced shutdown-test fixture/deadline defect, is fixed and independently rechecked. The current server suite passes **81 files / 446 tests**, and the client suite passes **17 files / 90 tests**, with zero skips. Windows exercises the registered shutdown handler through test-only IPC; native Linux SIGTERM remains a final-commit CI requirement. Both package typechecks and production builds pass. Client lint reports **0 errors / 27 warnings**. The migration fixture passes three migrations, drift rejection, parity, repeat deploy and preservation of **22 rows across 21 tables**.

@@ -21,7 +21,7 @@ async function authorizeBoard(req: AuthRequest, blockId: string, write: boolean)
   }
 
   const user = req.user!;
-  const isManager = user.role === Role.ADMIN || resolved.teacherId === user.userId;
+  const isManager = user.role === Role.ADMIN || (user.role === Role.TEACHER && resolved.teacherId === user.userId);
   if (isManager) return;
 
   if (write) {

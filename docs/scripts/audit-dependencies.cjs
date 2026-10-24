@@ -4,7 +4,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '../..');
-const destination = path.join(root, 'audit/m0');
+// Fresh scans must not overwrite the immutable M0 checkpoint reports.
+const destination = path.join(root, 'audit/m1-closure/dependencies');
 fs.mkdirSync(destination, { recursive: true });
 const exceptions = JSON.parse(fs.readFileSync(path.join(root, 'docs/dependency-exceptions.json'), 'utf8'));
 const verification = { checkedAt: new Date().toISOString(), packages: [] };
